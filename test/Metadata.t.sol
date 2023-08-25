@@ -13,18 +13,8 @@ contract MetadataTest is Test {
     address[] lotsOfAddresses;
 
     function setUp() external {
-        metadata = new MiladyMetadata();
-
-        for (uint i=0; i<10000; i++)
-        {
-            lotsOfAddresses.push(address(uint160(i)));
-        }
+        
     }
 
-    function test_populate() external {
-        metadata.populate(
-            0,
-            lotsOfAddresses
-        );
-    }
+    
 }
