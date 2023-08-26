@@ -7,20 +7,22 @@ pragma solidity ^0.8.13;
 import "openzeppelin/utils/math/SafeMath.sol";
 import "openzeppelin/token/ERC721/ERC721.sol";
 import "openzeppelin/token/ERC721/IERC721.sol";
-import "openzeppelin/access/Ownable.sol";
+import "openzeppelin/access/AccessControl.sol";
+import "./Constants.sol";
 
 // todo: this contract is designed with no conception of "accessory types"; i.e.
 // purple hats, red hats, and blue necklaces are all in the same "bucket".
 // This could be changed trivially, which may be better,
 // since we are uploading the metadata at this stage - there is an argument for completeness.
 
-uint8 constant NUM_ACCESSORY_TYPES = 4;
+contract MiladyMetadataAndRewards is AccessControl {
+    bytes32 constant ROLE_METADATA_AUTHORITY = keccak256("METADATA_AUTHORITY");
 
-contract MiladyMetadata is Ownable {
     IERC721 miladyContract;
 
-    constructor(IERC721 _miladyContract) {
+    constructor(IERC721 _miladyContract, address metadataAuthority) {
         miladyContract = _miladyContract;
+        _grantRole(ROLE_METADATA_AUTHORITY, metadataAuthority);
     }
 
     // using uint16 to specify a particular item (i.e. "purple hat").
@@ -39,8 +41,8 @@ contract MiladyMetadata is Ownable {
 
     mapping (uint => uint16[NUM_ACCESSORY_TYPES]) public miladyAccessoryInfo;
 
-    function prepareMilady(uint miladyID, uint16[NUM_ACCESSORY_TYPES] calldata accessories)
-        onlyOwner()
+    function onboardMilady(uint miladyID, uint16[NUM_ACCESSORY_TYPES] calldata accessories)
+        onlyRole(ROLE_METADATA_AUTHORITY)
         external
     {
         uint16[NUM_ACCESSORY_TYPES] storage accessoryInfo = miladyAccessoryInfo[miladyID];
