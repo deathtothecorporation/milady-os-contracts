@@ -13,16 +13,16 @@ import "./Constants.sol";
 // todo: this contract is designed with no conception of "accessory types"; i.e.
 // purple hats, red hats, and blue necklaces are all in the same "bucket".
 // This could be changed trivially, which may be better,
-// since we are uploading the metadata at this stage - there is an argument for completeness.
+// since we are uploading the accessories at this stage - there is an argument for completeness.
 
-contract MiladyMetadataAndRewards is AccessControl {
-    bytes32 constant ROLE_METADATA_AUTHORITY = keccak256("METADATA_AUTHORITY");
+contract MiladyAccessoriesAndRewards is AccessControl {
+    bytes32 constant ROLE_MILADY_AUTHORITY = keccak256("MILADY_AUTHORITY");
 
     IERC721 miladyContract;
 
-    constructor(IERC721 _miladyContract, address metadataAuthority) {
+    constructor(IERC721 _miladyContract, address miladyAuthority) {
         miladyContract = _miladyContract;
-        _grantRole(ROLE_METADATA_AUTHORITY, metadataAuthority);
+        _grantRole(ROLE_MILADY_AUTHORITY, miladyAuthority);
     }
 
     // using uint16 to specify a particular item (i.e. "purple hat").
@@ -42,7 +42,7 @@ contract MiladyMetadataAndRewards is AccessControl {
     mapping (uint => uint16[NUM_ACCESSORY_TYPES]) public miladyAccessoryInfo;
 
     function onboardMilady(uint miladyID, uint16[NUM_ACCESSORY_TYPES] calldata accessories)
-        onlyRole(ROLE_METADATA_AUTHORITY)
+        onlyRole(ROLE_MILADY_AUTHORITY)
         external
     {
         uint16[NUM_ACCESSORY_TYPES] storage accessoryInfo = miladyAccessoryInfo[miladyID];
@@ -58,6 +58,7 @@ contract MiladyMetadataAndRewards is AccessControl {
             require(! miladyRewardInfo.isRegistered, "milady has already been initialized");
 
             miladyRewardInfo.isRegistered = true;
+
             // When a new Milady is registered, we pretend they've been here the whole time and have already claimed all they could.
             // This essentially starts out this Milady with 0 claimable rewards, which will go up as revenue increases.
             miladyRewardInfo.amountClaimedBeforeDivision = rewardInfoForAccessory[accessories[i]].totalRewardsAccrued;
@@ -105,6 +106,7 @@ contract MiladyMetadataAndRewards is AccessControl {
         //todo: maybe send to the Milady's TBA instead?
         address recipient = miladyContract.ownerOf(miladyID);
 
+        //todo: should we be working around this?
         (bool success, ) = recipient.call{value: amountToSend}("");
         require(success, "Reward transfer failed");
 
