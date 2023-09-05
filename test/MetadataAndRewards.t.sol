@@ -6,12 +6,9 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
+import "./TestConstants.sol";
 import "../src/MetadataAndRewards.sol";
 import "../src/Miladys.sol";
-
-uint constant NUM_MILADYS_MINTED = 30;
-
-address constant miladyAuthorityAddress = address(uint160(1));
 
 contract MetadataAndRewardsTest is Test {
     MiladyAccessoriesAndRewards accessoriesAndRewardsContract;
