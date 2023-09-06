@@ -5,6 +5,11 @@
 pragma solidity ^0.8.13;
 
 import "openzeppelin/token/ERC1155/ERC1155.sol";
+import "openzeppelin/access/AccessControl.sol";
+import "./TBA/TBARegistry.sol";
+import "./Interfaces.sol";
+
+// todo: this could probably be a library?
 
 contract AccessoryBase is ERC1155 {
     constructor(string memory uri_)
