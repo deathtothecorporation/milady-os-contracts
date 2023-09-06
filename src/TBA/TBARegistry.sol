@@ -8,6 +8,12 @@ import "./IERC6551Registry.sol";
 contract TBARegistry is IERC6551Registry {
     error InitializationFailed();
 
+    struct TBA {
+        address tokenContract;
+        uint tokenId;
+    }
+    mapping (address => TBA) public registeredAccounts;
+
     function createAccount(
         address implementation,
         uint256 chainId,
@@ -26,6 +32,9 @@ contract TBARegistry is IERC6551Registry {
         if (_account.code.length != 0) return _account;
 
         _account = Create2.deploy(0, bytes32(salt), code);
+
+        registeredAccounts[_account].tokenContract = tokenContract;
+        registeredAccounts[_account].tokenId = tokenId;
 
         if (initData.length != 0) {
             (bool success, ) = _account.call(initData);
