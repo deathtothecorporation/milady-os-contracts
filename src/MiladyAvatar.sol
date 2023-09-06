@@ -66,7 +66,7 @@ contract MiladyAvatar is IERC721, IMiladyAvatar {
     }
 
     // each avatar has equip slots for each accessory type
-    mapping (uint => mapping (uint128 => bool)) public equipSlots;
+    mapping (uint => mapping (uint128 => uint)) public equipSlots;
 
     // Allows the owner of the avatar to equip an accessory.
     // The accessory must be held in the avatar's TBA.
@@ -80,11 +80,11 @@ contract MiladyAvatar is IERC721, IMiladyAvatar {
         
         address avatarTBA = getAvatarTBA(miladyId);
 
-        require(liquidAccessoriesContract.ownerOf(accessoryId) == address(avatarTBA), "That doll does not own that accessory.");
+        require(liquidAccessoriesContract.balanceOf(address(avatarTBA), accessoryId) > 0, "That doll does not own that accessory.");
 
         (uint128 accType,) = AccessoryUtils.idToTypeAndVariant(accessoryId);
 
-        equipSlots[accType] = accessoryId;
+        equipSlots[miladyId][accType] = accessoryId;
     }
 
     function unequipAccessoryByType(uint miladyId, uint128 accType)
@@ -93,14 +93,14 @@ contract MiladyAvatar is IERC721, IMiladyAvatar {
         require(msg.sender == ownerOf(miladyId), "You don't own that Milady Avatar");
 
         //todo: doc that 0 indicates no item, because hashes
-        equipSlots[accType] = 0;
+        equipSlots[miladyId][accType] = 0;
     }
 
     function unequipAccessoryById(uint miladyId, uint accessoryId)
         external
         override
     {
-        require(msg.sender == liquidAccessoriesContract || msg.sender == ownerOf(miladyId));
+        require(msg.sender == address(liquidAccessoriesContract) || msg.sender == ownerOf(miladyId));
 
         (uint128 accType,) = AccessoryUtils.idToTypeAndVariant(accessoryId);
 

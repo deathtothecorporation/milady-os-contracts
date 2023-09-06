@@ -124,7 +124,7 @@ contract LiquidAccessories is ERC1155 {
                 // check if this transfer would result in a 0 balance
                 if (amount == balanceOf(from, accessoryId)) {
                     //unequip if it's equipped
-                    miladyAvatarContract.unequipAccessoryIfEquipped(miladyId, accessoryId);
+                    miladyAvatarContract.unequipAccessoryById(miladyId, accessoryId);
                 }
             }
         }

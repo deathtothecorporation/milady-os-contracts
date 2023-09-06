@@ -6,14 +6,12 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
-import "../src/AccessoryBase.sol";
+import "../src/AccessoryUtils.sol";
 
 contract BitPacking is Test {
     function test_packBackAndForth(uint accessoryId) public {
-        AccessoryBase b = new AccessoryBase("");
-
-        (uint128 accType, uint128 accVariant) = b.idToTypeAndVariant(accessoryId);
-        uint recoveredId = b.typeAndVariantToId(accType, accVariant);
+        (uint128 accType, uint128 accVariant) = AccessoryUtils.idToTypeAndVariant(accessoryId);
+        uint recoveredId = AccessoryUtils.typeAndVariantToId(accType, accVariant);
 
         require(recoveredId == accessoryId);
     }

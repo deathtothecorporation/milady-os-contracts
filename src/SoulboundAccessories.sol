@@ -10,9 +10,9 @@ import "./TBA/IERC6551Registry.sol";
 import "./TBA/IERC6551Account.sol";
 import "./TBA/TokenBasedAccount.sol";
 import "./MiladyAvatar.sol";
-import "./AccessoryBase.sol";
+import "./AccessoryUtils.sol";
 
-contract MiladyAvatarAccessories is AccessoryBase, AccessControl {
+contract MiladyAvatarAccessories is ERC1155, AccessControl {
     bytes32 constant ROLE_MILADY_AUTHORITY = keccak256("MILADY_AUTHORITY");
 
     MiladyAvatar public miladyAvatarContract;
@@ -24,7 +24,9 @@ contract MiladyAvatarAccessories is AccessoryBase, AccessControl {
 
     mapping(uint => bool) public avatarActivated;
 
-    constructor(address miladyAuthority, MiladyAvatar _miladyAvatarContract, IERC6551Registry _tbaRegistry, IERC6551Account _tbaAccountImpl, uint _chainId) {
+    constructor(address miladyAuthority, MiladyAvatar _miladyAvatarContract, IERC6551Registry _tbaRegistry, IERC6551Account _tbaAccountImpl, uint _chainId, string memory uri_)
+        ERC1155(uri_)
+    {
         _grantRole(ROLE_MILADY_AUTHORITY, miladyAuthority);
         miladyAvatarContract = _miladyAvatarContract;
 
@@ -44,11 +46,12 @@ contract MiladyAvatarAccessories is AccessoryBase, AccessControl {
 
         // create the TBA for the avatar (or find it if it already exists)
         address avatarTbaAddress = tbaRegistry.createAccount(
-            tbaAccountImpl,
+            address(tbaAccountImpl),
             chainId,
-            miladyAvatarContract,
+            address(miladyAvatarContract),
             miladyId,
-            0
+            0,
+            ""
         );
 
         for (uint i=0; i<accessories.length; i++) {
@@ -59,8 +62,20 @@ contract MiladyAvatarAccessories is AccessoryBase, AccessControl {
     // disable all token transfers, making these soulbound.
     function _beforeTokenTransfer(address, address, address, uint256[] memory, uint256[] memory, bytes memory)
         internal
+        override
     {
         revert("These accessories are soulbound to the Milady Avatar and cannot be transferred");
+    }
+
+    // Because we inherit from two contracts that define supportsInterface,
+    // We resolve this by defining our own (try taking this out to see the error message)
+    // We'll just return true if either of our parent contracts return true:
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC1155, AccessControl) returns (bool)
+    {
+        return ERC1155.supportsInterface(interfaceId) || AccessControl.supportsInterface(interfaceId);
     }
 
     // todo: need to do anything for uri func?
