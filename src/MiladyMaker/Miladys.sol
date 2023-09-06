@@ -1,6 +1,7 @@
 // The below is taken from the canonical Milady Maker contract, pulled from etherscan.
 // It was then lightly modified to compile with a later version of Solidity and openzeppelin contracts.
-// Used only for testing our code against a "real" Milady system; not meant for production.
+// Used only for testing our code against a "real" Milady system;
+// the code below is not meant for production and is not deployed as part of the MiladyOS system.
 
 import "openzeppelin/token/ERC721/extensions/ERC721Enumerable.sol";
 import "openzeppelin/access/Ownable.sol";

@@ -9,7 +9,7 @@ import "openzeppelin/token/ERC721/IERC721.sol";
 import "openzeppelin/interfaces/IERC1271.sol";
 import "openzeppelin/utils/cryptography/SignatureChecker.sol";
 import "sstore2/utils/Bytecode.sol";
-import "../ERC6551/IERC6551Account.sol";
+import "./IERC6551Account.sol";
 
 contract TokenBasedAccount is IERC165, IERC1271, IERC6551Account {
     uint _nonce;
