@@ -7,26 +7,23 @@ pragma solidity ^0.8.13;
 import "openzeppelin/token/ERC1155/ERC1155.sol";
 import "openzeppelin/utils/math/SafeMath.sol";
 import "./TBA/TBARegistry.sol";
-import "./AccessoryBase.sol";
+import "./AccessoryUtils.sol";
 import "./Interfaces.sol";
 
 // todo: change uint16 to uint
 
-contract LiquidAccessories is AccessoryBase {
+contract LiquidAccessories is ERC1155 {
     TBARegistry public tbaRegistry;
     IMiladyAvatar public miladyAvatarContract;
-    bytes32 constant AVATAR_CONTRACT_ROLE = keccak256("AVATAR_CONTRACT");
 
     constructor(TBARegistry _tbaRegistry, IMiladyAvatar _miladyAvatarContract, string memory uri_)
-        AccessoryBase(uri_)
+        ERC1155(uri_)
     {
         tbaRegistry = _tbaRegistry;
         miladyAvatarContract = _miladyAvatarContract;
 
         require(address(tbaRegistry) != address(0), "tbaRegistry cannot be the 0x0 address");
         require(address(miladyAvatarContract) != address(0), "miladyAvatarContract cannot be the 0x0 address");
-
-        _grantRole(AVATAR_CONTRACT_ROLE, address(miladyAvatarContract));
     }
 
     // function setAvatarContract(IMiladyAvatar _avatarContract)
