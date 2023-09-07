@@ -12,23 +12,44 @@ import "./TBA/IERC6551Account.sol";
 import "./Interfaces.sol";
 import "./AccessoryUtils.sol";
 import "./LiquidAccessories.sol";
+import "./SoulboundAccessories.sol";
 
 contract MiladyAvatar is IERC721, IMiladyAvatar {
     IERC721 public miladysContract;
     LiquidAccessories public liquidAccessoriesContract;
+    SoulboundAccessories public soulboundAccessoriesContract;
     
     // state needed for TBA determination
     IERC6551Registry tbaRegistry;
     IERC6551Account tbaAccountImpl;
     uint chainId;
 
-    constructor(IERC721 _miladysContract, LiquidAccessories _liquidAccessoriesContract, IERC6551Registry _tbaRegistry, IERC6551Account _tbaAccountImpl, uint _chainId) {
+    // only used for initial deploy contract
+    address deployer;
+
+    constructor(
+        IERC721 _miladysContract,
+        IERC6551Registry _tbaRegistry,
+        IERC6551Account _tbaAccountImpl,
+        uint _chainId
+    ) {
+        deployer = msg.sender;
+
         miladysContract = _miladysContract;
-        liquidAccessoriesContract = _liquidAccessoriesContract;
         
         tbaRegistry = _tbaRegistry;
         tbaAccountImpl = _tbaAccountImpl;
         chainId = _chainId;
+    }
+
+    function setAccessoryContracts(LiquidAccessories _liquidAccessoriesContract, SoulboundAccessories _soulboundAccessoriesContract)
+        external
+    {
+        require(msg.sender == deployer, "Only callable by the initial deployer");
+        require(address(liquidAccessoriesContract) == address(0), "Accessory contracts already set");
+        
+        liquidAccessoriesContract = _liquidAccessoriesContract;
+        soulboundAccessoriesContract = _soulboundAccessoriesContract;
     }
 
     function balanceOf(address) external view returns (uint256 balance) {
@@ -80,7 +101,11 @@ contract MiladyAvatar is IERC721, IMiladyAvatar {
         
         address avatarTBA = getAvatarTBA(miladyId);
 
-        require(liquidAccessoriesContract.balanceOf(address(avatarTBA), accessoryId) > 0, "That doll does not own that accessory.");
+        require(
+            liquidAccessoriesContract.balanceOf(address(avatarTBA), accessoryId) > 0
+         || soulboundAccessoriesContract.balanceOf(address(avatarTBA), accessoryId) > 0,
+            "That avatar does not own that accessory."
+        );
 
         (uint128 accType,) = AccessoryUtils.idToTypeAndVariant(accessoryId);
 

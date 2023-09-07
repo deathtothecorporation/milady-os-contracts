@@ -4,18 +4,18 @@
 
 pragma solidity ^0.8.13;
 
-import "openzeppelin/token/ERC721/ERC721.sol";
+import "openzeppelin/token/ERC1155/ERC1155.sol";
 import "openzeppelin/access/AccessControl.sol";
 import "./TBA/IERC6551Registry.sol";
 import "./TBA/IERC6551Account.sol";
 import "./TBA/TokenBasedAccount.sol";
-import "./MiladyAvatar.sol";
 import "./AccessoryUtils.sol";
+import "./Interfaces.sol";
 
-contract MiladyAvatarAccessories is ERC1155, AccessControl {
+contract SoulboundAccessories is ERC1155, AccessControl {
     bytes32 constant ROLE_MILADY_AUTHORITY = keccak256("MILADY_AUTHORITY");
 
-    MiladyAvatar public miladyAvatarContract;
+    IMiladyAvatar public miladyAvatarContract;
 
     // state needed for TBA determination
     IERC6551Registry tbaRegistry;
@@ -24,15 +24,34 @@ contract MiladyAvatarAccessories is ERC1155, AccessControl {
 
     mapping(uint => bool) public avatarActivated;
 
-    constructor(address miladyAuthority, MiladyAvatar _miladyAvatarContract, IERC6551Registry _tbaRegistry, IERC6551Account _tbaAccountImpl, uint _chainId, string memory uri_)
+    // only used for initial deploy contract
+    address deployer;
+
+    constructor(
+        address miladyAuthority,
+        IERC6551Registry _tbaRegistry,
+        IERC6551Account _tbaAccountImpl,
+        uint _chainId,
+        string memory uri_
+    )
         ERC1155(uri_)
     {
+        deployer = msg.sender;
+
         _grantRole(ROLE_MILADY_AUTHORITY, miladyAuthority);
-        miladyAvatarContract = _miladyAvatarContract;
 
         tbaRegistry = _tbaRegistry;
         tbaAccountImpl = _tbaAccountImpl;
         chainId = _chainId;
+    }
+
+    function setAvatarContract(IMiladyAvatar _miladyAvatarContract)
+        external
+    {
+        require(msg.sender == deployer, "Only callable by the initial deployer");
+        require(address(miladyAvatarContract) == address(0), "avatar contract already set");
+
+        miladyAvatarContract = _miladyAvatarContract;
     }
 
     function mintSoulboundAccessories(uint miladyId, uint[] calldata accessories)

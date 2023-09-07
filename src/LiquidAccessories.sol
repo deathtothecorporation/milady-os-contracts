@@ -16,23 +16,28 @@ contract LiquidAccessories is ERC1155 {
     TBARegistry public tbaRegistry;
     IMiladyAvatar public miladyAvatarContract;
 
-    constructor(TBARegistry _tbaRegistry, IMiladyAvatar _miladyAvatarContract, string memory uri_)
+    // only used for initial deploy contract
+    address deployer; // todo: switch to owner?
+
+    constructor(TBARegistry _tbaRegistry, string memory uri_)
         ERC1155(uri_)
     {
+        deployer = msg.sender;
+
         tbaRegistry = _tbaRegistry;
-        miladyAvatarContract = _miladyAvatarContract;
 
         require(address(tbaRegistry) != address(0), "tbaRegistry cannot be the 0x0 address");
         require(address(miladyAvatarContract) != address(0), "miladyAvatarContract cannot be the 0x0 address");
     }
 
-    // function setAvatarContract(IMiladyAvatar _avatarContract)
-    //     external
-    //     onlyRole(DEFAULT_ADMIN_ROLE)
-    // {
-    //     avatarContract = _avatarContract;
-    //     _grantRole(AVATAR_CONTRACT_ROLE, address(avatarContract));
-    // }
+    function setAvatarContract(IMiladyAvatar _miladyAvatarContract)
+        external
+    {
+        require(msg.sender == deployer, "Only callable by the initial deployer");
+        require(address(miladyAvatarContract) == address(0), "avatar contract already set");
+
+        miladyAvatarContract = _miladyAvatarContract;
+    }
     
     mapping(uint16 => uint) public liquidAccessorySupply;
 
