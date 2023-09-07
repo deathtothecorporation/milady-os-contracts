@@ -119,15 +119,16 @@ contract LiquidAccessories is ERC1155 {
 
             // check if we're sending from a miladyAvatar TBA
             (address tbaTokenContract, uint tbaTokenId) = tbaRegistry.registeredAccounts(from);
+            // tbaTokenContract == 0x0 if not a TBA
             if (tbaTokenContract == address(miladyAvatarContract)) {
                 
                 // next 3 lines for clarity. possible todo: remove for gas savings
                 uint accessoryId = ids[i];
-                uint amount = amounts[i];
+                uint requestedAmountToTransfer = amounts[i];
                 uint miladyId = tbaTokenId;
 
                 // check if this transfer would result in a 0 balance
-                if (amount == balanceOf(from, accessoryId)) {
+                if (requestedAmountToTransfer == balanceOf(from, accessoryId)) { // if requestedAmountToTransfer is > balance, OZ's 1155 logic will catch and revert
                     //unequip if it's equipped
                     miladyAvatarContract.unequipAccessoryById(miladyId, accessoryId);
                 }
