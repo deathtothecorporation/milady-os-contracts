@@ -10,8 +10,6 @@ import "./TBA/TBARegistry.sol";
 import "./AccessoryUtils.sol";
 import "./Interfaces.sol";
 
-// todo: change uint16 to uint
-
 contract LiquidAccessories is ERC1155 {
     TBARegistry public tbaRegistry;
     IMiladyAvatar public miladyAvatarContract;
@@ -39,9 +37,9 @@ contract LiquidAccessories is ERC1155 {
         miladyAvatarContract = _miladyAvatarContract;
     }
     
-    mapping(uint16 => uint) public liquidAccessorySupply;
+    mapping(uint => uint) public liquidAccessorySupply;
 
-    function mintAccessory(uint16 accessory, address payable overpayReturnAddress)
+    function mintAccessory(uint accessory, address payable overpayReturnAddress)
         public
         payable
     {
@@ -57,7 +55,7 @@ contract LiquidAccessories is ERC1155 {
         _mint(msg.sender, uint256(accessory), 1, ""); // todo: better handling of data?
     }
 
-    function returnAccessory(uint16 accessory, address payable fundsRecipient)
+    function returnAccessory(uint accessory, address payable fundsRecipient)
         public
     {
         require(balanceOf(msg.sender, accessory) > 0, "You don't own that accessory.");
@@ -71,7 +69,7 @@ contract LiquidAccessories is ERC1155 {
         _burn(msg.sender, accessory, 1);
     }
 
-    function getBuyPriceOfNewAccessory(uint16 accessory)
+    function getBuyPriceOfNewAccessory(uint accessory)
         public
         view
         returns (uint)
@@ -80,7 +78,7 @@ contract LiquidAccessories is ERC1155 {
         return getBuyPriceGivenSupply(currentSupplyOfAccessory + 1);
     }
 
-    function getSellPriceOfAccessory(uint16 accessory)
+    function getSellPriceOfAccessory(uint accessory)
         public
         view
         returns (uint)
