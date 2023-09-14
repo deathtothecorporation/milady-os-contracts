@@ -5,7 +5,6 @@
 pragma solidity ^0.8.13;
 
 import "openzeppelin/token/ERC1155/ERC1155.sol";
-import "openzeppelin/utils/math/SafeMath.sol";
 import "./TBA/TBARegistry.sol";
 import "./AccessoryUtils.sol";
 import "./Interfaces.sol";
@@ -92,12 +91,10 @@ contract LiquidAccessories is ERC1155 {
         pure
         returns (uint)
     {
-        return SafeMath.div(
-            SafeMath.mul(
-                getSellPriceGivenSupply(supply + 1),
-                1100),
-            1000
-        );
+        return
+            ((getSellPriceGivenSupply(supply + 1) - 1100))
+            / 1000
+        ;
     }
 
     function getSellPriceGivenSupply(uint supply)
