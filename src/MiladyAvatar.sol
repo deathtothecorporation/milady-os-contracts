@@ -8,13 +8,12 @@ import "openzeppelin/token/ERC721/IERC721.sol";
 import "./TBA/TokenBasedAccount.sol";
 import "./TBA/IERC6551Registry.sol";
 import "./TBA/IERC6551Account.sol";
-import "./Interfaces.sol";
 import "./Rewards.sol";
 import "./AccessoryUtils.sol";
 import "./LiquidAccessories.sol";
 import "./SoulboundAccessories.sol";
 
-contract MiladyAvatar is IERC721, IMiladyAvatar {
+contract MiladyAvatar is IERC721 {
     IERC721 public miladysContract;
     LiquidAccessories public liquidAccessoriesContract;
     SoulboundAccessories public soulboundAccessoriesContract;
@@ -91,16 +90,32 @@ contract MiladyAvatar is IERC721, IMiladyAvatar {
     // each avatar has equip slots for each accessory type
     mapping (uint => mapping (uint128 => uint)) public equipSlots;
 
+    // A special function to allow the soulbound accessories to "auto equip" themselves upon mint
+    // See `SoulboundAccessories.mintSoulboundAccessories`.
+    function equipSoulboundAccessory(uint miladyId, uint soulboundAccessoryId)
+        external
+    {
+        require(msg.sender == address(soulboundAccessoriesContract), "this function is only callable by the SoulboundAccessories contract");
+
+        _equipAccessoryIfOwned(miladyId, soulboundAccessoryId);
+    }
+
     // Allows the owner of the avatar to equip an accessory.
     // The accessory must be held in the avatar's TBA.
     // If some other accessory is equipped with the same accType, it will be unequipped.
     function equipAccessory(uint miladyId, uint accessoryId)
-        public
+        external
     {
         // note: this effectively checks that the msg.sender is the avatar.
         // thus we are assuming that the interface is constructing a TBA call.
         require(msg.sender == ownerOf(miladyId), "You don't own that Milady Avatar");
-        
+
+        _equipAccessoryIfOwned(miladyId, accessoryId);
+    }
+
+    function _equipAccessoryIfOwned(uint miladyId, uint accessoryId)
+        internal
+    {
         address avatarTBA = getAvatarTBA(miladyId);
 
         require(
@@ -109,7 +124,7 @@ contract MiladyAvatar is IERC721, IMiladyAvatar {
             "That avatar does not own that accessory."
         );
 
-        (uint128 accType,) = AccessoryUtils.idToTypeAndVariant(accessoryId);
+        (uint128 accType,) = AccessoryUtils.idToTypeAndVariantHashes(accessoryId);
 
         unequipAccessoryByTypeIfEquipped(miladyId, accType);
         rewardsContract.registerMiladyForRewardsForAccessory(miladyId, accessoryId);
@@ -130,11 +145,10 @@ contract MiladyAvatar is IERC721, IMiladyAvatar {
 
     function unequipAccessoryByIdIfEquipped(uint miladyId, uint accessoryId)
         external
-        override
     {
         require(msg.sender == address(liquidAccessoriesContract) || msg.sender == ownerOf(miladyId));
 
-        (uint128 accType,) = AccessoryUtils.idToTypeAndVariant(accessoryId);
+        (uint128 accType,) = AccessoryUtils.idToTypeAndVariantHashes(accessoryId);
 
         unequipAccessoryByTypeIfEquipped(miladyId, accType);
     }

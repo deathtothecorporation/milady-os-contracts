@@ -10,12 +10,12 @@ import "./TBA/IERC6551Registry.sol";
 import "./TBA/IERC6551Account.sol";
 import "./TBA/TokenBasedAccount.sol";
 import "./AccessoryUtils.sol";
-import "./Interfaces.sol";
+import "./MiladyAvatar.sol";
 
 contract SoulboundAccessories is ERC1155, AccessControl {
     bytes32 constant ROLE_MILADY_AUTHORITY = keccak256("MILADY_AUTHORITY");
 
-    IMiladyAvatar public miladyAvatarContract;
+    MiladyAvatar public miladyAvatarContract;
 
     // state needed for TBA determination
     IERC6551Registry tbaRegistry;
@@ -45,7 +45,7 @@ contract SoulboundAccessories is ERC1155, AccessControl {
         chainId = _chainId;
     }
 
-    function setAvatarContract(IMiladyAvatar _miladyAvatarContract)
+    function setAvatarContract(MiladyAvatar _miladyAvatarContract)
         external
     {
         require(msg.sender == deployer, "Only callable by the initial deployer");
@@ -75,6 +75,7 @@ contract SoulboundAccessories is ERC1155, AccessControl {
 
         for (uint i=0; i<accessories.length; i++) {
             _mint(avatarTbaAddress, accessories[i], 1, "");
+            miladyAvatarContract.equipSoulboundAccessory(miladyId, accessories[i]);
         }
     }
 

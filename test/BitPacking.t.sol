@@ -10,8 +10,8 @@ import "../src/AccessoryUtils.sol";
 
 contract BitPacking is Test {
     function test_packBackAndForth(uint accessoryId) public {
-        (uint128 accType, uint128 accVariant) = AccessoryUtils.idToTypeAndVariant(accessoryId);
-        uint recoveredId = AccessoryUtils.typeAndVariantToId(accType, accVariant);
+        (uint128 accType, uint128 accVariant) = AccessoryUtils.idToTypeAndVariantHashes(accessoryId);
+        uint recoveredId = AccessoryUtils.typeAndVariantHashesToId(accType, accVariant);
 
         require(recoveredId == accessoryId);
     }

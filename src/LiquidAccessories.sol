@@ -7,11 +7,11 @@ pragma solidity ^0.8.13;
 import "openzeppelin/token/ERC1155/ERC1155.sol";
 import "./TBA/TBARegistry.sol";
 import "./AccessoryUtils.sol";
-import "./Interfaces.sol";
+import "./MiladyAvatar.sol";
 
 contract LiquidAccessories is ERC1155 {
     TBARegistry public tbaRegistry;
-    IMiladyAvatar public miladyAvatarContract;
+    MiladyAvatar public miladyAvatarContract;
 
     // only used for initial deploy contract
     address deployer; // todo: switch to owner?
@@ -27,7 +27,7 @@ contract LiquidAccessories is ERC1155 {
         require(address(miladyAvatarContract) != address(0), "miladyAvatarContract cannot be the 0x0 address");
     }
 
-    function setAvatarContract(IMiladyAvatar _miladyAvatarContract)
+    function setAvatarContract(MiladyAvatar _miladyAvatarContract)
         external
     {
         require(msg.sender == deployer, "Only callable by the initial deployer");
