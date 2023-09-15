@@ -10,6 +10,7 @@ import "./TBA/TokenBasedAccount.sol";
 import "./MiladyAvatar.sol";
 import "./LiquidAccessories.sol";
 import "./SoulboundAccessories.sol";
+import "./Rewards.sol";
 
 library Deployer {
     function deploy(
@@ -22,7 +23,7 @@ library Deployer {
         string memory soulboundAccessoriesURI
     )
         public
-        returns (MiladyAvatar avatarContract, LiquidAccessories liquidAccessoriesContract, SoulboundAccessories soulboundAccessoriesContract)
+        returns (MiladyAvatar avatarContract, LiquidAccessories liquidAccessoriesContract, SoulboundAccessories soulboundAccessoriesContract, Rewards rewardsContract)
     {
         avatarContract = new MiladyAvatar(
             miladyContract,
@@ -44,7 +45,9 @@ library Deployer {
             soulboundAccessoriesURI
         );
 
-        avatarContract.setAccessoryContracts(liquidAccessoriesContract, soulboundAccessoriesContract);
+        rewardsContract = new Rewards(address(avatarContract), miladyContract);
+
+        avatarContract.setOtherContracts(liquidAccessoriesContract, soulboundAccessoriesContract, rewardsContract);
         liquidAccessoriesContract.setAvatarContract(avatarContract);
         soulboundAccessoriesContract.setAvatarContract(avatarContract);
     }

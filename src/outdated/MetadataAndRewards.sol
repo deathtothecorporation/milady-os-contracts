@@ -107,6 +107,7 @@
 //         address recipient = miladyContract.ownerOf(miladyID);
 
 //         //todo: should we be working around this?
+//         //todo: RE-ENTRANCY ISSUE
 //         (bool success, ) = recipient.call{value: amountToSend}("");
 //         require(success, "Reward transfer failed");
 

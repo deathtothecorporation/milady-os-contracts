@@ -9,6 +9,7 @@ import "./TBA/TokenBasedAccount.sol";
 import "./TBA/IERC6551Registry.sol";
 import "./TBA/IERC6551Account.sol";
 import "./Interfaces.sol";
+import "./Rewards.sol";
 import "./AccessoryUtils.sol";
 import "./LiquidAccessories.sol";
 import "./SoulboundAccessories.sol";
@@ -17,6 +18,7 @@ contract MiladyAvatar is IERC721, IMiladyAvatar {
     IERC721 public miladysContract;
     LiquidAccessories public liquidAccessoriesContract;
     SoulboundAccessories public soulboundAccessoriesContract;
+    Rewards public rewardsContract;
     
     // state needed for TBA determination
     IERC6551Registry tbaRegistry;
@@ -41,14 +43,15 @@ contract MiladyAvatar is IERC721, IMiladyAvatar {
         chainId = _chainId;
     }
 
-    function setAccessoryContracts(LiquidAccessories _liquidAccessoriesContract, SoulboundAccessories _soulboundAccessoriesContract)
+    function setOtherContracts(LiquidAccessories _liquidAccessoriesContract, SoulboundAccessories _soulboundAccessoriesContract, Rewards _rewardsContract)
         external
     {
         require(msg.sender == deployer, "Only callable by the initial deployer");
-        require(address(liquidAccessoriesContract) == address(0), "Accessory contracts already set");
+        require(address(liquidAccessoriesContract) == address(0), "Contracts already set");
         
         liquidAccessoriesContract = _liquidAccessoriesContract;
         soulboundAccessoriesContract = _soulboundAccessoriesContract;
+        rewardsContract = _rewardsContract;
     }
 
     function balanceOf(address) external view returns (uint256 balance) {
@@ -90,7 +93,7 @@ contract MiladyAvatar is IERC721, IMiladyAvatar {
 
     // Allows the owner of the avatar to equip an accessory.
     // The accessory must be held in the avatar's TBA.
-    // If some other accessory is equipped with the same accType, it will be ovewritten (unequipped).
+    // If some other accessory is equipped with the same accType, it will be unequipped.
     function equipAccessory(uint miladyId, uint accessoryId)
         public
     {
@@ -108,19 +111,24 @@ contract MiladyAvatar is IERC721, IMiladyAvatar {
 
         (uint128 accType,) = AccessoryUtils.idToTypeAndVariant(accessoryId);
 
+        unequipAccessoryByTypeIfEquipped(miladyId, accType);
+        rewardsContract.registerMiladyForRewardsForAccessory(miladyId, accessoryId);
+
         equipSlots[miladyId][accType] = accessoryId;
     }
 
-    function unequipAccessoryByType(uint miladyId, uint128 accType)
+    function unequipAccessoryByTypeIfEquipped(uint miladyId, uint128 accType)
         public
     {
         require(msg.sender == ownerOf(miladyId), "You don't own that Milady Avatar");
 
-        //todo: doc that 0 indicates no item, because hashes
-        equipSlots[miladyId][accType] = 0;
+        if (equipSlots[miladyId][accType] != 0) {
+            rewardsContract.deregisterMiladyForRewardsForAccessoryAndClaim(miladyId, equipSlots[miladyId][accType]);
+            equipSlots[miladyId][accType] = 0;
+        }
     }
 
-    function unequipAccessoryById(uint miladyId, uint accessoryId)
+    function unequipAccessoryByIdIfEquipped(uint miladyId, uint accessoryId)
         external
         override
     {
@@ -128,7 +136,7 @@ contract MiladyAvatar is IERC721, IMiladyAvatar {
 
         (uint128 accType,) = AccessoryUtils.idToTypeAndVariant(accessoryId);
 
-        unequipAccessoryByType(miladyId, accType);
+        unequipAccessoryByTypeIfEquipped(miladyId, accType);
     }
 
     // Get the TokenBasedAccount for a particular Milady Avatar.
