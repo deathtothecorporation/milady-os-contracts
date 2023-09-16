@@ -7,11 +7,14 @@ pragma solidity ^0.8.13;
 import "openzeppelin/utils/introspection/IERC165.sol";
 import "openzeppelin/token/ERC721/IERC721.sol";
 import "openzeppelin/interfaces/IERC1271.sol";
+import "openzeppelin/token/ERC1155/IERC1155Receiver.sol";
 import "openzeppelin/utils/cryptography/SignatureChecker.sol";
 import "sstore2/utils/Bytecode.sol";
 import "./IERC6551Account.sol";
 
-contract TokenBasedAccount is IERC165, IERC1271, IERC6551Account {
+// todo: should this also be a 721 receiver?
+
+contract TokenBasedAccount is IERC165, IERC1271, IERC6551Account, IERC1155Receiver {
     uint _nonce;
 
     receive() external payable {}
@@ -84,5 +87,26 @@ contract TokenBasedAccount is IERC165, IERC1271, IERC6551Account {
 
     function nonce() external view returns (uint) {
         return _nonce;
+    }
+
+    function onERC1155Received(
+        address,
+        address,
+        uint256,
+        uint256,
+        bytes calldata
+    ) external returns (bytes4) {
+        return IERC1155Receiver.onERC1155Received.selector;
+    }
+
+    function onERC1155BatchReceived(
+        address,
+        address,
+        uint256[] calldata,
+        uint256[] calldata,
+        bytes calldata
+    ) external returns (bytes4)
+    {
+        return IERC1155Receiver.onERC1155BatchReceived.selector;
     }
 }
