@@ -28,7 +28,7 @@ contract Rewards is AccessControl {
         uint amountClaimedBeforeDivision;
     }
 
-    function accrueRewards(uint accessoryId)
+    function accrueRewardsForAccessory(uint accessoryId)
         payable
         external
     {
@@ -109,5 +109,15 @@ contract Rewards is AccessControl {
         uint rewardOwedBeforeDivision = rewardInfo.totalRewardsAccrued - rewardInfo.miladyRewardInfo[miladyId].amountClaimedBeforeDivision;
 
         amountClaimable = rewardOwedBeforeDivision / rewardInfo.totalHolders;
+    }
+
+    function getAmountClaimableForMiladyAndAccessories(uint miladyId, uint[] memory accessoryIds)
+        public
+        view
+        returns (uint amountClaimable)
+    {
+        for (uint i=0; i<accessoryIds.length; i++) {
+            amountClaimable += getAmountClaimableForMiladyAndAccessory(miladyId, accessoryIds[i]);
+        }
     }
 }
