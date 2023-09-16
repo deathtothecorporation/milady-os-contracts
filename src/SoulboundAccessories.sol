@@ -24,7 +24,7 @@ contract SoulboundAccessories is ERC1155, AccessControl {
 
     mapping(uint => bool) public avatarActivated;
 
-    // only used for initial deploy contract
+    // only used for initial deploy
     address deployer;
 
     constructor(

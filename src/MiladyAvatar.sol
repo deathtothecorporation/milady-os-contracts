@@ -24,7 +24,7 @@ contract MiladyAvatar is IERC721 {
     IERC6551Account tbaAccountImpl;
     uint chainId;
 
-    // only used for initial deploy contract
+    // only used for initial deploy
     address deployer;
 
     constructor(

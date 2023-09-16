@@ -13,8 +13,8 @@ contract LiquidAccessories is ERC1155 {
     TBARegistry public tbaRegistry;
     MiladyAvatar public miladyAvatarContract;
 
-    // only used for initial deploy contract
-    address deployer; // todo: switch to owner?
+    // only used for initial deploy
+    address deployer;
 
     constructor(TBARegistry _tbaRegistry, string memory uri_)
         ERC1155(uri_)
