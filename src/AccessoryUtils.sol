@@ -13,18 +13,19 @@ library AccessoryUtils {
         string accVariant;
     }
 
-    function batchPlaintextAccessoryInfoToAccessoryIds(PlaintextAccessoryInfo[] calldata accInfos)
+    function batchPlaintextAccessoryInfoToAccessoryIds(PlaintextAccessoryInfo[] memory accInfos)
         public
         pure
         returns (uint[] memory accIds)
     {
+        accIds = new uint[](accInfos.length);
         for (uint i=0; i<accInfos.length; i++)
         {
-            accIds[i] = plaintextAccessoryInfoToIds(accInfos[i]);
+            accIds[i] = plaintextAccessoryInfoToId(accInfos[i]);
         }
     }
 
-    function plaintextAccessoryInfoToIds(PlaintextAccessoryInfo calldata accInfo)
+    function plaintextAccessoryInfoToId(PlaintextAccessoryInfo memory accInfo)
         public
         pure
         returns (uint accessoryId)
@@ -32,6 +33,14 @@ library AccessoryUtils {
         uint128 accType = uint128(uint256(keccak256(abi.encodePacked(accInfo.accType))));
         uint128 accVariant = uint128(uint256(keccak256(abi.encodePacked(accInfo.accVariant))));
         accessoryId = typeAndVariantHashesToId(accType, accVariant);
+    }
+
+    function plaintextAccessoryTextToId(string memory accTypeString, string memory accVariantString)
+        public
+        pure
+        returns (uint accessoryId)
+    {
+        return plaintextAccessoryInfoToId(PlaintextAccessoryInfo(accTypeString, accVariantString));
     }
 
     function idToTypeAndVariantHashes(uint id)
