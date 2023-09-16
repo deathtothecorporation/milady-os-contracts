@@ -54,7 +54,7 @@ contract SoulboundAccessories is ERC1155, AccessControl {
         miladyAvatarContract = _miladyAvatarContract;
     }
 
-    function mintSoulboundAccessories(uint miladyId, uint[] calldata accessories)
+    function mintAndEquipSoulboundAccessories(uint miladyId, uint[] calldata accessories)
         onlyRole(ROLE_MILADY_AUTHORITY)
         external
     {
@@ -80,10 +80,13 @@ contract SoulboundAccessories is ERC1155, AccessControl {
     }
 
     // disable all token transfers, making these soulbound.
-    function _beforeTokenTransfer(address, address, address, uint256[] memory, uint256[] memory, bytes memory)
+    function _beforeTokenTransfer(address, address from, address, uint256[] memory, uint256[] memory, bytes memory)
         internal
         override
     {
+        if (from == address(0x0)) {
+            return; // allow transfers from 0x0, i.e. mints
+        }
         revert("These accessories are soulbound to the Milady Avatar and cannot be transferred");
     }
 
