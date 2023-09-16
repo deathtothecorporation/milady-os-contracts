@@ -126,21 +126,10 @@ contract MiladyAvatar is IERC721 {
 
         (uint128 accType,) = AccessoryUtils.idToTypeAndVariantHashes(accessoryId);
 
-        unequipAccessoryByTypeIfEquipped(miladyId, accType);
+        _unequipAccessoryByTypeIfEquipped(miladyId, accType);
         rewardsContract.registerMiladyForRewardsForAccessory(miladyId, accessoryId);
 
         equipSlots[miladyId][accType] = accessoryId;
-    }
-
-    function unequipAccessoryByTypeIfEquipped(uint miladyId, uint128 accType)
-        public
-    {
-        require(msg.sender == ownerOf(miladyId), "You don't own that Milady Avatar");
-
-        if (equipSlots[miladyId][accType] != 0) {
-            rewardsContract.deregisterMiladyForRewardsForAccessoryAndClaim(miladyId, equipSlots[miladyId][accType]);
-            equipSlots[miladyId][accType] = 0;
-        }
     }
 
     function unequipAccessoryByIdIfEquipped(uint miladyId, uint accessoryId)
@@ -151,6 +140,23 @@ contract MiladyAvatar is IERC721 {
         (uint128 accType,) = AccessoryUtils.idToTypeAndVariantHashes(accessoryId);
 
         unequipAccessoryByTypeIfEquipped(miladyId, accType);
+    }
+
+    function unequipAccessoryByTypeIfEquipped(uint miladyId, uint128 accType)
+        public
+    {
+        require(msg.sender == ownerOf(miladyId), "You don't own that Milady Avatar");
+
+        _unequipAccessoryByTypeIfEquipped(miladyId, accType);
+    }
+
+    function _unequipAccessoryByTypeIfEquipped(uint miladyId, uint128 accType)
+        internal
+    {
+        if (equipSlots[miladyId][accType] != 0) {
+            rewardsContract.deregisterMiladyForRewardsForAccessoryAndClaim(miladyId, equipSlots[miladyId][accType]);
+            equipSlots[miladyId][accType] = 0;
+        }
     }
 
     // Get the TokenBasedAccount for a particular Milady Avatar.
