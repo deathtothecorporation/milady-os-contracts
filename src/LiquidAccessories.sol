@@ -50,7 +50,7 @@ contract LiquidAccessories is ERC1155 {
 
         liquidAccessorySupply[accessory] ++;
 
-        _mint(msg.sender, uint256(accessory), 1, ""); // todo: better handling of data?
+        _mint(msg.sender, uint256(accessory), 1, "");
     }
 
     function returnAccessory(uint accessory, address payable fundsRecipient)

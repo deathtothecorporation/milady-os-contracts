@@ -103,6 +103,10 @@ contract Rewards is AccessControl {
         view
         returns (uint amountClaimable)
     {
+        if (! rewardInfoForAccessory[accessoryId].miladyRewardInfo[miladyId].isRegistered) {
+            return 0;
+        }
+        
         RewardInfoForAccessory storage rewardInfo = rewardInfoForAccessory[accessoryId];
         
         //todo: possible DRY cleanup with this and the beginning of claimRewardsForMiladyAndAccessory

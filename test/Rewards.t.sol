@@ -57,61 +57,49 @@ contract RewardsTest is Test {
 
         require(rewardsContract.getAmountClaimableForMiladyAndAccessories(0, milady0Accessories) == 201);
 
+        uint balancePreClaim = address(this).balance;
+        rewardsContract.claimRewardsForMilady(0, milady0Accessories);
+        uint balancePostClaim = address(this).balance;
+        require(balancePostClaim - balancePreClaim == 201);
+        require(rewardsContract.getAmountClaimableForMiladyAndAccessories(0, milady0Accessories) == 0);
 
-
-
-
-        // uint balancePreClaim = address(this).balance;
-        // accessoriesAndRewardsContract.claimRewardsForMilady(0);
-        // uint balancePostClaim = address(this).balance;
-        // require(balancePostClaim - balancePreClaim == 201);
-        // require(accessoriesAndRewardsContract.getAmountClaimableForMilady(0) == 0);
-
-        // // now onboard another Milady and make sure rewards work as expected
-        // // new milady only shares accessory id 0 with previous milady
-        // uint16[NUM_ACCESSORY_TYPES] memory metadata1 = [uint16(0), 4, 5, 6];
-        // vm.prank(miladyAuthorityAddress);
-        // accessoriesAndRewardsContract.onboardMilady(1, metadata1);
-
-        // // deposit a reward for:
-        // // * shared accessory
-        // accessoriesAndRewardsContract.receiveRewardsForAccessory{value:100}(0);
-        // // * accessory only held by milady 0
-        // accessoriesAndRewardsContract.receiveRewardsForAccessory{value:101}(1);
-        // // * accessory only held by milady 1
-        // accessoriesAndRewardsContract.receiveRewardsForAccessory{value:103}(4);
-
-        // uint expectedRewardsForMilady0 = 50 + 101; // half of first reward, all of second
-        // uint expectedRewardsForMilady1 = 50 + 103; // half of first reward, all of third
-
-        // // test read functions
-        // require(accessoriesAndRewardsContract.getAmountClaimableForMilady(0) == expectedRewardsForMilady0);
-        // require(accessoriesAndRewardsContract.getAmountClaimableForMilady(1) == expectedRewardsForMilady1);
-
-        // // test actual claims
-        // balancePreClaim = address(this).balance;
-        // accessoriesAndRewardsContract.claimRewardsForMilady(0);
-        // balancePostClaim = address(this).balance;
-        // require(balancePostClaim - balancePreClaim == expectedRewardsForMilady0);
-
-        // balancePreClaim = address(this).balance;
-        // accessoriesAndRewardsContract.claimRewardsForMilady(1);
-        // balancePostClaim = address(this).balance;
-        // require(balancePostClaim - balancePreClaim == expectedRewardsForMilady1);
-
-        // // just for kicks let's do one more onboarding and claim
-        // uint16[NUM_ACCESSORY_TYPES] memory metadata2 = [uint16(0), 4, 5, 6];
-        // vm.prank(miladyAuthorityAddress);
-        // accessoriesAndRewardsContract.onboardMilady(2, metadata2);
+        // now onboard another Milady and make sure rewards work as expected
+        // new milady only shares accessory id 0 with previous milady
+        AccessoryUtils.PlaintextAccessoryInfo[] memory milady1AccessoriesPlaintext = new AccessoryUtils.PlaintextAccessoryInfo[](3);
+        milady1AccessoriesPlaintext[0] = AccessoryUtils.PlaintextAccessoryInfo("hat", "red hat");
+        milady1AccessoriesPlaintext[1] = AccessoryUtils.PlaintextAccessoryInfo("earring", "peach");
+        milady1AccessoriesPlaintext[2] = AccessoryUtils.PlaintextAccessoryInfo("shirt", "wife beater");
         
-        // // deposit more rewards for accessory id 0
-        // accessoriesAndRewardsContract.receiveRewardsForAccessory{value:99}(0);
+        uint[] memory milady1Accessories = AccessoryUtils.batchPlaintextAccessoryInfoToAccessoryIds(milady1AccessoriesPlaintext);
+        vm.prank(MILADY_AUTHORITY_ADDRESS);
+        
+        soulboundAccessoriesContract.mintAndEquipSoulboundAccessories(1, milady1Accessories);
 
-        // require(accessoriesAndRewardsContract.getAmountClaimableForMilady(2) == 33);
-        // balancePreClaim = address(this).balance;
-        // accessoriesAndRewardsContract.claimRewardsForMilady(2);
-        // balancePostClaim = address(this).balance;
-        // require(balancePostClaim - balancePreClaim == 33);
+        // deposit a reward for:
+        // * shared accessory
+        rewardsContract.accrueRewardsForAccessory{value:100}(milady0Accessories[0]);
+        // * accessory only held by milady 0
+        rewardsContract.accrueRewardsForAccessory{value:101}(milady0Accessories[1]);
+        // * accessory only held by milady 1
+        rewardsContract.accrueRewardsForAccessory{value:103}(milady1Accessories[1]);
+
+        uint expectedRewardsForMilady0 = 50 + 101; // half of first reward, all of second
+        uint expectedRewardsForMilady1 = 50 + 103; // half of first reward, all of third
+
+        // test read functions
+        require(rewardsContract.getAmountClaimableForMiladyAndAccessories(0, milady0Accessories) == expectedRewardsForMilady0);
+        require(rewardsContract.getAmountClaimableForMiladyAndAccessories(1, milady1Accessories) == expectedRewardsForMilady1);
+
+        // test actual claims
+        balancePreClaim = address(this).balance;
+        rewardsContract.claimRewardsForMilady(0, milady0Accessories);
+        balancePostClaim = address(this).balance;
+        require(balancePostClaim - balancePreClaim == expectedRewardsForMilady0);
+
+        balancePreClaim = address(this).balance;
+        rewardsContract.claimRewardsForMilady(1, milady1Accessories);
+        balancePostClaim = address(this).balance;
+        require(balancePostClaim - balancePreClaim == expectedRewardsForMilady1);
     }
 
     // define functions to allow receiving ether and NFTs
