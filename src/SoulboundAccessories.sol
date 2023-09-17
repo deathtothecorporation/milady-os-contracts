@@ -63,8 +63,8 @@ contract SoulboundAccessories is ERC1155, AccessControl {
         require(!avatarActivated[miladyId], "This avatar has already been activated");
         avatarActivated[miladyId] = true;
 
-        // todo: do we want to worry about the authority making a mistake, and being able to address this?
-
+        // todo: @Schalk <| do we want to worry about the authority making a mistake, and being able to address this?
+        // todo: @Logan <| I think we should, I have frequently made mistakes in the past and left a trail of incorrect contracts from my deployer address
         // create the TBA for the avatar (or find it if it already exists)
         address avatarTbaAddress = tbaRegistry.createAccount(
             address(tbaAccountImpl),
