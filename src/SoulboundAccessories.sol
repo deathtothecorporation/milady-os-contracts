@@ -28,7 +28,7 @@ contract SoulboundAccessories is ERC1155, AccessControl {
     address deployer;
 
     constructor(
-        address miladyAuthority,
+        address _miladyAuthority,
         IERC6551Registry _tbaRegistry,
         IERC6551Account _tbaAccountImpl,
         uint _chainId,
@@ -38,7 +38,7 @@ contract SoulboundAccessories is ERC1155, AccessControl {
     {
         deployer = msg.sender;
 
-        _grantRole(ROLE_MILADY_AUTHORITY, miladyAuthority);
+        _grantRole(ROLE_MILADY_AUTHORITY, _miladyAuthority);
 
         tbaRegistry = _tbaRegistry;
         tbaAccountImpl = _tbaAccountImpl;
@@ -52,6 +52,8 @@ contract SoulboundAccessories is ERC1155, AccessControl {
         require(address(miladyAvatarContract) == address(0), "avatar contract already set");
 
         miladyAvatarContract = _miladyAvatarContract;
+
+        // Todo : @Logan @Schalk, put in an event here? Or is it not necessary?
     }
 
     function mintAndEquipSoulboundAccessories(uint miladyId, uint[] calldata accessories)
@@ -88,7 +90,7 @@ contract SoulboundAccessories is ERC1155, AccessControl {
             return; // allow transfers from 0x0, i.e. mints
         }
         revert("These accessories are soulbound to the Milady Avatar and cannot be transferred");
-    }
+    } 
 
     // Because we inherit from two contracts that define supportsInterface,
     // We resolve this by defining our own (try taking this out to see the error message)
