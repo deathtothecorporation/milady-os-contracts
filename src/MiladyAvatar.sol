@@ -53,8 +53,12 @@ contract MiladyAvatar is IERC721 {
         rewardsContract = _rewardsContract;
     }
 
-    function balanceOf(address) external view returns (uint256 balance) {
-        return 0;
+    function balanceOf(address who) external view returns (uint256 balance) {
+        (tbaContractAddress,) = tbaRegistry.registeredAccounts(who);
+        if (tbaContractAddress == address(miladysContract)) {
+            return 1;
+        }
+        else return 0;
     }
     function ownerOf(uint256 tokenId) public view returns (address owner) {
         return tbaRegistry.account(address(tbaAccountImpl), chainId, address(miladysContract), tokenId, 0);
