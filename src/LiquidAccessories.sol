@@ -91,7 +91,7 @@ contract LiquidAccessories is ERC1155 {
         returns (uint)
     {
         return
-            ((getSellPriceGivenSupply(supply + 1) - 1100))
+            ((getSellPriceGivenSupply(supply + 1) * 1100))
             / 1000
         ;
     }
