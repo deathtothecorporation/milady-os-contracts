@@ -60,7 +60,7 @@ contract SoulboundAccessories is ERC1155, AccessControl {
         onlyRole(ROLE_MILADY_AUTHORITY)
         external
     {
-        require(!avatarActivated[miladyId], "This avatar has already been activated");
+        require(!avatarActivated[miladyId], "Avatar already activated");
         avatarActivated[miladyId] = true;
 
         // todo: @Schalk <| do we want to worry about the authority making a mistake, and being able to address this?
