@@ -6,8 +6,7 @@ pragma solidity ^0.8.13;
 
 import "openzeppelin/token/ERC721/IERC721.sol";
 import "./TBA/TokenBasedAccount.sol";
-import "./TBA/IERC6551Registry.sol";
-import "./TBA/IERC6551Account.sol";
+import "./TBA/TBARegistry.sol";
 import "./Rewards.sol";
 import "./AccessoryUtils.sol";
 import "./LiquidAccessories.sol";
@@ -20,7 +19,7 @@ contract MiladyAvatar is IERC721 {
     Rewards public rewardsContract;
     
     // state needed for TBA determination
-    IERC6551Registry tbaRegistry;
+    TBARegistry tbaRegistry;
     IERC6551Account tbaAccountImpl;
     uint chainId;
 
@@ -54,7 +53,7 @@ contract MiladyAvatar is IERC721 {
     }
 
     function balanceOf(address who) external view returns (uint256 balance) {
-        (tbaContractAddress,) = tbaRegistry.registeredAccounts(who);
+        (address tbaContractAddress,) = tbaRegistry.registeredAccounts(who);
         if (tbaContractAddress == address(miladysContract)) {
             return 1;
         }
