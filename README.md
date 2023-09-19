@@ -31,7 +31,7 @@ During or before onboarding of a particular MiladyMaker holder, a server holding
 
 ### Liquid Accessories
 
-`Liquid Accessories` (`LiquidAccessories.sol`) can be freely minted by anyone from a bonding curve, with a 10% spread between buy and sell prices for a given existing supply of that particular item. Revenue is taken from this action and split between an external fee capture contract, and a `Rewards` contract.
+`Liquid Accessories` (`LiquidAccessories.sol`) can be freely minted by anyone from a bonding curve, with a 10% spread between buy and sell prices for a given existing supply of that particular item. Revenue is taken from this action and split between an external fee capture address, and a `Rewards` contract.
 
 ## Rewards
 
