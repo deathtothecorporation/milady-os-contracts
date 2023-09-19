@@ -28,8 +28,8 @@ contract MiladyAvatar is IERC721 {
 
     constructor(
         IERC721 _miladysContract,
-        IERC6551Registry _tbaRegistry,
-        IERC6551Account _tbaAccountImpl,
+        TBARegistry _tbaRegistry,
+        TokenBasedAccount _tbaAccountImpl,
         uint _chainId
     ) {
         deployer = msg.sender;
@@ -157,7 +157,7 @@ contract MiladyAvatar is IERC721 {
         internal
     {
         if (equipSlots[miladyId][accType] != 0) {
-            rewardsContract.deregisterMiladyForRewardsForAccessoryAndClaim(miladyId, equipSlots[miladyId][accType]);
+            rewardsContract.deregisterMiladyForRewardsForAccessoryAndClaim(miladyId, equipSlots[miladyId][accType], getPayableAvatarTBA(miladyId));
             equipSlots[miladyId][accType] = 0;
         }
     }
@@ -169,6 +169,14 @@ contract MiladyAvatar is IERC721 {
         returns (address)
     {
         return tbaRegistry.account(address(tbaAccountImpl), block.chainid, address(this), miladyId, 0);
+    }
+
+    function getPayableAvatarTBA(uint miladyId)
+        public
+        view
+        returns (address payable)
+    {
+        return payable(getAvatarTBA(miladyId));
     }
 
     // todo: needs uri function?

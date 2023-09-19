@@ -6,14 +6,16 @@ pragma solidity ^0.8.13;
 
 import "openzeppelin/access/AccessControl.sol";
 import "openzeppelin/token/ERC721/IERC721.sol";
+import "./TBA/TBARegistry.sol";
 
 contract Rewards is AccessControl {
     bytes32 constant ROLE_REWARD_REGISTRATION = keccak256("REWARD_REGISTRATION");
 
-    IERC721 miladysContract;
+    IERC721 public miladysContract;
 
     constructor(address miladyAvatarContractAddress, IERC721 _miladysContract) {
         _grantRole(ROLE_REWARD_REGISTRATION, miladyAvatarContractAddress);
+
         miladysContract = _miladysContract;
     }
 
