@@ -18,6 +18,7 @@ library Deployer {
         TokenBasedAccount tbaAccountImpl,
         IERC721 miladyContract,
         address miladyAuthorityAddress,
+        address payable revenueRecipient,
         uint chainId,
         string memory liquidAccessoriesURI,
         string memory soulboundAccessoriesURI
@@ -32,8 +33,12 @@ library Deployer {
             chainId
         );
 
+        rewardsContract = new Rewards(address(avatarContract), miladyContract);
+
         liquidAccessoriesContract = new LiquidAccessories(
             tbaRegistry,
+            rewardsContract,
+            revenueRecipient,
             liquidAccessoriesURI
         );
 
@@ -43,9 +48,7 @@ library Deployer {
             tbaAccountImpl,
             chainId,
             soulboundAccessoriesURI
-        );
-
-        rewardsContract = new Rewards(address(avatarContract), miladyContract);
+        );        
 
         avatarContract.setOtherContracts(liquidAccessoriesContract, soulboundAccessoriesContract, rewardsContract);
         liquidAccessoriesContract.setAvatarContract(avatarContract);

@@ -8,20 +8,26 @@ import "openzeppelin/token/ERC1155/ERC1155.sol";
 import "./TBA/TBARegistry.sol";
 import "./AccessoryUtils.sol";
 import "./MiladyAvatar.sol";
+import "./Rewards.sol";
 
 contract LiquidAccessories is ERC1155 {
     TBARegistry public tbaRegistry;
     MiladyAvatar public miladyAvatarContract;
 
+    Rewards rewardsContract;
+    address payable revenueRecipient;
+
     // only used for initial deploy
     address deployer;
 
-    constructor(TBARegistry _tbaRegistry, string memory uri_)
+    constructor(TBARegistry _tbaRegistry, Rewards _rewardsContract, address payable _revenueRecipient, string memory uri_)
         ERC1155(uri_)
     {
         deployer = msg.sender;
 
         tbaRegistry = _tbaRegistry;
+        rewardsContract = _rewardsContract;
+        revenueRecipient = _revenueRecipient;
 
         require(address(tbaRegistry) != address(0), "tbaRegistry cannot be the 0x0 address");
     }
@@ -37,20 +43,31 @@ contract LiquidAccessories is ERC1155 {
     
     mapping(uint => uint) public liquidAccessorySupply;
 
-    function mintAccessory(uint accessory, address payable overpayReturnAddress)
+    function mintAccessoryAndTakeRevenue(uint accessoryId, address payable overpayReturnAddress)
         public
         payable
     {
-        uint price = getBuyPriceOfNewAccessory(accessory);
-        require (msg.value >= price, "Not enough ether included to buy that accessory.");
-        if (msg.value > price) {
+        uint buyPrice = getBuyPriceOfNewAccessory(accessoryId);
+        require (msg.value >= buyPrice, "Not enough ether included to buy that accessory.");
+        if (msg.value > buyPrice) {
             // return extra in case of overpayment
-            overpayReturnAddress.transfer(msg.value - price);
+            overpayReturnAddress.transfer(msg.value - buyPrice);
         }
 
-        liquidAccessorySupply[accessory] ++;
+        liquidAccessorySupply[accessoryId] ++;
 
-        _mint(msg.sender, uint256(accessory), 1, "");
+        _mint(msg.sender, uint256(accessoryId), 1, "");
+
+        // let's now take revenue.
+        // now that we've minted, we can get the current sell price, to know how much we can skim off the top
+        uint sellPrice = getSellPriceOfAccessory(accessoryId);
+        uint totalRevenue = buyPrice - sellPrice;
+        uint halfRevenue = totalRevenue / 2;
+
+        rewardsContract.accrueRewardsForAccessory{value:halfRevenue}(accessoryId);
+
+        // syntax / which transfer func?
+        revenueRecipient.transfer(halfRevenue);
     }
 
     function returnAccessory(uint accessory, address payable fundsRecipient)
