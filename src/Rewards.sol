@@ -53,7 +53,7 @@ contract Rewards is AccessControl {
         miladyRewardInfo.isRegistered = true;
     }
 
-    function deregisterMiladyForRewardsForAccessoryAndClaim(uint miladyId, uint accessoryId)
+    function deregisterMiladyForRewardsForAccessoryAndClaim(uint miladyId, uint accessoryId, address payable recipient)
         external
         onlyRole(ROLE_REWARD_REGISTRATION)
     {
@@ -61,24 +61,24 @@ contract Rewards is AccessControl {
 
         require(miladyRewardInfo.isRegistered, "Milady is not registered.");
 
-        _claimRewardsForMiladyForAccessory(miladyId, accessoryId);
+        _claimRewardsForMiladyForAccessory(miladyId, accessoryId, recipient);
 
         rewardInfoForAccessory[accessoryId].totalHolders --;
 
         miladyRewardInfo.isRegistered = false;
     }
 
-    function claimRewardsForMilady(uint miladyId, uint[] calldata accessoriesToClaimFor)
+    function claimRewardsForMilady(uint miladyId, uint[] calldata accessoriesToClaimFor, address payable recipient)
         external
     {
         require(msg.sender == miladysContract.ownerOf(miladyId), "Only callable by the owner of the Milady");
 
         for (uint i=0; i<accessoriesToClaimFor.length; i++) {
-            _claimRewardsForMiladyForAccessory(miladyId, accessoriesToClaimFor[i]);
+            _claimRewardsForMiladyForAccessory(miladyId, accessoriesToClaimFor[i], recipient);
         }
     }
 
-    function _claimRewardsForMiladyForAccessory(uint miladyId, uint accessoryId)
+    function _claimRewardsForMiladyForAccessory(uint miladyId, uint accessoryId, address payable recipient)
         internal
     {
         RewardInfoForAccessory storage rewardInfo = rewardInfoForAccessory[accessoryId];
@@ -87,15 +87,10 @@ contract Rewards is AccessControl {
 
         uint amountToSend = getAmountClaimableForMiladyAndAccessory(miladyId, accessoryId);
 
-        //todo: maybe send to the Milady's TBA instead?
-        address recipient = miladysContract.ownerOf(miladyId);
-
-        //todo: RE-ENTRANCY ISSUE
-        //todo: should we really be working around this issue?
-        (bool success, ) = recipient.call{value: amountToSend}("");
-        require(success, "Reward transfer failed");
-
         rewardInfo.miladyRewardInfo[miladyId].amountClaimedBeforeDivision += rewardOwedBeforeDivision;
+
+        // Schalk: Should we be doing something more elaborate/careful here?
+        recipient.transfer(amountToSend);
     }
 
     function getAmountClaimableForMiladyAndAccessory(uint miladyId, uint accessoryId)
