@@ -58,7 +58,7 @@ contract RewardsTest is Test {
         require(rewardsContract.getAmountClaimableForMiladyAndAccessories(0, milady0Accessories) == 201);
 
         uint balancePreClaim = address(this).balance;
-        rewardsContract.claimRewardsForMilady(0, milady0Accessories);
+        rewardsContract.claimRewardsForMilady(0, milady0Accessories, payable(address(this)));
         uint balancePostClaim = address(this).balance;
         require(balancePostClaim - balancePreClaim == 201);
         require(rewardsContract.getAmountClaimableForMiladyAndAccessories(0, milady0Accessories) == 0);
@@ -92,12 +92,12 @@ contract RewardsTest is Test {
 
         // test actual claims
         balancePreClaim = address(this).balance;
-        rewardsContract.claimRewardsForMilady(0, milady0Accessories);
+        rewardsContract.claimRewardsForMilady(0, milady0Accessories, payable(address(this)));
         balancePostClaim = address(this).balance;
         require(balancePostClaim - balancePreClaim == expectedRewardsForMilady0);
 
         balancePreClaim = address(this).balance;
-        rewardsContract.claimRewardsForMilady(1, milady1Accessories);
+        rewardsContract.claimRewardsForMilady(1, milady1Accessories, payable(address(this)));
         balancePostClaim = address(this).balance;
         require(balancePostClaim - balancePreClaim == expectedRewardsForMilady1);
     }

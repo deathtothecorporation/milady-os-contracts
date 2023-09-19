@@ -9,12 +9,13 @@ import "forge-std/Test.sol";
 import "forge-std/console.sol";
 import "../src/TBA/TokenBasedAccount.sol";
 import "../src/TBA/TBARegistry.sol";
-import "./Miladys.sol";
 import "../src/MiladyAvatar.sol";
 import "../src/LiquidAccessories.sol";
 import "../src/SoulboundAccessories.sol";
 import "../src/Rewards.sol";
 import "../src/Deployer.sol";
+import "./TestConstants.sol";
+import "./Miladys.sol";
 
 library TestSetup {
     function deploy(uint numMiladysToMint, address miladyAuthorityAddress)
@@ -47,6 +48,7 @@ library TestSetup {
             tbaAccountImpl,
             miladyContract,
             miladyAuthorityAddress,
+            PROJECT_REVENUE_RECIPIENT,
             31337, // chain id of Forge's test chain
             "",
             ""
