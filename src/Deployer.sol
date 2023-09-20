@@ -21,6 +21,7 @@ library Deployer {
         IERC721 miladysContract,
         address miladyAuthorityAddress,
         address payable revenueRecipient,
+        string memory avatarBaseURI,
         string memory liquidAccessoriesURI,
         string memory soulboundAccessoriesURI
     )
@@ -37,7 +38,8 @@ library Deployer {
             miladysContract,
             tbaRegistry,
             tbaAccountImpl,
-            chainId
+            chainId,
+            avatarBaseURI
         );
 
         rewardsContract = new Rewards(address(avatarContract), miladysContract);

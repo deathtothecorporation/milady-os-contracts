@@ -23,6 +23,8 @@ contract MiladyAvatar is IERC721 {
     IERC6551Account tbaAccountImpl;
     uint chainId;
 
+    string baseURI;
+
     // only used for initial deploy
     address deployer;
 
@@ -30,7 +32,8 @@ contract MiladyAvatar is IERC721 {
         IERC721 _miladysContract,
         TBARegistry _tbaRegistry,
         TokenBasedAccount _tbaAccountImpl,
-        uint _chainId
+        uint _chainId,
+        string memory _baseURI
     ) {
         deployer = msg.sender;
 
@@ -39,6 +42,8 @@ contract MiladyAvatar is IERC721 {
         tbaRegistry = _tbaRegistry;
         tbaAccountImpl = _tbaAccountImpl;
         chainId = _chainId;
+
+        baseURI = _baseURI;
     }
 
     function setOtherContracts(LiquidAccessories _liquidAccessoriesContract, SoulboundAccessories _soulboundAccessoriesContract, Rewards _rewardsContract)
@@ -50,6 +55,19 @@ contract MiladyAvatar is IERC721 {
         liquidAccessoriesContract = _liquidAccessoriesContract;
         soulboundAccessoriesContract = _soulboundAccessoriesContract;
         rewardsContract = _rewardsContract;
+    }
+
+    function name() external pure returns (string memory) {
+        return "Milady Avatar";
+    }
+
+    function symbol() external pure returns (string memory) {
+        return "MILA";
+    }
+
+    function tokenURI(uint256 tokenId) external view returns (string memory) {
+        require(tokenId <= 9999, "Invalid Milady/Avatar id");
+        return string(abi.encodePacked(baseURI, Strings.toString(tokenId)));
     }
 
     function balanceOf(address who) external view returns (uint256 balance) {
