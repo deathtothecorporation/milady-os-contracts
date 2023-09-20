@@ -52,10 +52,11 @@ contract RewardsTest is Test {
         rewardsContract.accrueRewardsForAccessory{value:100}(milady0Accessories[0]);
         rewardsContract.accrueRewardsForAccessory{value:101}(milady0Accessories[1]);
 
-        // deposit a reward for an item the Milady does not have
-        rewardsContract.accrueRewardsForAccessory{value:99}(
-            AccessoryUtils.plaintextAccessoryTextToId("hat", "awful hat that no one has")
-        );
+        // depositing a reward for an item the Milady does not have should revert,
+        // as no one will receive the rewards
+        uint idForAccessoryNooneHas = AccessoryUtils.plaintextAccessoryTextToId("hat", "awful hat that no one has");
+        vm.expectRevert("That accessory has no eligible recipients");
+        rewardsContract.accrueRewardsForAccessory{value:99}(idForAccessoryNooneHas);
 
         require(rewardsContract.getAmountClaimableForMiladyAndAccessories(0, milady0Accessories) == 201);
 

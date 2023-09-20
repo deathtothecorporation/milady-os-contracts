@@ -33,7 +33,8 @@ contract GhostNFT is Test {
             miladyContract,
             tbaRegistry,
             tbaAcctImpl,
-            31337 // chain id of Forge's test chain
+            31337, // chain id of Forge's test chain
+            ""
         );
     }
 

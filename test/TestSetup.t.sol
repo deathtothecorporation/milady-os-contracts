@@ -52,6 +52,7 @@ library TestSetup {
             miladyAuthorityAddress,
             PROJECT_REVENUE_RECIPIENT,
             "",
+            "",
             ""
         );
     }
