@@ -35,6 +35,7 @@ contract Rewards is AccessControl {
         external
     {
         require(msg.value > 0, "call must include some ether");
+        require(rewardInfoForAccessory[accessoryId].totalHolders > 0, "That accessory has no eligible recipients");
 
         rewardInfoForAccessory[accessoryId].totalRewardsAccrued += msg.value;
     }

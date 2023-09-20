@@ -62,12 +62,22 @@ contract LiquidAccessories is ERC1155 {
         // now that we've minted, we can get the current sell price, to know how much we can skim off the top
         uint sellPrice = getSellPriceOfAccessory(accessoryId);
         uint totalRevenue = buyPrice - sellPrice;
-        uint halfRevenue = totalRevenue / 2;
 
-        rewardsContract.accrueRewardsForAccessory{value:halfRevenue}(accessoryId);
+        // If no one is currently equipping the accessory, the rewards contract will revert.
+        // We test for this and just send everything to revenueRecipient if that's the case.
+        (, uint numEligibleRewardRecipients) = rewardsContract.rewardInfoForAccessory(accessoryId);
+        if (numEligibleRewardRecipients == 0) {
+            // syntax / which transfer func?
+            revenueRecipient.transfer(totalRevenue);
+        }
+        else {
+            uint halfRevenue = totalRevenue / 2;
 
-        // syntax / which transfer func?
-        revenueRecipient.transfer(halfRevenue);
+            rewardsContract.accrueRewardsForAccessory{value:halfRevenue}(accessoryId);
+
+            // syntax / which transfer func?
+            revenueRecipient.transfer(halfRevenue);
+        }
     }
 
     function returnAccessory(uint accessory, address payable fundsRecipient)
