@@ -11,29 +11,36 @@ import "./MiladyAvatar.sol";
 import "./LiquidAccessories.sol";
 import "./SoulboundAccessories.sol";
 import "./Rewards.sol";
+import "./Onboarding.sol";
 
 library Deployer {
     function deploy(
         TBARegistry tbaRegistry,
         TokenBasedAccount tbaAccountImpl,
-        IERC721 miladyContract,
+        uint chainId,
+        IERC721 miladysContract,
         address miladyAuthorityAddress,
         address payable revenueRecipient,
-        uint chainId,
         string memory liquidAccessoriesURI,
         string memory soulboundAccessoriesURI
     )
         public
-        returns (MiladyAvatar avatarContract, LiquidAccessories liquidAccessoriesContract, SoulboundAccessories soulboundAccessoriesContract, Rewards rewardsContract)
+        returns (
+            MiladyAvatar avatarContract,
+            LiquidAccessories liquidAccessoriesContract,
+            SoulboundAccessories soulboundAccessoriesContract,
+            Rewards rewardsContract,
+            Onboarding onboardingContract
+        )
     {
         avatarContract = new MiladyAvatar(
-            miladyContract,
+            miladysContract,
             tbaRegistry,
             tbaAccountImpl,
             chainId
         );
 
-        rewardsContract = new Rewards(address(avatarContract), miladyContract);
+        rewardsContract = new Rewards(address(avatarContract), miladysContract);
 
         liquidAccessoriesContract = new LiquidAccessories(
             tbaRegistry,
@@ -43,15 +50,23 @@ library Deployer {
         );
 
         soulboundAccessoriesContract = new SoulboundAccessories(
-            miladyAuthorityAddress,
             tbaRegistry,
             tbaAccountImpl,
             chainId,
             soulboundAccessoriesURI
-        );        
+        );   
+
+        onboardingContract = new Onboarding(
+            tbaRegistry,
+            tbaAccountImpl,
+            chainId,
+            miladysContract,
+            soulboundAccessoriesContract,
+            miladyAuthorityAddress
+        );
 
         avatarContract.setOtherContracts(liquidAccessoriesContract, soulboundAccessoriesContract, rewardsContract);
         liquidAccessoriesContract.setAvatarContract(avatarContract);
-        soulboundAccessoriesContract.setAvatarContract(avatarContract);
+        soulboundAccessoriesContract.setOtherContracts(avatarContract, address(onboardingContract));
     }
 }

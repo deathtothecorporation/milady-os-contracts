@@ -13,7 +13,7 @@ import "./AccessoryUtils.sol";
 import "./MiladyAvatar.sol";
 
 contract SoulboundAccessories is ERC1155, AccessControl {
-    bytes32 constant ROLE_MILADY_AUTHORITY = keccak256("MILADY_AUTHORITY");
+    bytes32 constant ROLE_ONBOARDING_CONTRACT = keccak256("MILADY_AUTHORITY");
 
     MiladyAvatar public miladyAvatarContract;
 
@@ -28,7 +28,6 @@ contract SoulboundAccessories is ERC1155, AccessControl {
     address deployer;
 
     constructor(
-        address miladyAuthority,
         IERC6551Registry _tbaRegistry,
         IERC6551Account _tbaAccountImpl,
         uint _chainId,
@@ -38,30 +37,27 @@ contract SoulboundAccessories is ERC1155, AccessControl {
     {
         deployer = msg.sender;
 
-        _grantRole(ROLE_MILADY_AUTHORITY, miladyAuthority);
-
         tbaRegistry = _tbaRegistry;
         tbaAccountImpl = _tbaAccountImpl;
         chainId = _chainId;
     }
 
-    function setAvatarContract(MiladyAvatar _miladyAvatarContract)
+    function setOtherContracts(MiladyAvatar _miladyAvatarContract, address onboardingContract)
         external
     {
         require(msg.sender == deployer, "Only callable by the initial deployer");
         require(address(miladyAvatarContract) == address(0), "avatar contract already set");
 
         miladyAvatarContract = _miladyAvatarContract;
+        _grantRole(ROLE_ONBOARDING_CONTRACT, onboardingContract);
     }
 
     function mintAndEquipSoulboundAccessories(uint miladyId, uint[] calldata accessories)
-        onlyRole(ROLE_MILADY_AUTHORITY)
+        onlyRole(ROLE_ONBOARDING_CONTRACT)
         external
     {
         require(!avatarActivated[miladyId], "This avatar has already been activated");
         avatarActivated[miladyId] = true;
-
-        // todo: do we want to worry about the authority making a mistake, and being able to address this?
 
         // create the TBA for the avatar (or find it if it already exists)
         address avatarTbaAddress = tbaRegistry.createAccount(

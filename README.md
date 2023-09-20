@@ -27,7 +27,7 @@ Accessories are either soulbound or liquid, but share ID schemes as well as the 
 
 `Soulbound Accessories` (`SoulboundAccessories.sol`) represent the initial set of accessories that "came with" a given Milady - in other words, the accessories listed at the above endpoint for a given Milady, and displayed as part of the canonical MiladyMaker image. These accessories cannot be sent away from the Avatar's TBA.
 
-During or before onboarding of a particular MiladyMaker holder, a server holding a key authorized as `ROLE_MILADY_AUTHORITY` is expected to call `mintAndEquipSoulboundAccessories` with a set of `uint256` IDs. Note that this is where the "missing metadata" is uploaded onto the EVM for the original, canonical set of accessories for that Milady, encoded into the `uint256` (see `AccessoryUtils.sol`).
+During or before onboarding of a particular MiladyMaker holder, a server holding a key authorized as `ROLE_MILADY_AUTHORITY` is expected to call `onboardMilady` with a set of `uint256` IDs. Note that this is where the "missing metadata" is uploaded onto the EVM for the original, canonical set of accessories for that Milady, encoded into the `uint256` (see `AccessoryUtils.sol`).
 
 ### Liquid Accessories
 
