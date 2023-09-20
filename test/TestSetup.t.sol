@@ -28,7 +28,8 @@ library TestSetup {
         MiladyAvatar miladyAvatarContract,
         LiquidAccessories liquidAccessoriesContract,
         SoulboundAccessories soulboundAccessoriesContract,
-        Rewards rewardsContract
+        Rewards rewardsContract,
+        Onboarding onboardingContract
     )
     {
         tbaRegistry = new TBARegistry();
@@ -41,15 +42,15 @@ library TestSetup {
         miladyContract.mintMiladys{value:60000000000000000*numMiladysToMint}(numMiladysToMint);
         
         (
-            miladyAvatarContract, liquidAccessoriesContract, soulboundAccessoriesContract, rewardsContract
+            miladyAvatarContract, liquidAccessoriesContract, soulboundAccessoriesContract, rewardsContract, onboardingContract
         ) =
         Deployer.deploy(
             tbaRegistry,
             tbaAccountImpl,
+            31337, // chain id of Forge's test chain
             miladyContract,
             miladyAuthorityAddress,
             PROJECT_REVENUE_RECIPIENT,
-            31337, // chain id of Forge's test chain
             "",
             ""
         );
