@@ -96,13 +96,13 @@ contract MiladyAvatar is IERC721 {
         revertWithSoulboundMessage();
     }
     function getApproved(uint256) external view returns (address operator) {
-        revert("Milady Dolls cannot be moved from their soulbound Milady.");
+        revertWithSoulboundMessage();
     }
     function isApprovedForAll(address, address) external view returns (bool) {
         return false;
     }
     function revertWithSoulboundMessage() pure internal {
-        revert("Milady Dolls cannot be moved from their soulbound Milady.");
+        revert("Milady Avatars cannot be moved from their soulbound Milady.");
     }
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return interfaceId == type(IERC721).interfaceId;
