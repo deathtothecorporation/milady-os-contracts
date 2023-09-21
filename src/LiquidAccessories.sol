@@ -49,10 +49,6 @@ contract LiquidAccessories is ERC1155 {
     {
         uint buyPrice = getBuyPriceOfNewAccessory(accessoryId);
         require (msg.value >= buyPrice, "Not enough ether included to buy that accessory.");
-        if (msg.value > buyPrice) {
-            // return extra in case of overpayment
-            overpayReturnAddress.transfer(msg.value - buyPrice);
-        }
 
         liquidAccessorySupply[accessoryId] ++;
 
@@ -76,7 +72,12 @@ contract LiquidAccessories is ERC1155 {
             rewardsContract.accrueRewardsForAccessory{value:halfRevenue}(accessoryId);
 
             // syntax / which transfer func?
-            revenueRecipient.transfer(halfRevenue);
+            revenueRecipient.transfer(totalRevenue - halfRevenue); // using `totalRevenue-halfRevenue` instead of simply `halfRevenue` to handle rounding errors
+        }
+
+        if (msg.value > buyPrice) {
+            // return extra in case of overpayment
+            overpayReturnAddress.transfer(msg.value - buyPrice);
         }
     }
 
