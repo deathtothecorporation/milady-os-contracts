@@ -5,22 +5,21 @@
 pragma solidity ^0.8.13;
 
 import "openzeppelin/token/ERC1155/ERC1155.sol";
-import "openzeppelin/access/AccessControl.sol";
 import "./TBA/IERC6551Registry.sol";
 import "./TBA/IERC6551Account.sol";
 import "./TBA/TokenBasedAccount.sol";
 import "./AccessoryUtils.sol";
 import "./MiladyAvatar.sol";
 
-contract SoulboundAccessories is ERC1155, AccessControl {
-    bytes32 constant ROLE_ONBOARDING_CONTRACT = keccak256("MILADY_AUTHORITY");
-
+contract SoulboundAccessories is ERC1155 {
     MiladyAvatar public miladyAvatarContract;
 
     // state needed for TBA determination
     IERC6551Registry tbaRegistry;
     IERC6551Account tbaAccountImpl;
     uint chainId;
+
+    address public onboardingContract;
 
     mapping(uint => bool) public avatarActivated;
 
@@ -42,20 +41,21 @@ contract SoulboundAccessories is ERC1155, AccessControl {
         chainId = _chainId;
     }
 
-    function setOtherContracts(MiladyAvatar _miladyAvatarContract, address onboardingContract)
+    function setOtherContracts(MiladyAvatar _miladyAvatarContract, address _onboardingContract)
         external
     {
         require(msg.sender == deployer, "Only callable by the initial deployer");
         require(address(miladyAvatarContract) == address(0), "avatar contract already set");
 
         miladyAvatarContract = _miladyAvatarContract;
-        _grantRole(ROLE_ONBOARDING_CONTRACT, onboardingContract);
+        onboardingContract = _onboardingContract;
     }
 
     function mintAndEquipSoulboundAccessories(uint miladyId, uint[] calldata accessories)
-        onlyRole(ROLE_ONBOARDING_CONTRACT)
         external
     {
+        require(msg.sender == onboardingContract, "msg.sender is not authorized to call this function.");
+
         require(!avatarActivated[miladyId], "This avatar has already been activated");
         avatarActivated[miladyId] = true;
 
@@ -85,18 +85,4 @@ contract SoulboundAccessories is ERC1155, AccessControl {
         }
         revert("These accessories are soulbound to the Milady Avatar and cannot be transferred");
     }
-
-    // Because we inherit from two contracts that define supportsInterface,
-    // We resolve this by defining our own (try taking this out to see the error message)
-    // We'll just return true if either of our parent contracts return true:
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(ERC1155, AccessControl) returns (bool)
-    {
-        return ERC1155.supportsInterface(interfaceId) || AccessControl.supportsInterface(interfaceId);
-    }
-
-    // todo: need to do anything for uri func?
-    // should we do something special if not yet activated (like forward to Milady's uri?)
 }

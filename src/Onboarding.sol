@@ -4,20 +4,18 @@
 
 pragma solidity ^0.8.13;
 
-import "openzeppelin/access/AccessControl.sol";
 import "openzeppelin/token/ERC721/IERC721.sol";
 import "./SoulboundAccessories.sol";
 import "./TBA/TBARegistry.sol";
 
-contract Onboarding is AccessControl {
-    bytes32 constant ROLE_MILADY_AUTHORITY = keccak256("MILADY_AUTHORITY");
-
-    TBARegistry tbaRegistry;
-    TokenBasedAccount tbaAccountImpl;
-    uint chainId;
+contract Onboarding {
+    TBARegistry public tbaRegistry;
+    TokenBasedAccount public tbaAccountImpl;
+    uint public chainId;
 
     SoulboundAccessories public soulboundAccessories;
-    IERC721 miladysContract;
+    IERC721 public miladysContract;
+    address public miladyAuthorityAddress;
 
     constructor(
         TBARegistry _tbaRegistry,
@@ -25,23 +23,22 @@ contract Onboarding is AccessControl {
         uint _chainId,
         IERC721 _miladysContract,
         SoulboundAccessories _soulboundAccessories,
-        address miladyAuthorityAddress
+        address _miladyAuthorityAddress
     )
     {
         tbaRegistry = _tbaRegistry;
         tbaAccountImpl = _tbaAccountImpl;
         chainId = _chainId;
 
-        _grantRole(ROLE_MILADY_AUTHORITY, miladyAuthorityAddress);
-
+        miladyAuthorityAddress = _miladyAuthorityAddress;
         miladysContract = _miladysContract;
         soulboundAccessories = _soulboundAccessories;
     }
 
     function onboardMilady(uint miladyId, uint[] calldata accessories)
         external
-        onlyRole(ROLE_MILADY_AUTHORITY)
     {
+        require(msg.sender == miladyAuthorityAddress, "msg.sender is not authorized to call this function.");
         // initialize the TBA for the original Milady
         tbaRegistry.createAccount(
             address(tbaAccountImpl),

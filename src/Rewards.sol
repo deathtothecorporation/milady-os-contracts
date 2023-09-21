@@ -4,18 +4,15 @@
 
 pragma solidity ^0.8.13;
 
-import "openzeppelin/access/AccessControl.sol";
 import "openzeppelin/token/ERC721/IERC721.sol";
 import "./TBA/TBARegistry.sol";
 
-contract Rewards is AccessControl {
-    bytes32 constant ROLE_AVATAR_CONTRACT = keccak256("AVATAR_CONTRACT");
-
+contract Rewards {
     IERC721 public miladysContract;
+    address public avatarContractAddress;
 
-    constructor(address miladyAvatarContractAddress, IERC721 _miladysContract) {
-        _grantRole(ROLE_AVATAR_CONTRACT, miladyAvatarContractAddress);
-
+    constructor(address _avatarContractAddress, IERC721 _miladysContract) {
+        avatarContractAddress = _avatarContractAddress;
         miladysContract = _miladysContract;
     }
 
@@ -42,8 +39,10 @@ contract Rewards is AccessControl {
 
     function registerMiladyForRewardsForAccessory(uint miladyId, uint accessoryId)
         external
-        onlyRole(ROLE_AVATAR_CONTRACT)
+        
     {
+        require(msg.sender == avatarContractAddress, "msg.sender is not authorized to call this function.");
+        
         MiladyRewardInfo storage miladyRewardInfo = rewardInfoForAccessory[accessoryId].miladyRewardInfo[miladyId];
 
         require(! miladyRewardInfo.isRegistered, "Milady is already registered.");
@@ -58,8 +57,9 @@ contract Rewards is AccessControl {
 
     function deregisterMiladyForRewardsForAccessoryAndClaim(uint miladyId, uint accessoryId, address payable recipient)
         external
-        onlyRole(ROLE_AVATAR_CONTRACT)
     {
+        require(msg.sender == avatarContractAddress, "msg.sender is not authorized to call this function.");
+
         MiladyRewardInfo storage miladyRewardInfo = rewardInfoForAccessory[accessoryId].miladyRewardInfo[miladyId];
 
         require(miladyRewardInfo.isRegistered, "Milady is not registered.");
