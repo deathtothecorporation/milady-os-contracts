@@ -9,12 +9,12 @@ import "openzeppelin/token/ERC721/IERC721.sol";
 import "./TBA/TBARegistry.sol";
 
 contract Rewards is AccessControl {
-    bytes32 constant ROLE_REWARD_REGISTRATION = keccak256("REWARD_REGISTRATION");
+    bytes32 constant ROLE_AVATAR_CONTRACT = keccak256("AVATAR_CONTRACT");
 
     IERC721 public miladysContract;
 
     constructor(address miladyAvatarContractAddress, IERC721 _miladysContract) {
-        _grantRole(ROLE_REWARD_REGISTRATION, miladyAvatarContractAddress);
+        _grantRole(ROLE_AVATAR_CONTRACT, miladyAvatarContractAddress);
 
         miladysContract = _miladysContract;
     }
@@ -42,7 +42,7 @@ contract Rewards is AccessControl {
 
     function registerMiladyForRewardsForAccessory(uint miladyId, uint accessoryId)
         external
-        onlyRole(ROLE_REWARD_REGISTRATION)
+        onlyRole(ROLE_AVATAR_CONTRACT)
     {
         MiladyRewardInfo storage miladyRewardInfo = rewardInfoForAccessory[accessoryId].miladyRewardInfo[miladyId];
 
@@ -58,7 +58,7 @@ contract Rewards is AccessControl {
 
     function deregisterMiladyForRewardsForAccessoryAndClaim(uint miladyId, uint accessoryId, address payable recipient)
         external
-        onlyRole(ROLE_REWARD_REGISTRATION)
+        onlyRole(ROLE_AVATAR_CONTRACT)
     {
         MiladyRewardInfo storage miladyRewardInfo = rewardInfoForAccessory[accessoryId].miladyRewardInfo[miladyId];
 
