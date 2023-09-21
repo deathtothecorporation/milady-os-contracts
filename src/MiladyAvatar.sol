@@ -67,6 +67,7 @@ contract MiladyAvatar is IERC721 {
 
     function tokenURI(uint256 tokenId) external view returns (string memory) {
         require(tokenId <= 9999, "Invalid Milady/Avatar id");
+
         return string(abi.encodePacked(baseURI, Strings.toString(tokenId)));
     }
 
@@ -78,6 +79,8 @@ contract MiladyAvatar is IERC721 {
         else return 0;
     }
     function ownerOf(uint256 tokenId) public view returns (address owner) {
+        require(tokenId <= 9999, "Invalid Milady/Avatar id");
+
         return tbaRegistry.account(address(tbaAccountImpl), chainId, address(miladysContract), tokenId, 0);
     }
     function safeTransferFrom(address, address, uint256, bytes calldata) external {
