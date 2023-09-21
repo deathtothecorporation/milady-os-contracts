@@ -28,8 +28,7 @@ library TestSetup {
         MiladyAvatar miladyAvatarContract,
         LiquidAccessories liquidAccessoriesContract,
         SoulboundAccessories soulboundAccessoriesContract,
-        Rewards rewardsContract,
-        Onboarding onboardingContract
+        Rewards rewardsContract
     )
     {
         tbaRegistry = new TBARegistry();
@@ -42,7 +41,7 @@ library TestSetup {
         miladyContract.mintMiladys{value:60000000000000000*numMiladysToMint}(numMiladysToMint);
         
         (
-            miladyAvatarContract, liquidAccessoriesContract, soulboundAccessoriesContract, rewardsContract, onboardingContract
+            miladyAvatarContract, liquidAccessoriesContract, soulboundAccessoriesContract, rewardsContract
         ) =
         Deployer.deploy(
             tbaRegistry,

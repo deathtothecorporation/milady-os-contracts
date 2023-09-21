@@ -19,7 +19,6 @@ contract RewardsTest is Test {
     Rewards rewardsContract;
     Miladys miladyContract;
     SoulboundAccessories soulboundAccessoriesContract;
-    Onboarding onboardingContract;
 
     function setUp() external {
         (
@@ -29,8 +28,7 @@ contract RewardsTest is Test {
             ,//MiladyAvatar miladyAvatarContract,
             ,//LiquidAccessories liquidAccessoriesContract,
             soulboundAccessoriesContract,
-            rewardsContract,
-            onboardingContract
+            rewardsContract
         )
          =
         TestSetup.deploy(NUM_MILADYS_MINTED, MILADY_AUTHORITY_ADDRESS);
@@ -46,7 +44,7 @@ contract RewardsTest is Test {
         uint[] memory milady0Accessories = AccessoryUtils.batchPlaintextAccessoryInfoToAccessoryIds(milady0AccessoriesPlaintext);
         vm.prank(MILADY_AUTHORITY_ADDRESS);
         
-        onboardingContract.onboardMilady(0, milady0Accessories);
+        soulboundAccessoriesContract.mintAndEquipSoulboundAccessories(0, milady0Accessories);
 
         // deposit rewards for some items the Milady has
         rewardsContract.accrueRewardsForAccessory{value:100}(milady0Accessories[0]);
@@ -76,7 +74,7 @@ contract RewardsTest is Test {
         uint[] memory milady1Accessories = AccessoryUtils.batchPlaintextAccessoryInfoToAccessoryIds(milady1AccessoriesPlaintext);
         vm.prank(MILADY_AUTHORITY_ADDRESS);
         
-        onboardingContract.onboardMilady(1, milady1Accessories);
+        soulboundAccessoriesContract.mintAndEquipSoulboundAccessories(1, milady1Accessories);
 
         // deposit a reward for:
         // * shared accessory

@@ -11,7 +11,6 @@ import "./MiladyAvatar.sol";
 import "./LiquidAccessories.sol";
 import "./SoulboundAccessories.sol";
 import "./Rewards.sol";
-import "./Onboarding.sol";
 
 library Deployer {
     function deploy(
@@ -30,8 +29,7 @@ library Deployer {
             MiladyAvatar avatarContract,
             LiquidAccessories liquidAccessoriesContract,
             SoulboundAccessories soulboundAccessoriesContract,
-            Rewards rewardsContract,
-            Onboarding onboardingContract
+            Rewards rewardsContract
         )
     {
         avatarContract = new MiladyAvatar(
@@ -55,20 +53,12 @@ library Deployer {
             tbaRegistry,
             tbaAccountImpl,
             chainId,
+            miladyAuthorityAddress,
             soulboundAccessoriesURI
-        );   
-
-        onboardingContract = new Onboarding(
-            tbaRegistry,
-            tbaAccountImpl,
-            chainId,
-            miladysContract,
-            soulboundAccessoriesContract,
-            miladyAuthorityAddress
         );
 
         avatarContract.setOtherContracts(liquidAccessoriesContract, soulboundAccessoriesContract, rewardsContract);
         liquidAccessoriesContract.setAvatarContract(avatarContract);
-        soulboundAccessoriesContract.setOtherContracts(avatarContract, address(onboardingContract));
+        soulboundAccessoriesContract.setAvatarContract(avatarContract);
     }
 }

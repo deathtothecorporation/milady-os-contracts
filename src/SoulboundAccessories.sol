@@ -19,7 +19,7 @@ contract SoulboundAccessories is ERC1155 {
     IERC6551Account tbaAccountImpl;
     uint chainId;
 
-    address public onboardingContract;
+    address public miladyAuthority;
 
     mapping(uint => bool) public avatarActivated;
 
@@ -30,6 +30,7 @@ contract SoulboundAccessories is ERC1155 {
         IERC6551Registry _tbaRegistry,
         IERC6551Account _tbaAccountImpl,
         uint _chainId,
+        address _miladyAuthority,
         string memory uri_
     )
         ERC1155(uri_)
@@ -39,34 +40,33 @@ contract SoulboundAccessories is ERC1155 {
         tbaRegistry = _tbaRegistry;
         tbaAccountImpl = _tbaAccountImpl;
         chainId = _chainId;
+
+        miladyAuthority = _miladyAuthority;
     }
 
-    function setOtherContracts(MiladyAvatar _miladyAvatarContract, address _onboardingContract)
+    function setAvatarContract(MiladyAvatar _miladyAvatarContract)
         external
     {
         require(msg.sender == deployer, "Only callable by the initial deployer");
         require(address(miladyAvatarContract) == address(0), "avatar contract already set");
 
         miladyAvatarContract = _miladyAvatarContract;
-        onboardingContract = _onboardingContract;
     }
 
     function mintAndEquipSoulboundAccessories(uint miladyId, uint[] calldata accessories)
         external
     {
-        require(msg.sender == onboardingContract, "msg.sender is not authorized to call this function.");
+        require(msg.sender == miladyAuthority, "msg.sender is not authorized to call this function.");
 
         require(!avatarActivated[miladyId], "This avatar has already been activated");
         avatarActivated[miladyId] = true;
 
-        // create the TBA for the avatar (or find it if it already exists)
-        address avatarTbaAddress = tbaRegistry.createAccount(
+        address avatarTbaAddress = tbaRegistry.account(
             address(tbaAccountImpl),
             chainId,
             address(miladyAvatarContract),
             miladyId,
-            0,
-            ""
+            0
         );
 
         for (uint i=0; i<accessories.length; i++) {
