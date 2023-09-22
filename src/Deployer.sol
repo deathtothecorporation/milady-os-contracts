@@ -6,7 +6,7 @@ pragma solidity ^0.8.13;
 
 import "openzeppelin/token/ERC721/IERC721.sol";
 import "./TBA/TBARegistry.sol";
-import "./TBA/TokenBasedAccount.sol";
+import "./TBA/TokenGatedAccount.sol";
 import "./MiladyAvatar.sol";
 import "./LiquidAccessories.sol";
 import "./SoulboundAccessories.sol";
@@ -15,7 +15,7 @@ import "./Rewards.sol";
 library Deployer {
     function deploy(
         TBARegistry tbaRegistry,
-        TokenBasedAccount tbaAccountImpl,
+        TokenGatedAccount tbaAccountImpl,
         uint chainId,
         IERC721 miladysContract,
         address miladyAuthorityAddress,

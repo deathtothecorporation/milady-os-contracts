@@ -14,14 +14,14 @@ import "../src/TBA/TBARegistry.sol";
 
 contract GhostNFT is Test {
     TBARegistry public tbaRegistry;
-    TokenBasedAccount public tbaAcctImpl;
+    TokenGatedAccount public tbaAcctImpl;
 
     Miladys miladyContract;
     MiladyAvatar miladyAvatarContract;
 
     function setUp() external {
         tbaRegistry = new TBARegistry();
-        tbaAcctImpl = new TokenBasedAccount();
+        tbaAcctImpl = new TokenGatedAccount();
 
         miladyContract = new Miladys();
         miladyContract.flipSaleState();

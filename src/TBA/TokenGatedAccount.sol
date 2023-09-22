@@ -14,18 +14,41 @@ import "./IERC6551Account.sol";
 
 // todo: should this also be a 721 receiver?
 
-contract TokenBasedAccount is IERC165, IERC1271, IERC6551Account, IERC1155Receiver {
+contract TokenGatedAccount is IERC165, IERC1271, IERC6551Account, IERC1155Receiver {
+    address public bondedAddress;
+    address public tokenOwnerAtLastBond;
+
+    // internal function to ensure that if the main owner ever moves the milday
+    // likely as the result of a sale, that the pwaKey is invalidated
+    modifier onlyAuthorizedMsgSender() {
+        require(msg.sender == owner() || (msg.sender == bondedAddress && tokenOwnerAtLastBond == owner()), "Unauthorized caller");
+        _;
+    }
+
+    // this can be called as part of the onboarding process once the user has the PWA
+    // if the user ever reinstalls the PWA, they can use this function to re-associate
+
+    // Note that we the bonded address can pass this bond on without authorization from owner()
+    function bond(address addressToBond) 
+        external
+        onlyAuthorizedMsgSender()
+    {
+        require(msg.sender == owner(), "Not token owner");
+
+        bondedAddress = addressToBond;
+        tokenOwnerAtLastBond = owner();
+    }
+
     uint _nonce;
 
     receive() external payable {}
 
-    function executeCall(
-        address to,
-        uint256 value,
-        bytes calldata data
-    ) external payable returns (bytes memory result) {
-        require(msg.sender == owner(), "Not token owner");
-
+    function executeCall(address to, uint256 value,bytes calldata data)
+        external
+        payable
+        onlyAuthorizedMsgSender()
+        returns (bytes memory result)
+    {
         bool success;
         (success, result) = to.call{value: value}(data);
 

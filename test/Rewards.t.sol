@@ -23,7 +23,7 @@ contract RewardsTest is Test {
     function setUp() external {
         (
             ,//TBARegistry tbaRegistry,
-            ,//TokenBasedAccount tbaAccountImpl,
+            ,//TokenGatedAccount tbaAccountImpl,
             miladyContract,
             ,//MiladyAvatar miladyAvatarContract,
             ,//LiquidAccessories liquidAccessoriesContract,

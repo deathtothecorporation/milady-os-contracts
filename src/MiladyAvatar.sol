@@ -5,7 +5,7 @@
 pragma solidity ^0.8.13;
 
 import "openzeppelin/token/ERC721/IERC721.sol";
-import "./TBA/TokenBasedAccount.sol";
+import "./TBA/TokenGatedAccount.sol";
 import "./TBA/TBARegistry.sol";
 import "./Rewards.sol";
 import "./AccessoryUtils.sol";
@@ -31,7 +31,7 @@ contract MiladyAvatar is IERC721 {
     constructor(
         IERC721 _miladysContract,
         TBARegistry _tbaRegistry,
-        TokenBasedAccount _tbaAccountImpl,
+        TokenGatedAccount _tbaAccountImpl,
         uint _chainId,
         string memory _baseURI
     ) {
@@ -183,7 +183,7 @@ contract MiladyAvatar is IERC721 {
         }
     }
 
-    // Get the TokenBasedAccount for a particular Milady Avatar.
+    // Get the TokenGatedAccount for a particular Milady Avatar.
     function getAvatarTBA(uint miladyId)
         public
         view

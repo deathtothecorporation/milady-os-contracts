@@ -7,7 +7,7 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
-import "../src/TBA/TokenBasedAccount.sol";
+import "../src/TBA/TokenGatedAccount.sol";
 import "../src/TBA/TBARegistry.sol";
 import "../src/MiladyAvatar.sol";
 import "../src/LiquidAccessories.sol";
@@ -23,7 +23,7 @@ library TestSetup {
         returns
     (
         TBARegistry tbaRegistry,
-        TokenBasedAccount tbaAccountImpl,
+        TokenGatedAccount tbaAccountImpl,
         Miladys miladyContract,
         MiladyAvatar miladyAvatarContract,
         LiquidAccessories liquidAccessoriesContract,
@@ -32,7 +32,7 @@ library TestSetup {
     )
     {
         tbaRegistry = new TBARegistry();
-        tbaAccountImpl = new TokenBasedAccount();
+        tbaAccountImpl = new TokenGatedAccount();
 
         miladyContract = new Miladys();
         miladyContract.flipSaleState();
