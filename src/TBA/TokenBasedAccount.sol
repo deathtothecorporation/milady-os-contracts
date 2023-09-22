@@ -15,6 +15,30 @@ import "./IERC6551Account.sol";
 // todo: should this also be a 721 receiver?
 
 contract TokenBasedAccount is IERC165, IERC1271, IERC6551Account, IERC1155Receiver {
+    // Todo: @Logan - I think something like this needs to be added
+    address public pwaKey;
+    address public pkaKeyAssigningOwner;
+
+    // this can be called as part of the onboarding process once the user has the PWA
+    // if the user ever reinstalls the PWA, they can use this function to re-associate
+    function setOtherOwner(address _otherOwner) 
+        external 
+    {
+        require(msg.sender == owner(), "Not token owner");
+        otherOwner = _otherOwner;
+        pkaKeyAssigningOwner = owner();
+    }
+
+    // internal function to ensure that if the main owner ever moves the milday
+    // likely as the result of a sale, that the pwaKey is invalidated
+    function _validMsgSender() 
+        internal
+        view 
+        returns (bool) 
+    {
+        return msg.sender == owner() || (msg.sender == otherOwner && pkaKeyAssigningOwner == owner());
+    }
+
     uint _nonce;
 
     receive() external payable {}
@@ -24,7 +48,7 @@ contract TokenBasedAccount is IERC165, IERC1271, IERC6551Account, IERC1155Receiv
         uint256 value,
         bytes calldata data
     ) external payable returns (bytes memory result) {
-        require(msg.sender == owner(), "Not token owner");
+        require(msg.sender == _validMsgSender(), "Unauthorized caller");
 
         bool success;
         (success, result) = to.call{value: value}(data);
