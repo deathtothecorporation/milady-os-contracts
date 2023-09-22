@@ -116,25 +116,36 @@ contract MiladyAvatar is IERC721 {
 
     // A special function to allow the soulbound accessories to "auto equip" themselves upon mint
     // See `SoulboundAccessories.mintSoulboundAccessories`.
-    function equipSoulboundAccessory(uint miladyId, uint soulboundAccessoryId)
+    function equipSoulboundAccessory(uint miladyId, uint accessoryId)
         external
     {
         require(msg.sender == address(soulboundAccessoriesContract), "this function is only callable by the SoulboundAccessories contract");
 
-        _equipAccessoryIfOwned(miladyId, soulboundAccessoryId);
+        _equipAccessoryIfOwned(miladyId, accessoryId);
     }
 
     // Allows the owner of the avatar to equip an accessory.
     // The accessory must be held in the avatar's TBA.
     // If some other accessory is equipped with the same accType, it will be unequipped.
     function equipAccessory(uint miladyId, uint accessoryId)
-        external
+        public
     {
         // note: this effectively checks that the msg.sender is the avatar.
         // thus we are assuming that the interface is constructing a TBA call.
         require(msg.sender == ownerOf(miladyId), "You don't own that Milady Avatar");
 
         _equipAccessoryIfOwned(miladyId, accessoryId);
+    }
+
+    // batch version of the previous function
+    function equipAccessories(uint miladyId, uint[] memory accessoryIds)
+        external
+    {
+        require(msg.sender == ownerOf(miladyId), "You don't own that Milady Avatar");
+
+        for (uint i=0; i<accessoryIds.length; i++) {
+            _equipAccessoryIfOwned(miladyId, accessoryIds[i]);
+        }
     }
 
     function _equipAccessoryIfOwned(uint miladyId, uint accessoryId)
