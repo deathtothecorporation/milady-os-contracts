@@ -43,7 +43,7 @@ contract LiquidAccessories is ERC1155 {
     
     mapping(uint => uint) public liquidAccessorySupply;
 
-    function mintAccessoryAndTakeRevenue(uint accessoryId, address payable overpayReturnAddress)
+    function mintAccessoryAndDisburseRevenue(uint accessoryId, address payable overpayReturnAddress)
         public
         payable
     {
@@ -71,12 +71,14 @@ contract LiquidAccessories is ERC1155 {
 
             rewardsContract.accrueRewardsForAccessory{value:halfRevenue}(accessoryId);
 
-            // syntax / which transfer func?
-            revenueRecipient.transfer(totalRevenue - halfRevenue); // using `totalRevenue-halfRevenue` instead of simply `halfRevenue` to handle rounding errors
+            // using `totalRevenue-halfRevenue` instead of simply `halfRevenue` to handle rounding errors from div by 2
+            // schalk: is this the appropriate tfer func to use?
+            revenueRecipient.transfer(totalRevenue - halfRevenue);
         }
 
         if (msg.value > buyPrice) {
             // return extra in case of overpayment
+            // schalk: is this the appropriate tfer func to use?
             overpayReturnAddress.transfer(msg.value - buyPrice);
         }
     }
