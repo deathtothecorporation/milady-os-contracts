@@ -5,16 +5,13 @@
 pragma solidity ^0.8.13;
 
 import "openzeppelin/token/ERC1155/ERC1155.sol";
-import "openzeppelin/access/AccessControl.sol";
 import "./TBA/IERC6551Registry.sol";
 import "./TBA/IERC6551Account.sol";
-import "./TBA/TokenBasedAccount.sol";
+import "./TBA/TokenGatedAccount.sol";
 import "./AccessoryUtils.sol";
 import "./MiladyAvatar.sol";
 
-contract SoulboundAccessories is ERC1155, AccessControl {
-    bytes32 constant ROLE_MILADY_AUTHORITY = keccak256("MILADY_AUTHORITY");
-
+contract SoulboundAccessories is ERC1155 {
     MiladyAvatar public miladyAvatarContract;
 
     // state needed for TBA determination
@@ -22,27 +19,29 @@ contract SoulboundAccessories is ERC1155, AccessControl {
     IERC6551Account tbaAccountImpl;
     uint chainId;
 
+    address public miladyAuthority;
+
     mapping(uint => bool) public avatarActivated;
 
     // only used for initial deploy
     address deployer;
 
     constructor(
-        address _miladyAuthority,
         IERC6551Registry _tbaRegistry,
         IERC6551Account _tbaAccountImpl,
         uint _chainId,
+        address _miladyAuthority,
         string memory uri_
     )
         ERC1155(uri_)
     {
         deployer = msg.sender;
 
-        _grantRole(ROLE_MILADY_AUTHORITY, _miladyAuthority);
-
         tbaRegistry = _tbaRegistry;
         tbaAccountImpl = _tbaAccountImpl;
         chainId = _chainId;
+
+        miladyAuthority = _miladyAuthority;
     }
 
     function setAvatarContract(MiladyAvatar _miladyAvatarContract)
@@ -57,22 +56,19 @@ contract SoulboundAccessories is ERC1155, AccessControl {
     }
 
     function mintAndEquipSoulboundAccessories(uint miladyId, uint[] calldata accessories)
-        onlyRole(ROLE_MILADY_AUTHORITY)
         external
     {
-        require(!avatarActivated[miladyId], "Avatar already activated");
+        require(msg.sender == miladyAuthority, "msg.sender is not authorized to call this function.");
+
+        require(!avatarActivated[miladyId], "This avatar has already been activated");
         avatarActivated[miladyId] = true;
 
-        // todo: @Schalk <| do we want to worry about the authority making a mistake, and being able to address this?
-        // todo: @Logan <| I think we should, I have frequently made mistakes in the past and left a trail of incorrect contracts from my deployer address
-        // create the TBA for the avatar (or find it if it already exists)
-        address avatarTbaAddress = tbaRegistry.createAccount(
+        address avatarTbaAddress = tbaRegistry.account(
             address(tbaAccountImpl),
             chainId,
             address(miladyAvatarContract),
             miladyId,
-            0,
-            ""
+            0
         );
 
         for (uint i=0; i<accessories.length; i++) {
@@ -90,19 +86,5 @@ contract SoulboundAccessories is ERC1155, AccessControl {
             return; // allow transfers from 0x0, i.e. mints
         }
         revert("These accessories are soulbound to the Milady Avatar and cannot be transferred");
-    } 
-
-    // Because we inherit from two contracts that define supportsInterface,
-    // We resolve this by defining our own (try taking this out to see the error message)
-    // We'll just return true if either of our parent contracts return true:
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(ERC1155, AccessControl) returns (bool)
-    {
-        return ERC1155.supportsInterface(interfaceId) || AccessControl.supportsInterface(interfaceId);
     }
-
-    // todo: need to do anything for uri func?
-    // should we do something special if not yet activated (like forward to Milady's uri?)
 }

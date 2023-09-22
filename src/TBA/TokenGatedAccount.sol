@@ -14,18 +14,39 @@ import "./IERC6551Account.sol";
 
 // todo: should this also be a 721 receiver?
 
-contract TokenBasedAccount is IERC165, IERC1271, IERC6551Account, IERC1155Receiver {
+contract TokenGatedAccount is IERC165, IERC1271, IERC6551Account, IERC1155Receiver {
+    address public bondedAddress;
+    address public tokenOwnerAtLastBond;
+
+    // ensures the msg.sender is either:
+    //  * the token owner
+    //  * the bonded account - UNLESS owner() has changed since that bond call
+    modifier onlyAuthorizedMsgSender() {
+        require(msg.sender == owner() || (msg.sender == bondedAddress && tokenOwnerAtLastBond == owner()), "Unauthorized caller");
+        _;
+    }
+
+    // Note that we the bonded address can pass this bond on without authorization from owner()
+    function bond(address addressToBond) 
+        external
+        onlyAuthorizedMsgSender()
+    {
+        require(msg.sender == owner(), "Not token owner");
+
+        bondedAddress = addressToBond;
+        tokenOwnerAtLastBond = owner();
+    }
+
     uint _nonce;
 
     receive() external payable {}
 
-    function executeCall(
-        address to,
-        uint256 value,
-        bytes calldata data
-    ) external payable returns (bytes memory result) {
-        require(msg.sender == owner(), "Not token owner");
-
+    function executeCall(address to, uint256 value,bytes calldata data)
+        external
+        payable
+        onlyAuthorizedMsgSender()
+        returns (bytes memory result)
+    {
         bool success;
         (success, result) = to.call{value: value}(data);
 

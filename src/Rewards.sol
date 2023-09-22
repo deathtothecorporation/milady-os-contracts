@@ -4,16 +4,15 @@
 
 pragma solidity ^0.8.13;
 
-import "openzeppelin/access/AccessControl.sol";
 import "openzeppelin/token/ERC721/IERC721.sol";
+import "./TBA/TBARegistry.sol";
 
-contract Rewards is AccessControl {
-    bytes32 constant ROLE_REWARD_REGISTRATION = keccak256("REWARD_REGISTRATION");
+contract Rewards {
+    IERC721 public miladysContract;
+    address public avatarContractAddress;
 
-    IERC721 miladysContract;
-
-    constructor(address miladyAvatarContractAddress, IERC721 _miladysContract) {
-        _grantRole(ROLE_REWARD_REGISTRATION, miladyAvatarContractAddress);
+    constructor(address _avatarContractAddress, IERC721 _miladysContract) {
+        avatarContractAddress = _avatarContractAddress;
         miladysContract = _miladysContract;
     }
 
@@ -33,14 +32,17 @@ contract Rewards is AccessControl {
         external
     {
         require(msg.value > 0, "call must include some ether");
+        require(rewardInfoForAccessory[accessoryId].totalHolders > 0, "That accessory has no eligible recipients");
 
         rewardInfoForAccessory[accessoryId].totalRewardsAccrued += msg.value;
     }
 
     function registerMiladyForRewardsForAccessory(uint miladyId, uint accessoryId)
         external
-        onlyRole(ROLE_REWARD_REGISTRATION)
+        
     {
+        require(msg.sender == avatarContractAddress, "msg.sender is not authorized to call this function.");
+        
         MiladyRewardInfo storage miladyRewardInfo = rewardInfoForAccessory[accessoryId].miladyRewardInfo[miladyId];
 
         require(! miladyRewardInfo.isRegistered, "Milady is already registered.");
@@ -53,32 +55,33 @@ contract Rewards is AccessControl {
         miladyRewardInfo.isRegistered = true;
     }
 
-    function deregisterMiladyForRewardsForAccessoryAndClaim(uint miladyId, uint accessoryId)
+    function deregisterMiladyForRewardsForAccessoryAndClaim(uint miladyId, uint accessoryId, address payable recipient)
         external
-        onlyRole(ROLE_REWARD_REGISTRATION)
     {
+        require(msg.sender == avatarContractAddress, "msg.sender is not authorized to call this function.");
+
         MiladyRewardInfo storage miladyRewardInfo = rewardInfoForAccessory[accessoryId].miladyRewardInfo[miladyId];
 
         require(miladyRewardInfo.isRegistered, "Milady is not registered.");
 
-        _claimRewardsForMiladyForAccessory(miladyId, accessoryId);
+        _claimRewardsForMiladyForAccessory(miladyId, accessoryId, recipient);
 
         rewardInfoForAccessory[accessoryId].totalHolders --;
 
         miladyRewardInfo.isRegistered = false;
     }
 
-    function claimRewardsForMilady(uint miladyId, uint[] calldata accessoriesToClaimFor)
+    function claimRewardsForMilady(uint miladyId, uint[] calldata accessoriesToClaimFor, address payable recipient)
         external
     {
         require(msg.sender == miladysContract.ownerOf(miladyId), "Only callable by the owner of the Milady");
 
         for (uint i=0; i<accessoriesToClaimFor.length; i++) {
-            _claimRewardsForMiladyForAccessory(miladyId, accessoriesToClaimFor[i]);
+            _claimRewardsForMiladyForAccessory(miladyId, accessoriesToClaimFor[i], recipient);
         }
     }
 
-    function _claimRewardsForMiladyForAccessory(uint miladyId, uint accessoryId)
+    function _claimRewardsForMiladyForAccessory(uint miladyId, uint accessoryId, address payable recipient)
         internal
     {
         RewardInfoForAccessory storage rewardInfo = rewardInfoForAccessory[accessoryId];
@@ -87,15 +90,10 @@ contract Rewards is AccessControl {
 
         uint amountToSend = getAmountClaimableForMiladyAndAccessory(miladyId, accessoryId);
 
-        //todo: maybe send to the Milady's TBA instead?
-        address recipient = miladysContract.ownerOf(miladyId);
-
-        //todo: RE-ENTRANCY ISSUE
-        //todo: should we really be working around this issue?
-        (bool success, ) = recipient.call{value: amountToSend}("");
-        require(success, "Reward transfer failed");
-
         rewardInfo.miladyRewardInfo[miladyId].amountClaimedBeforeDivision += rewardOwedBeforeDivision;
+
+        // Schalk: Should we be doing something more elaborate/careful here?
+        recipient.transfer(amountToSend);
     }
 
     function getAmountClaimableForMiladyAndAccessory(uint miladyId, uint accessoryId)

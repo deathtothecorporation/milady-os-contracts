@@ -23,7 +23,7 @@ contract RewardsTest is Test {
     function setUp() external {
         (
             ,//TBARegistry tbaRegistry,
-            ,//TokenBasedAccount tbaAccountImpl,
+            ,//TokenGatedAccount tbaAccountImpl,
             miladyContract,
             ,//MiladyAvatar miladyAvatarContract,
             ,//LiquidAccessories liquidAccessoriesContract,
@@ -50,15 +50,16 @@ contract RewardsTest is Test {
         rewardsContract.accrueRewardsForAccessory{value:100}(milady0Accessories[0]);
         rewardsContract.accrueRewardsForAccessory{value:101}(milady0Accessories[1]);
 
-        // deposit a reward for an item the Milady does not have
-        rewardsContract.accrueRewardsForAccessory{value:99}(
-            AccessoryUtils.plaintextAccessoryTextToId("hat", "awful hat that no one has")
-        );
+        // depositing a reward for an item the Milady does not have should revert,
+        // as no one will receive the rewards
+        uint idForAccessoryNooneHas = AccessoryUtils.plaintextAccessoryTextToId("hat", "awful hat that no one has");
+        vm.expectRevert("That accessory has no eligible recipients");
+        rewardsContract.accrueRewardsForAccessory{value:99}(idForAccessoryNooneHas);
 
         require(rewardsContract.getAmountClaimableForMiladyAndAccessories(0, milady0Accessories) == 201);
 
         uint balancePreClaim = address(this).balance;
-        rewardsContract.claimRewardsForMilady(0, milady0Accessories);
+        rewardsContract.claimRewardsForMilady(0, milady0Accessories, payable(address(this)));
         uint balancePostClaim = address(this).balance;
         require(balancePostClaim - balancePreClaim == 201);
         require(rewardsContract.getAmountClaimableForMiladyAndAccessories(0, milady0Accessories) == 0);
@@ -92,12 +93,12 @@ contract RewardsTest is Test {
 
         // test actual claims
         balancePreClaim = address(this).balance;
-        rewardsContract.claimRewardsForMilady(0, milady0Accessories);
+        rewardsContract.claimRewardsForMilady(0, milady0Accessories, payable(address(this)));
         balancePostClaim = address(this).balance;
         require(balancePostClaim - balancePreClaim == expectedRewardsForMilady0);
 
         balancePreClaim = address(this).balance;
-        rewardsContract.claimRewardsForMilady(1, milady1Accessories);
+        rewardsContract.claimRewardsForMilady(1, milady1Accessories, payable(address(this)));
         balancePostClaim = address(this).balance;
         require(balancePostClaim - balancePreClaim == expectedRewardsForMilady1);
     }

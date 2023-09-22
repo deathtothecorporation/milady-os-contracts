@@ -5,9 +5,8 @@
 pragma solidity ^0.8.13;
 
 import "openzeppelin/token/ERC721/IERC721.sol";
-import "./TBA/TokenBasedAccount.sol";
-import "./TBA/IERC6551Registry.sol";
-import "./TBA/IERC6551Account.sol";
+import "./TBA/TokenGatedAccount.sol";
+import "./TBA/TBARegistry.sol";
 import "./Rewards.sol";
 import "./AccessoryUtils.sol";
 import "./LiquidAccessories.sol";
@@ -20,18 +19,21 @@ contract MiladyAvatar is IERC721 {
     Rewards public rewardsContract;
     
     // state needed for TBA determination
-    IERC6551Registry tbaRegistry;
+    TBARegistry tbaRegistry;
     IERC6551Account tbaAccountImpl;
     uint chainId;
+
+    string baseURI;
 
     // only used for initial deploy
     address deployer;
 
     constructor(
         IERC721 _miladysContract,
-        IERC6551Registry _tbaRegistry,
-        IERC6551Account _tbaAccountImpl,
-        uint _chainId
+        TBARegistry _tbaRegistry,
+        TokenGatedAccount _tbaAccountImpl,
+        uint _chainId,
+        string memory _baseURI
     ) {
         deployer = msg.sender;
 
@@ -40,6 +42,8 @@ contract MiladyAvatar is IERC721 {
         tbaRegistry = _tbaRegistry;
         tbaAccountImpl = _tbaAccountImpl;
         chainId = _chainId;
+
+        baseURI = _baseURI;
     }
 
     function setOtherContracts(LiquidAccessories _liquidAccessoriesContract, SoulboundAccessories _soulboundAccessoriesContract, Rewards _rewardsContract)
@@ -53,10 +57,30 @@ contract MiladyAvatar is IERC721 {
         rewardsContract = _rewardsContract;
     }
 
-    function balanceOf(address) external view returns (uint256 balance) {
-        return 0;
+    function name() external pure returns (string memory) {
+        return "Milady Avatar";
+    }
+
+    function symbol() external pure returns (string memory) {
+        return "MILA";
+    }
+
+    function tokenURI(uint256 tokenId) external view returns (string memory) {
+        require(tokenId <= 9999, "Invalid Milady/Avatar id");
+
+        return string(abi.encodePacked(baseURI, Strings.toString(tokenId)));
+    }
+
+    function balanceOf(address who) external view returns (uint256 balance) {
+        (address tbaContractAddress,) = tbaRegistry.registeredAccounts(who);
+        if (tbaContractAddress == address(miladysContract)) {
+            return 1;
+        }
+        else return 0;
     }
     function ownerOf(uint256 tokenId) public view returns (address owner) {
+        require(tokenId <= 9999, "Invalid Milady/Avatar id");
+
         return tbaRegistry.account(address(tbaAccountImpl), chainId, address(miladysContract), tokenId, 0);
     }
     function safeTransferFrom(address, address, uint256, bytes calldata) external {
@@ -75,13 +99,13 @@ contract MiladyAvatar is IERC721 {
         revertWithSoulboundMessage();
     }
     function getApproved(uint256) external view returns (address operator) {
-        revert("Milady Dolls cannot be moved from their soulbound Milady.");
+        revertWithSoulboundMessage();
     }
     function isApprovedForAll(address, address) external view returns (bool) {
         return false;
     }
     function revertWithSoulboundMessage() pure internal {
-        revert("Milady Dolls cannot be moved from their soulbound Milady.");
+        revert("Milady Avatars cannot be moved from their soulbound Milady.");
     }
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return interfaceId == type(IERC721).interfaceId;
@@ -154,18 +178,26 @@ contract MiladyAvatar is IERC721 {
         internal
     {
         if (equipSlots[miladyId][accType] != 0) {
-            rewardsContract.deregisterMiladyForRewardsForAccessoryAndClaim(miladyId, equipSlots[miladyId][accType]);
+            rewardsContract.deregisterMiladyForRewardsForAccessoryAndClaim(miladyId, equipSlots[miladyId][accType], getPayableAvatarTBA(miladyId));
             equipSlots[miladyId][accType] = 0;
         }
     }
 
-    // Get the TokenBasedAccount for a particular Milady Avatar.
+    // Get the TokenGatedAccount for a particular Milady Avatar.
     function getAvatarTBA(uint miladyId)
         public
         view
         returns (address)
     {
         return tbaRegistry.account(address(tbaAccountImpl), block.chainid, address(this), miladyId, 0);
+    }
+
+    function getPayableAvatarTBA(uint miladyId)
+        public
+        view
+        returns (address payable)
+    {
+        return payable(getAvatarTBA(miladyId));
     }
 
     // todo: needs uri function?

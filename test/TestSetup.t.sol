@@ -7,14 +7,15 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
-import "../src/TBA/TokenBasedAccount.sol";
+import "../src/TBA/TokenGatedAccount.sol";
 import "../src/TBA/TBARegistry.sol";
-import "./Miladys.sol";
 import "../src/MiladyAvatar.sol";
 import "../src/LiquidAccessories.sol";
 import "../src/SoulboundAccessories.sol";
 import "../src/Rewards.sol";
 import "../src/Deployer.sol";
+import "./TestConstants.sol";
+import "./Miladys.sol";
 
 library TestSetup {
     function deploy(uint numMiladysToMint, address miladyAuthorityAddress)
@@ -22,7 +23,7 @@ library TestSetup {
         returns
     (
         TBARegistry tbaRegistry,
-        TokenBasedAccount tbaAccountImpl,
+        TokenGatedAccount tbaAccountImpl,
         Miladys miladyContract,
         MiladyAvatar miladyAvatarContract,
         LiquidAccessories liquidAccessoriesContract,
@@ -31,7 +32,7 @@ library TestSetup {
     )
     {
         tbaRegistry = new TBARegistry();
-        tbaAccountImpl = new TokenBasedAccount();
+        tbaAccountImpl = new TokenGatedAccount();
 
         miladyContract = new Miladys();
         miladyContract.flipSaleState();
@@ -45,9 +46,11 @@ library TestSetup {
         Deployer.deploy(
             tbaRegistry,
             tbaAccountImpl,
+            31337, // chain id of Forge's test chain
             miladyContract,
             miladyAuthorityAddress,
-            31337, // chain id of Forge's test chain
+            PROJECT_REVENUE_RECIPIENT,
+            "",
             "",
             ""
         );
