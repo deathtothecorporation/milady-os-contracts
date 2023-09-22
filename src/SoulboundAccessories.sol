@@ -47,8 +47,8 @@ contract SoulboundAccessories is ERC1155 {
     function setAvatarContract(MiladyAvatar _miladyAvatarContract)
         external
     {
-        require(msg.sender == deployer, "Only callable by the initial deployer");
-        require(address(miladyAvatarContract) == address(0), "avatar contract already set");
+        require(msg.sender == deployer, "Not initial deployer");
+        require(address(miladyAvatarContract) == address(0), "Avatar already set");
 
         miladyAvatarContract = _miladyAvatarContract;
 
