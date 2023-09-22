@@ -18,15 +18,13 @@ contract TokenGatedAccount is IERC165, IERC1271, IERC6551Account, IERC1155Receiv
     address public bondedAddress;
     address public tokenOwnerAtLastBond;
 
-    // internal function to ensure that if the main owner ever moves the milday
-    // likely as the result of a sale, that the pwaKey is invalidated
+    // ensures the msg.sender is either:
+    //  * the token owner
+    //  * the bonded account - UNLESS owner() has changed since that bond call
     modifier onlyAuthorizedMsgSender() {
         require(msg.sender == owner() || (msg.sender == bondedAddress && tokenOwnerAtLastBond == owner()), "Unauthorized caller");
         _;
     }
-
-    // this can be called as part of the onboarding process once the user has the PWA
-    // if the user ever reinstalls the PWA, they can use this function to re-associate
 
     // Note that we the bonded address can pass this bond on without authorization from owner()
     function bond(address addressToBond) 
