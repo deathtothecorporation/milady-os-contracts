@@ -47,18 +47,20 @@ contract SoulboundAccessories is ERC1155 {
     function setAvatarContract(MiladyAvatar _miladyAvatarContract)
         external
     {
-        require(msg.sender == deployer, "Only callable by the initial deployer");
-        require(address(miladyAvatarContract) == address(0), "avatar contract already set");
+        require(msg.sender == deployer, "Not initial deployer");
+        require(address(miladyAvatarContract) == address(0), "Avatar already set");
 
         miladyAvatarContract = _miladyAvatarContract;
+
+        // Todo : @Logan @Schalk, put in an event here? Or is it not necessary?
     }
 
     function mintAndEquipSoulboundAccessories(uint miladyId, uint[] calldata accessories)
         external
     {
-        require(msg.sender == miladyAuthority, "msg.sender is not authorized to call this function.");
+        require(msg.sender == miladyAuthority, "Not miladyAuthority");
 
-        require(!avatarActivated[miladyId], "This avatar has already been activated");
+        require(!avatarActivated[miladyId], "Avatar already activated");
         avatarActivated[miladyId] = true;
 
         address avatarTbaAddress = tbaRegistry.account(

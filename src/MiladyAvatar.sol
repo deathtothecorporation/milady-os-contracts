@@ -119,7 +119,7 @@ contract MiladyAvatar is IERC721 {
     function equipSoulboundAccessory(uint miladyId, uint accessoryId)
         external
     {
-        require(msg.sender == address(soulboundAccessoriesContract), "this function is only callable by the SoulboundAccessories contract");
+        require(msg.sender == address(soulboundAccessoriesContract), "not called by SoulboundAccessories");
 
         _equipAccessoryIfOwned(miladyId, accessoryId);
     }
