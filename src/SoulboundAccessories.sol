@@ -69,10 +69,13 @@ contract SoulboundAccessories is ERC1155 {
             0
         );
 
-        for (uint i=0; i<accessories.length; i++) {
-            _mint(avatarTbaAddress, accessories[i], 1, "");
-            miladyAvatarContract.equipSoulboundAccessory(miladyId, accessories[i]);
+        uint[] memory listOf1s = new uint[](accessories.length);
+        for (uint i=0; i<listOf1s.length; i++) {
+            listOf1s[i] = 1;
         }
+
+        _mintBatch(avatarTbaAddress, accessories, listOf1s);
+        miladyAvatarContract.equipSoulboundAccessories(miladyId, accessories);
     }
 
     // disable all token transfers, making these soulbound.

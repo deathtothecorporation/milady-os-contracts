@@ -117,11 +117,22 @@ contract MiladyAvatar is IERC721 {
     // A special function to allow the soulbound accessories to "auto equip" themselves upon mint
     // See `SoulboundAccessories.mintSoulboundAccessories`.
     function equipSoulboundAccessory(uint miladyId, uint accessoryId)
-        external
+        public
     {
         require(msg.sender == address(soulboundAccessoriesContract), "not called by SoulboundAccessories");
 
         _equipAccessoryIfOwned(miladyId, accessoryId);
+    }
+
+    // batch version of the previous function
+    function equipSoulboundAccessories(uint miladyId, uint[] calldata accessoryIds)
+        external
+    {
+        require(msg.sender == address(soulboundAccessoriesContract), "not called by SoulboundAccessories");
+
+        for (uint i=0; i<accessoryIds.length; i++) {
+            _equipAccessoryIfOwned(miladyId, accessoryIds[i]);
+        }
     }
 
     // Allows the owner of the avatar to equip an accessory.
