@@ -5,7 +5,7 @@
 pragma solidity ^0.8.13;
 
 import "openzeppelin/token/ERC721/IERC721.sol";
-import "./TBA/TBARegistry.sol";
+import "./TGA/TBARegistry.sol";
 
 contract Rewards {
     IERC721 public miladysContract;

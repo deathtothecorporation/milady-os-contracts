@@ -7,8 +7,8 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
-import "../src/TBA/TokenGatedAccount.sol";
-import "../src/TBA/TBARegistry.sol";
+import "../src/TGA/TokenGatedAccount.sol";
+import "../src/TGA/TBARegistry.sol";
 import "../src/MiladyAvatar.sol";
 import "../src/LiquidAccessories.sol";
 import "../src/SoulboundAccessories.sol";

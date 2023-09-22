@@ -5,8 +5,8 @@
 pragma solidity ^0.8.13;
 
 import "openzeppelin/token/ERC721/IERC721.sol";
-import "./TBA/TBARegistry.sol";
-import "./TBA/TokenGatedAccount.sol";
+import "./TGA/TBARegistry.sol";
+import "./TGA/TokenGatedAccount.sol";
 import "./MiladyAvatar.sol";
 import "./LiquidAccessories.sol";
 import "./SoulboundAccessories.sol";

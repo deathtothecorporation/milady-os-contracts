@@ -5,9 +5,9 @@
 pragma solidity ^0.8.13;
 
 import "openzeppelin/token/ERC1155/ERC1155.sol";
-import "./TBA/IERC6551Registry.sol";
-import "./TBA/IERC6551Account.sol";
-import "./TBA/TokenGatedAccount.sol";
+import "./TGA/IERC6551Registry.sol";
+import "./TGA/IERC6551Account.sol";
+import "./TGA/TokenGatedAccount.sol";
 import "./AccessoryUtils.sol";
 import "./MiladyAvatar.sol";
 
@@ -74,7 +74,7 @@ contract SoulboundAccessories is ERC1155 {
             listOf1s[i] = 1;
         }
 
-        _mintBatch(avatarTbaAddress, accessories, listOf1s);
+        _mintBatch(avatarTbaAddress, accessories, listOf1s, "");
         miladyAvatarContract.equipSoulboundAccessories(miladyId, accessories);
     }
 

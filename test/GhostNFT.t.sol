@@ -10,7 +10,7 @@ import "forge-std/console.sol";
 import "./TestConstants.sol";
 import "./Miladys.sol";
 import "../src/MiladyAvatar.sol";
-import "../src/TBA/TBARegistry.sol";
+import "../src/TGA/TBARegistry.sol";
 
 contract GhostNFT is Test {
     TBARegistry public tbaRegistry;
