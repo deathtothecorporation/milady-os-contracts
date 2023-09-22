@@ -75,6 +75,8 @@ contract SoulboundAccessories is ERC1155 {
             _mint(avatarTbaAddress, accessories[i], 1, "");
             miladyAvatarContract.equipSoulboundAccessory(miladyId, accessories[i]);
         }
+
+        // Todo : @Logan <| Event here?
     }
 
     // disable all token transfers, making these soulbound.
