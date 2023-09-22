@@ -58,9 +58,9 @@ contract SoulboundAccessories is ERC1155 {
     function mintAndEquipSoulboundAccessories(uint miladyId, uint[] calldata accessories)
         external
     {
-        require(msg.sender == miladyAuthority, "msg.sender is not authorized to call this function.");
+        require(msg.sender == miladyAuthority, "Not miladyAuthority");
 
-        require(!avatarActivated[miladyId], "This avatar has already been activated");
+        require(!avatarActivated[miladyId], "Avatar already activated");
         avatarActivated[miladyId] = true;
 
         address avatarTbaAddress = tbaRegistry.account(
