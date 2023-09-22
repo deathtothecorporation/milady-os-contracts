@@ -15,9 +15,9 @@ contract SoulboundAccessories is ERC1155 {
     MiladyAvatar public miladyAvatarContract;
 
     // state needed for TBA determination
-    IERC6551Registry tbaRegistry;
-    IERC6551Account tbaAccountImpl;
-    uint chainId;
+    IERC6551Registry public tbaRegistry;
+    IERC6551Account public tbaAccountImpl;
+    uint public chainId;
 
     address public miladyAuthority;
 
@@ -51,8 +51,6 @@ contract SoulboundAccessories is ERC1155 {
         require(address(miladyAvatarContract) == address(0), "Avatar already set");
 
         miladyAvatarContract = _miladyAvatarContract;
-
-        // Todo : @Logan @Schalk, put in an event here? Or is it not necessary?
     }
 
     function mintAndEquipSoulboundAccessories(uint miladyId, uint[] calldata accessories)
