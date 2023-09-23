@@ -112,6 +112,21 @@ contract LiquidAccessories is ERC1155 {
         _burn(msg.sender, accessory, 1);
     }
 
+    // batch call of the previous function
+    function returnAccessories(uint[] calldata accessoryIds, uint[] calldata numReturnsOfAccessory, address payable fundsRecipient)
+        external
+        payable
+    {
+        require(accessoryIds.length == numReturnsOfAccessory.length, "array arguments must have the same length");
+
+        for (uint i=0; i<accessoryIds.length; i++) {
+            for (uint j=0; j<numReturnsOfAccessory[i]; j++) {
+                // schalk: is there a concern of re-entry here? I don't think so, since this call always changes state then disburses funds...?
+                returnAccessory(accessoryIds[i], fundsRecipient);
+            }
+        }
+    }
+
     function getBuyPriceOfNewAccessory(uint accessory)
         public
         view
