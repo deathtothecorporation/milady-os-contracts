@@ -8,6 +8,8 @@ pragma solidity ^0.8.13;
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 import "./TestConstants.sol";
+import "./TestSetup.sol";
+import "./TestUtils.sol";
 import "./Miladys.sol";
 import "../src/MiladyAvatar.sol";
 import "../src/TGA/TBARegistry.sol";
@@ -19,43 +21,50 @@ contract GhostNFT is Test {
     Miladys miladyContract;
     MiladyAvatar miladyAvatarContract;
 
+    TestUtils testUtils;
+
     function setUp() external {
-        tbaRegistry = new TBARegistry();
-        tbaAcctImpl = new TokenGatedAccount();
-
-        miladyContract = new Miladys();
-        miladyContract.flipSaleState();
-
-        // mint miladys to msg.sender for testing
-        miladyContract.mintMiladys{value:60000000000000000*NUM_MILADYS_MINTED}(NUM_MILADYS_MINTED);
-
-        miladyAvatarContract = new MiladyAvatar(
+        (
+            ,//TBARegistry tbaRegistry,
+            ,//TokenGatedAccount tbaAccountImpl,
             miladyContract,
-            tbaRegistry,
-            tbaAcctImpl,
-            31337, // chain id of Forge's test chain
-            ""
-        );
+            miladyAvatarContract,
+            ,//LiquidAccessories liquidAccessoriesContract,
+            ,//soulboundAccessoriesContract,
+            ,//rewardsContract,
+            testUtils
+        )
+         =
+        TestSetup.deploy(NUM_MILADYS_MINTED, MILADY_AUTHORITY_ADDRESS);
     }
 
     function test_ownershipTracks() public {
-        assert(miladyAvatarContract.ownerOf(0) == tbaRegistry.account(
-            address(tbaAcctImpl),
-            31337,
-            address(miladyContract),
-            0,
-            0
-        ));
+        assert(miladyAvatarContract.ownerOf(0) == testUtils.getTGA(miladyContract, 0));
 
         miladyContract.transferFrom(address(this), address(0x2), 0);
 
-        assert(miladyAvatarContract.ownerOf(0) == tbaRegistry.account(
-            address(tbaAcctImpl),
-            31337,
-            address(miladyContract),
-            0,
-            0
-        ));
+        assert(miladyAvatarContract.ownerOf(0) == testUtils.getTGA(miladyContract, 0));
+    }
+
+    function test_balanceOfForTGAIs1(uint miladyId) public {
+        vm.assume(miladyId <= 9999);
+
+        require(miladyAvatarContract.balanceOf(testUtils.getTGA(miladyContract, 0)) == 1);
+    }
+
+    function test_balanceOfRandomAcccountIs0(address randomAccount) public {
+        vm.assume(randomAccount != address(uint160(0)));
+        require(miladyAvatarContract.balanceOf(randomAccount) == 0);
+    }
+
+    function test_idValidity(uint id) public {
+        if (id <= 9999) {
+            miladyAvatarContract.ownerOf(id);
+        }
+        else {
+            vm.expectRevert("Invalid Milady/Avatar id");
+            miladyAvatarContract.ownerOf(id);
+        }
     }
 
     /*
