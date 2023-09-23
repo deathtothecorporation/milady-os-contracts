@@ -196,6 +196,17 @@ contract MiladyAvatar is IERC721 {
         _unequipAccessoryByTypeIfEquipped(miladyId, accType);
     }
 
+    // batch version of previous function
+    function unequipAccessoriesByTypeIfEquipped(uint miladyId, uint128[] memory accTypes)
+        public
+    {
+        require(msg.sender == ownerOf(miladyId), "You don't own that Milady Avatar");
+
+        for (uint i=0; i<accTypes.length; i++) {
+            _unequipAccessoryByTypeIfEquipped(miladyId, accTypes[i]);
+        }
+    }
+
     function _unequipAccessoryByTypeIfEquipped(uint miladyId, uint128 accType)
         internal
     {
