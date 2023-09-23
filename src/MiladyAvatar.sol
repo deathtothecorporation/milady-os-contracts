@@ -116,15 +116,6 @@ contract MiladyAvatar is IERC721 {
 
     // A special function to allow the soulbound accessories to "auto equip" themselves upon mint
     // See `SoulboundAccessories.mintSoulboundAccessories`.
-    function equipSoulboundAccessory(uint miladyId, uint accessoryId)
-        public
-    {
-        require(msg.sender == address(soulboundAccessoriesContract), "not called by SoulboundAccessories");
-
-        _equipAccessoryIfOwned(miladyId, accessoryId);
-    }
-
-    // batch version of the previous function
     function equipSoulboundAccessories(uint miladyId, uint[] calldata accessoryIds)
         external
     {
@@ -134,28 +125,30 @@ contract MiladyAvatar is IERC721 {
             _equipAccessoryIfOwned(miladyId, accessoryIds[i]);
         }
     }
-
-    // Allows the owner of the avatar to equip an accessory.
-    // The accessory must be held in the avatar's TBA.
-    // If some other accessory is equipped with the same accType, it will be unequipped.
-    function equipAccessory(uint miladyId, uint accessoryId)
+    
+    // main entry point for a user to change their Avatar's appearance / equip status
+    // If an accessoryId's unpacked accVariant == 0, we interpret this as an unequip action
+    function updateEquipSlotsByAccessoryIds(uint miladyId, uint[] memory accessoryIds)
         public
-    {
-        // note: this effectively checks that the msg.sender is the avatar.
-        // thus we are assuming that the interface is constructing a TBA call.
-        require(msg.sender == ownerOf(miladyId), "You don't own that Milady Avatar");
-
-        _equipAccessoryIfOwned(miladyId, accessoryId);
-    }
-
-    // batch version of the previous function
-    function equipAccessories(uint miladyId, uint[] memory accessoryIds)
-        external
     {
         require(msg.sender == ownerOf(miladyId), "You don't own that Milady Avatar");
 
         for (uint i=0; i<accessoryIds.length; i++) {
-            _equipAccessoryIfOwned(miladyId, accessoryIds[i]);
+            (uint128 accType, uint128 accVariant) = AccessoryUtils.idToTypeAndVariantHashes(accessoryIds[i]);
+
+            _updateEquipSlotByTypeAndVariant(miladyId, accType, accVariant);
+        }
+    }
+
+    function _updateEquipSlotByTypeAndVariant(uint miladyId, uint128 accType, uint128 accVariantOrNull)
+        internal
+    {
+        if (accVariantOrNull == 0) {
+            _unequipAccessoryByTypeIfEquipped(miladyId, accType);
+        }
+        else {
+            uint accessoryId = AccessoryUtils.typeAndVariantHashesToId(accType, accVariantOrNull);
+            _equipAccessoryIfOwned(miladyId, accessoryId);
         }
     }
 
@@ -170,41 +163,13 @@ contract MiladyAvatar is IERC721 {
             "That avatar does not own that accessory."
         );
 
-        (uint128 accType,) = AccessoryUtils.idToTypeAndVariantHashes(accessoryId);
+        (uint128 accType, uint accVariant) = AccessoryUtils.idToTypeAndVariantHashes(accessoryId);
+        assert(accVariant != 0); // take out for gas savings?
 
         _unequipAccessoryByTypeIfEquipped(miladyId, accType);
         rewardsContract.registerMiladyForRewardsForAccessory(miladyId, accessoryId);
 
         equipSlots[miladyId][accType] = accessoryId;
-    }
-
-    function unequipAccessoryByIdIfEquipped(uint miladyId, uint accessoryId)
-        external
-    {
-        require(msg.sender == address(liquidAccessoriesContract) || msg.sender == ownerOf(miladyId));
-
-        (uint128 accType,) = AccessoryUtils.idToTypeAndVariantHashes(accessoryId);
-
-        unequipAccessoryByTypeIfEquipped(miladyId, accType);
-    }
-
-    function unequipAccessoryByTypeIfEquipped(uint miladyId, uint128 accType)
-        public
-    {
-        require(msg.sender == ownerOf(miladyId), "You don't own that Milady Avatar");
-
-        _unequipAccessoryByTypeIfEquipped(miladyId, accType);
-    }
-
-    // batch version of previous function
-    function unequipAccessoriesByTypeIfEquipped(uint miladyId, uint128[] memory accTypes)
-        public
-    {
-        require(msg.sender == ownerOf(miladyId), "You don't own that Milady Avatar");
-
-        for (uint i=0; i<accTypes.length; i++) {
-            _unequipAccessoryByTypeIfEquipped(miladyId, accTypes[i]);
-        }
     }
 
     function _unequipAccessoryByTypeIfEquipped(uint miladyId, uint128 accType)
@@ -214,6 +179,20 @@ contract MiladyAvatar is IERC721 {
             rewardsContract.deregisterMiladyForRewardsForAccessoryAndClaim(miladyId, equipSlots[miladyId][accType], getPayableAvatarTBA(miladyId));
             equipSlots[miladyId][accType] = 0;
         }
+    }
+
+    // convenience functions
+
+    function unequipAccessoryByIdIfEquipped(uint miladyId, uint accessoryId)
+        external
+    {
+        (uint128 accType, ) = AccessoryUtils.idToTypeAndVariantHashes(accessoryId);
+        uint nullAccessoryForThisType = AccessoryUtils.typeAndVariantHashesToId(accType, 0);
+
+        uint[] memory accessoryIds = new uint[](1);
+        accessoryIds[0] = nullAccessoryForThisType;
+
+        updateEquipSlotsByAccessoryIds(miladyId, accessoryIds);
     }
 
     // Get the TokenGatedAccount for a particular Milady Avatar.
