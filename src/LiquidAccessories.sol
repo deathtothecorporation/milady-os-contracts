@@ -43,125 +43,139 @@ contract LiquidAccessories is ERC1155 {
     
     mapping(uint => uint) public liquidAccessorySupply;
 
-    function mintAccessoryAndDisburseRevenue(uint accessoryId, address payable overpayReturnAddress)
-        public
+    function mintAccessories(uint[] calldata accessoryIds, uint[] calldata amounts, address payable overpayReturnAddress)
+        external
         payable
     {
-        uint buyPrice = getBuyPriceOfNewAccessory(accessoryId);
-        require (msg.value >= buyPrice, "Not enough ether included to buy that accessory.");
+        require(accessoryIds.length == amounts.length, "array arguments must have the same length");
+        
+        uint totalMintCost;
+        for (uint i=0; i<accessoryIds.length; i++) {
+            totalMintCost += getMintCostForNewAccessories(accessoryIds[i], amounts[i]);
+        }
+        require(msg.value >= totalMintCost, "Not enough ether included to buy that accessory.");
 
-        liquidAccessorySupply[accessoryId] ++;
+        for (uint i=0; i<accessoryIds.length; i++) {
+            _mintAccessoryAndDisburseRevenue(accessoryIds[i], amounts[i]);
+        }
 
-        _mint(msg.sender, uint256(accessoryId), 1, "");
+        if (msg.value > totalMintCost) {
+            // return extra in case of overpayment
+            // schalk: is this the appropriate tfer func to use?
+            overpayReturnAddress.transfer(msg.value - totalMintCost);
+        }
+    }
+
+    function _mintAccessoryAndDisburseRevenue(uint accessoryId, uint amount)
+        internal
+    {
+        uint mintCost = _mintAccessory(accessoryId, amount);
 
         // let's now take revenue.
-        // now that we've minted, we can get the current sell price, to know how much we can skim off the top
-        uint sellPrice = getSellPriceOfAccessory(accessoryId);
-        uint totalRevenue = buyPrice - sellPrice;
+        uint burnReward = getBurnRewardForReturnedAccessories(accessoryId, amount);
+        uint freeRevenue = mintCost - burnReward;
 
         // If no one is currently equipping the accessory, the rewards contract will revert.
         // We test for this and just send everything to revenueRecipient if that's the case.
         (, uint numEligibleRewardRecipients) = rewardsContract.rewardInfoForAccessory(accessoryId);
         if (numEligibleRewardRecipients == 0) {
             // syntax / which transfer func?
-            revenueRecipient.transfer(totalRevenue);
+            revenueRecipient.transfer(freeRevenue);
         }
         else {
-            uint halfRevenue = totalRevenue / 2;
+            uint halfFreeRevenue = freeRevenue / 2;
 
-            rewardsContract.accrueRewardsForAccessory{value:halfRevenue}(accessoryId);
+            rewardsContract.accrueRewardsForAccessory{value:halfFreeRevenue}(accessoryId);
 
-            // using `totalRevenue-halfRevenue` instead of simply `halfRevenue` to handle rounding errors from div by 2
+            // using `totalRevenue-halfFreeRevenue` instead of simply `halfFreeRevenue` to handle rounding errors from div by 2
             // schalk: is this the appropriate tfer func to use?
-            revenueRecipient.transfer(totalRevenue - halfRevenue);
-        }
-
-        if (msg.value > buyPrice) {
-            // return extra in case of overpayment
-            // schalk: is this the appropriate tfer func to use?
-            overpayReturnAddress.transfer(msg.value - buyPrice);
+            revenueRecipient.transfer(freeRevenue - halfFreeRevenue);
         }
     }
 
-    // batch call of the previous function
-    function mintAccessoriesAndDisburseRevenue(uint[] calldata accessoryIds, uint[] calldata numBuysOfAccessory, address payable overpayReturnAddress)
-        external
-        payable
+    function _mintAccessory(uint accessoryId, uint amount)
+        internal
+        returns (uint cost)
     {
-        require(accessoryIds.length == numBuysOfAccessory.length, "array arguments must have the same length");
+        cost = getMintCostForNewAccessories(accessoryId, amount);
 
-        for (uint i=0; i<accessoryIds.length; i++) {
-            for (uint j=0; j<numBuysOfAccessory[i]; j++) {
-                // schalk: is there a concern of re-entry here? I don't think so, since this call always changes state then disburses funds...?
-                mintAccessoryAndDisburseRevenue(accessoryIds[i], overpayReturnAddress);
-            }
-        }
+        liquidAccessorySupply[accessoryId] += amount;
+
+        _mint(msg.sender, accessoryId, amount, "");
     }
 
-    function returnAccessory(uint accessory, address payable fundsRecipient)
+    function burnAccessory(uint accessoryId, uint amount, address payable fundsRecipient)
         public
     {
-        require(balanceOf(msg.sender, accessory) > 0, "You don't own that accessory.");
+        require(balanceOf(msg.sender, accessoryId) >= amount, "You don't own that many of that accessory.");
 
-        uint sellPrice = getSellPriceOfAccessory(accessory);
-
-        fundsRecipient.transfer(sellPrice);
+        uint burnReward = getBurnRewardForReturnedAccessories(accessoryId, amount);
         
-        liquidAccessorySupply[accessory] --;
+        liquidAccessorySupply[accessoryId] -= amount;
 
-        _burn(msg.sender, accessory, 1);
+        _burn(msg.sender, accessoryId, amount);
+
+        fundsRecipient.transfer(burnReward);
     }
 
     // batch call of the previous function
-    function returnAccessories(uint[] calldata accessoryIds, uint[] calldata numReturnsOfAccessory, address payable fundsRecipient)
+    function burnAccessories(uint[] calldata accessoryIds, uint[] calldata amounts, address payable fundsRecipient)
         external
         payable
     {
-        require(accessoryIds.length == numReturnsOfAccessory.length, "array arguments must have the same length");
+        require(accessoryIds.length == amounts.length, "array arguments must have the same length");
 
         for (uint i=0; i<accessoryIds.length; i++) {
-            for (uint j=0; j<numReturnsOfAccessory[i]; j++) {
-                // schalk: is there a concern of re-entry here? I don't think so, since this call always changes state then disburses funds...?
-                returnAccessory(accessoryIds[i], fundsRecipient);
-            }
+            burnAccessory(accessoryIds[i], amounts[i], fundsRecipient);
         }
     }
 
-    function getBuyPriceOfNewAccessory(uint accessory)
+    function getMintCostForNewAccessories(uint accessoryId, uint amount)
         public
         view
         returns (uint)
     {
-        uint currentSupplyOfAccessory = liquidAccessorySupply[accessory];
-        return getBuyPriceGivenSupply(currentSupplyOfAccessory + 1);
+        uint currentSupplyOfAccessory = liquidAccessorySupply[accessoryId];
+
+        uint totalCost;
+        for (uint i=0; i<amount; i++) {
+            totalCost += getMintCostForItemNumber(currentSupplyOfAccessory + i);
+        }
+        return totalCost;
     }
 
-    function getSellPriceOfAccessory(uint accessory)
+    function getBurnRewardForReturnedAccessories(uint accessoryId, uint amount)
         public
         view
         returns (uint)
     {
-        uint currentSupplyOfAccessory = liquidAccessorySupply[accessory];
-        return getSellPriceGivenSupply(currentSupplyOfAccessory);
+        uint currentSupplyOfAccessory = liquidAccessorySupply[accessoryId];
+        require(amount <= currentSupplyOfAccessory, "Not enough supply of that accessory");
+
+        uint totalReward;
+        for (uint i=0; i<amount; i++) {
+            totalReward += getBurnRewardForItemNumber((currentSupplyOfAccessory - 1) - i);
+        }
+        return totalReward;
     }
 
-    function getBuyPriceGivenSupply(uint supply)
+    function getMintCostForItemNumber(uint itemNumber)
         public
         pure
         returns (uint)
     {
         return
-            ((getSellPriceGivenSupply(supply + 1) * 1100))
+            ((getBurnRewardForItemNumber(itemNumber) * 1100))
             / 1000
         ;
     }
 
-    function getSellPriceGivenSupply(uint supply)
+    function getBurnRewardForItemNumber(uint itemNumber)
         public
         pure
         returns (uint)
     {
-        return 0.001 ether * supply;
+        return 0.001 ether * (itemNumber + 1);
     }
 
     // We need to make sure the equip status is updated if we send away an accessory that is currently equipped.
