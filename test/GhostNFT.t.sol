@@ -53,7 +53,11 @@ contract GhostNFT is Test {
     }
 
     function test_balanceOfRandomAcccountIs0(address randomAccount) public {
+        // make sure this random address is not 0x0 or a TBA
         vm.assume(randomAccount != address(uint160(0)));
+        (address tbaTokenContractAddr, ) = testUtils.tgaReverseLookup(randomAccount);
+        vm.assume(tbaTokenContractAddr == address(0x0));
+
         require(miladyAvatarContract.balanceOf(randomAccount) == 0);
     }
 

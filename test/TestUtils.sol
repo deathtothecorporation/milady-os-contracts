@@ -45,4 +45,12 @@ contract TestUtils {
             0
         ));
     }
+
+    function tgaReverseLookup(address addr)
+        public
+        returns (address tokenAddress, uint tokenId)
+    {
+        return tbaRegistry.registeredAccounts(addr);
+    }
+        
 }
