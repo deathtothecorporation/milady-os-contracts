@@ -15,6 +15,7 @@ import "../src/SoulboundAccessories.sol";
 import "../src/Rewards.sol";
 import "../src/Deployer.sol";
 import "./TestConstants.sol";
+import "./TestUtils.sol";
 import "./Miladys.sol";
 
 library TestSetup {
@@ -28,17 +29,31 @@ library TestSetup {
         MiladyAvatar miladyAvatarContract,
         LiquidAccessories liquidAccessoriesContract,
         SoulboundAccessories soulboundAccessoriesContract,
-        Rewards rewardsContract
+        Rewards rewardsContract,
+        TestUtils testUtils
     )
     {
         tbaRegistry = new TBARegistry();
         tbaAccountImpl = new TokenGatedAccount();
+
+        testUtils = new TestUtils(tbaRegistry, tbaAccountImpl);
 
         miladyContract = new Miladys();
         miladyContract.flipSaleState();
 
         // mint miladys to msg.sender for testing
         miladyContract.mintMiladys{value:60000000000000000*numMiladysToMint}(numMiladysToMint);
+
+        for (uint i=0; i<numMiladysToMint; i++) {
+            tbaRegistry.createAccount(
+                address(tbaAccountImpl),
+                31337, // chain id of Forge's test chain
+                address(miladyContract),
+                i,
+                0,
+                ""
+            );
+        }
         
         (
             miladyAvatarContract, liquidAccessoriesContract, soulboundAccessoriesContract, rewardsContract

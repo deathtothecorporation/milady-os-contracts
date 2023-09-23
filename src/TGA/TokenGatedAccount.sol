@@ -31,8 +31,6 @@ contract TokenGatedAccount is IERC165, IERC1271, IERC6551Account, IERC1155Receiv
         external
         onlyAuthorizedMsgSender()
     {
-        require(msg.sender == owner(), "Not token owner");
-
         bondedAddress = addressToBond;
         tokenOwnerAtLastBond = owner();
     }
@@ -41,7 +39,7 @@ contract TokenGatedAccount is IERC165, IERC1271, IERC6551Account, IERC1155Receiv
 
     receive() external payable {}
 
-    function executeCall(address to, uint256 value,bytes calldata data)
+    function executeCall(address to, uint256 value, bytes calldata data)
         external
         payable
         onlyAuthorizedMsgSender()

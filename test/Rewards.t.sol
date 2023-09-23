@@ -13,7 +13,7 @@ import "../src/Deployer.sol";
 import "../src/AccessoryUtils.sol";
 import "./TestConstants.sol";
 import "./Miladys.sol";
-import "./TestSetup.t.sol";
+import "./TestSetup.sol";
 
 contract RewardsTest is Test {
     Rewards rewardsContract;
@@ -29,6 +29,7 @@ contract RewardsTest is Test {
             ,//LiquidAccessories liquidAccessoriesContract,
             soulboundAccessoriesContract,
             rewardsContract
+            ,
         )
          =
         TestSetup.deploy(NUM_MILADYS_MINTED, MILADY_AUTHORITY_ADDRESS);
