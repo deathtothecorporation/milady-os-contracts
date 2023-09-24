@@ -89,9 +89,6 @@ contract LiquidAccessoriesTests is Test {
         require(address(rewardsContract).balance == expectedRevenue - (expectedRevenue / 2));
 
         // send the item away and make sure unequip and deregister happens
-        // (uint128 hatTypeIdentifier, ) = AccessoryUtils.idToTypeAndVariantHashes(blueHatAccessoryId);
-        // console.log(avatarContract.equipSlots(0, hatTypeIdentifier));
-
         require(liquidAccessoriesContract.balanceOf(address(avatar0TGA), blueHatAccessoryId) == 1);
         (,uint totalHolders) = rewardsContract.rewardInfoForAccessory(blueHatAccessoryId);
         require(totalHolders == 1);
