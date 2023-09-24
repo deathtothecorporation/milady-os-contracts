@@ -19,7 +19,7 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
         vm.expectRevert("Not miladyAuthority");
         soulboundAccessoriesContract.mintAndEquipSoulboundAccessories(0, accessoryIds);
 
-        TokenGatedAccount avatar0TGA = testUtils.getTGA(miladyAvatarContract, 0);
+        TokenGatedAccount avatar0TGA = testUtils.getTGA(avatarContract, 0);
 
         vm.startPrank(MILADY_AUTHORITY_ADDRESS);
         soulboundAccessoriesContract.mintAndEquipSoulboundAccessories(0, accessoryIds);
@@ -27,7 +27,7 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
         require(soulboundAccessoriesContract.balanceOf(address(avatar0TGA), accessoryIds[0]) == 1);
 
         (uint128 hatAccessoryType,) = AccessoryUtils.idToTypeAndVariantHashes(accessoryIds[0]);
-        uint equippedAccessoryId = miladyAvatarContract.equipSlots(0, hatAccessoryType);
+        uint equippedAccessoryId = avatarContract.equipSlots(0, hatAccessoryType);
         require(equippedAccessoryId == accessoryIds[0]);
 
         vm.expectRevert("Avatar already activated");

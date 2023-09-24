@@ -15,17 +15,17 @@ import "../src/TGA/TBARegistry.sol";
 contract GhostNFT is MiladyOSTestBase {
 
     function test_ownershipTracks() public {
-        assert(miladyAvatarContract.ownerOf(0) == testUtils.getTgaAddress(miladysContract, 0));
+        assert(avatarContract.ownerOf(0) == testUtils.getTgaAddress(miladysContract, 0));
 
         miladysContract.transferFrom(address(this), address(0x2), 0);
 
-        assert(miladyAvatarContract.ownerOf(0) == testUtils.getTgaAddress(miladysContract, 0));
+        assert(avatarContract.ownerOf(0) == testUtils.getTgaAddress(miladysContract, 0));
     }
 
     function test_balanceOfForTGAIs1(uint miladyId) public {
         vm.assume(miladyId <= 9999);
 
-        require(miladyAvatarContract.balanceOf(testUtils.getTgaAddress(miladysContract, 0)) == 1);
+        require(avatarContract.balanceOf(testUtils.getTgaAddress(miladysContract, 0)) == 1);
     }
 
     function test_balanceOfRandomAcccountIs0(address randomAccount) public {
@@ -34,16 +34,16 @@ contract GhostNFT is MiladyOSTestBase {
         (address tbaTokenContractAddr, ) = testUtils.tgaReverseLookup(randomAccount);
         vm.assume(tbaTokenContractAddr == address(0x0));
 
-        require(miladyAvatarContract.balanceOf(randomAccount) == 0);
+        require(avatarContract.balanceOf(randomAccount) == 0);
     }
 
     function test_idValidity(uint id) public {
         if (id <= 9999) {
-            miladyAvatarContract.ownerOf(id);
+            avatarContract.ownerOf(id);
         }
         else {
             vm.expectRevert("Invalid Milady/Avatar id");
-            miladyAvatarContract.ownerOf(id);
+            avatarContract.ownerOf(id);
         }
     }
 

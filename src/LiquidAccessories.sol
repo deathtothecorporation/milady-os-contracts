@@ -12,7 +12,7 @@ import "./Rewards.sol";
 
 contract LiquidAccessories is ERC1155 {
     TBARegistry public tbaRegistry;
-    MiladyAvatar public miladyAvatarContract;
+    MiladyAvatar public avatarContract;
 
     Rewards rewardsContract;
     address payable revenueRecipient;
@@ -32,13 +32,13 @@ contract LiquidAccessories is ERC1155 {
         require(address(tbaRegistry) != address(0), "tbaRegistry cannot be the 0x0 address");
     }
 
-    function setAvatarContract(MiladyAvatar _miladyAvatarContract)
+    function setAvatarContract(MiladyAvatar _avatarContract)
         external
     {
         require(msg.sender == deployer, "Only callable by the initial deployer");
-        require(address(miladyAvatarContract) == address(0), "avatar contract already set");
+        require(address(avatarContract) == address(0), "avatar contract already set");
 
-        miladyAvatarContract = _miladyAvatarContract;
+        avatarContract = _avatarContract;
     }
     
     mapping(uint => uint) public liquidAccessorySupply;
@@ -188,7 +188,7 @@ contract LiquidAccessories is ERC1155 {
             // check if we're sending from a miladyAvatar TBA
             (address tbaTokenContract, uint tbaTokenId) = tbaRegistry.registeredAccounts(from);
             // tbaTokenContract == 0x0 if not a TBA
-            if (tbaTokenContract == address(miladyAvatarContract)) {
+            if (tbaTokenContract == address(avatarContract)) {
                 
                 // next 3 lines for clarity. possible todo: remove for gas savings
                 uint accessoryId = ids[i];
@@ -198,7 +198,7 @@ contract LiquidAccessories is ERC1155 {
                 // check if this transfer would result in a 0 balance
                 if (requestedAmountToTransfer == balanceOf(from, accessoryId)) { // if requestedAmountToTransfer is > balance, OZ's 1155 logic will catch and revert
                     //unequip if it's equipped
-                    miladyAvatarContract.preTransferUnequipById(miladyId, accessoryId);
+                    avatarContract.preTransferUnequipById(miladyId, accessoryId);
                 }
             }
         }

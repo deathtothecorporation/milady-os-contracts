@@ -12,7 +12,7 @@ import "./AccessoryUtils.sol";
 import "./MiladyAvatar.sol";
 
 contract SoulboundAccessories is ERC1155 {
-    MiladyAvatar public miladyAvatarContract;
+    MiladyAvatar public avatarContract;
 
     // state needed for TBA determination
     IERC6551Registry public tbaRegistry;
@@ -44,13 +44,13 @@ contract SoulboundAccessories is ERC1155 {
         miladyAuthority = _miladyAuthority;
     }
 
-    function setAvatarContract(MiladyAvatar _miladyAvatarContract)
+    function setAvatarContract(MiladyAvatar _avatarContract)
         external
     {
         require(msg.sender == deployer, "Not initial deployer");
-        require(address(miladyAvatarContract) == address(0), "Avatar already set");
+        require(address(avatarContract) == address(0), "Avatar already set");
 
-        miladyAvatarContract = _miladyAvatarContract;
+        avatarContract = _avatarContract;
     }
 
     function mintAndEquipSoulboundAccessories(uint miladyId, uint[] calldata accessories)
@@ -64,7 +64,7 @@ contract SoulboundAccessories is ERC1155 {
         address avatarTbaAddress = tbaRegistry.account(
             address(tbaAccountImpl),
             chainId,
-            address(miladyAvatarContract),
+            address(avatarContract),
             miladyId,
             0
         );
@@ -75,7 +75,7 @@ contract SoulboundAccessories is ERC1155 {
         }
 
         _mintBatch(avatarTbaAddress, accessories, listOf1s, "");
-        miladyAvatarContract.equipSoulboundAccessories(miladyId, accessories);
+        avatarContract.equipSoulboundAccessories(miladyId, accessories);
     }
 
     // disable all token transfers, making these soulbound.

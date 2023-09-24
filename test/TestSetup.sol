@@ -26,7 +26,7 @@ library TestSetup {
         TBARegistry tbaRegistry,
         TokenGatedAccount tbaAccountImpl,
         Miladys miladyContract,
-        MiladyAvatar miladyAvatarContract,
+        MiladyAvatar avatarContract,
         LiquidAccessories liquidAccessoriesContract,
         SoulboundAccessories soulboundAccessoriesContract,
         Rewards rewardsContract,
@@ -45,7 +45,7 @@ library TestSetup {
         miladyContract.mintMiladys{value:60000000000000000*numMiladysToMint}(numMiladysToMint);
         
         (
-            miladyAvatarContract, liquidAccessoriesContract, soulboundAccessoriesContract, rewardsContract
+            avatarContract, liquidAccessoriesContract, soulboundAccessoriesContract, rewardsContract
         ) =
         Deployer.deploy(
             tbaRegistry,
@@ -72,7 +72,7 @@ library TestSetup {
             tbaRegistry.createAccount(
                 address(tbaAccountImpl),
                 31337, // chain id of Forge's test chain
-                address(miladyAvatarContract),
+                address(avatarContract),
                 i,
                 0,
                 ""

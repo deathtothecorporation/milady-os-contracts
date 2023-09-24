@@ -37,11 +37,11 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
         require(PROJECT_REVENUE_RECIPIENT.balance == expectedRevenue);
 
         TokenGatedAccount milady0TGA = testUtils.getTGA(miladysContract, 0);
-        TokenGatedAccount avatar0TGA = testUtils.getTGA(miladyAvatarContract, 0);
+        TokenGatedAccount avatar0TGA = testUtils.getTGA(avatarContract, 0);
 
         // let's now equip it on an Avatar and try again
         liquidAccessoriesContract.safeTransferFrom(address(this), address(avatar0TGA), blueHatAccessoryId, 1, "");
-        milady0TGA.executeCall(address(miladyAvatarContract), 0, abi.encodeCall(miladyAvatarContract.updateEquipSlotsByAccessoryIds, (0, listOfBlueHatAccessoryId) ));
+        milady0TGA.executeCall(address(avatarContract), 0, abi.encodeCall(avatarContract.updateEquipSlotsByAccessoryIds, (0, listOfBlueHatAccessoryId) ));
 
         // clear out PROJECT_REVENUE_RECIPIENT to make logic below simpler
         vm.prank(PROJECT_REVENUE_RECIPIENT);

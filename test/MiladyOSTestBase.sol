@@ -14,7 +14,7 @@ contract MiladyOSTestBase is Test {
     TBARegistry tbaRegistry;
     // TokenGatedAccount tbaAccountImpl;
     Miladys miladysContract;
-    MiladyAvatar miladyAvatarContract;
+    MiladyAvatar avatarContract;
     LiquidAccessories liquidAccessoriesContract;
     SoulboundAccessories soulboundAccessoriesContract;
     Rewards rewardsContract;
@@ -25,7 +25,7 @@ contract MiladyOSTestBase is Test {
             tbaRegistry,
             ,// tbaAccountImpl,
             miladysContract,
-            miladyAvatarContract,
+            avatarContract,
             liquidAccessoriesContract,
             soulboundAccessoriesContract,
             rewardsContract,
