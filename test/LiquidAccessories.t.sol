@@ -9,41 +9,9 @@ import "forge-std/Test.sol";
 import "../src/AccessoryUtils.sol";
 import "../src/Rewards.sol";
 import "../src/MiladyAvatar.sol";
-import "./TestSetup.sol";
-import "./TestUtils.sol";
-import "./TestConstants.sol";
+import "./MiladyOSTestBase.sol";
 
-contract LiquidAccessoriesTests is Test {
-    TestUtils testUtils;
-    LiquidAccessories liquidAccessoriesContract;
-    MiladyAvatar avatarContract;
-    Miladys miladysContract;
-    Rewards rewardsContract;
-    
-    function setUp() public {
-        (
-            ,//TBARegistry tbaRegistry,
-            ,//TokenGatedAccount tbaAccountImpl,
-            Miladys _miladysContract,
-            MiladyAvatar _avatarContract,
-            LiquidAccessories _liquidAccessoriesContract,
-            ,//soulboundAccessoriesContract,
-            Rewards _rewardsContract,
-            TestUtils _testUtils
-        )
-         =
-        TestSetup.deploy(NUM_MILADYS_MINTED, MILADY_AUTHORITY_ADDRESS);
-
-        testUtils = _testUtils;
-        liquidAccessoriesContract = _liquidAccessoriesContract;
-        avatarContract = _avatarContract;
-        miladysContract = _miladysContract;
-        rewardsContract = _rewardsContract;
-    }
-
-    event ItemEquipped(uint miladyId, uint accessoryId);
-    event ItemUnequipped(uint miladyId, uint accessoryId);
-
+contract LiquidAccessoriesTests is MiladyOSTestBase {
     function test_revenueFlow() public {
         require(liquidAccessoriesContract.getBurnRewardForItemNumber(0) == 0.001 ether);
         require(liquidAccessoriesContract.getMintCostForItemNumber(0) == 0.0011 ether);
@@ -69,11 +37,11 @@ contract LiquidAccessoriesTests is Test {
         require(PROJECT_REVENUE_RECIPIENT.balance == expectedRevenue);
 
         TokenGatedAccount milady0TGA = testUtils.getTGA(miladysContract, 0);
-        TokenGatedAccount avatar0TGA = testUtils.getTGA(avatarContract, 0);
+        TokenGatedAccount avatar0TGA = testUtils.getTGA(miladyAvatarContract, 0);
 
         // let's now equip it on an Avatar and try again
         liquidAccessoriesContract.safeTransferFrom(address(this), address(avatar0TGA), blueHatAccessoryId, 1, "");
-        milady0TGA.executeCall(address(avatarContract), 0, abi.encodeCall(avatarContract.updateEquipSlotsByAccessoryIds, (0, listOfBlueHatAccessoryId) ));
+        milady0TGA.executeCall(address(miladyAvatarContract), 0, abi.encodeCall(miladyAvatarContract.updateEquipSlotsByAccessoryIds, (0, listOfBlueHatAccessoryId) ));
 
         // clear out PROJECT_REVENUE_RECIPIENT to make logic below simpler
         vm.prank(PROJECT_REVENUE_RECIPIENT);
@@ -106,28 +74,5 @@ contract LiquidAccessoriesTests is Test {
         // Half of this (0.0001) should have been sent to the rewards contract, then distributed to the Milady
         // Thus the avatar's TBA should have a balance of 0.0001 ETH
         require(payable(address(avatar0TGA)).balance == 0.0001 ether);
-    }
-
-    // define functions to allow receiving ether and NFTs
-
-    receive() external payable {}
-
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes calldata
-    ) external pure returns (bytes4) {
-        return IERC721Receiver.onERC721Received.selector;
-    }
-
-    function onERC1155Received(
-        address,
-        address,
-        uint256,
-        uint256,
-        bytes calldata
-    ) external returns (bytes4) {
-        return IERC1155Receiver.onERC1155Received.selector;
     }
 }

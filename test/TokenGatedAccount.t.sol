@@ -8,36 +8,13 @@ pragma solidity ^0.8.13;
 import "forge-std/Test.sol";
 import "../src/TGA/TBARegistry.sol";
 import "../src/TGA/TokenGatedAccount.sol";
-import "./TestSetup.sol";
-import "./TestUtils.sol";
-import "./TestConstants.sol";
+import "./MiladyOSTestBase.sol";
 import "./Miladys.sol";
 
-contract TGATests is Test {
-    Miladys miladysContract;
-    TestUtils testUtils;
-
+contract TGATests is MiladyOSTestBase {
     // Schalk: I'm using an NFT "approve" tx for the inner tx to try to execute, for testing.
     // Ideally this would instead be a straight send of ETH, to simplify the logic below
     // But I have no idea how to structure this... tga.executeCall(targetAddress, ethValToSend, "") doesn't work.
-
-    function setUp() public {
-        (
-            ,//TBARegistry tbaRegistry,
-            ,//TokenGatedAccount tbaAccountImpl,
-            Miladys _miladysContract,
-            ,//MiladyAvatar miladyAvatarContract,
-            ,//LiquidAccessories liquidAccessoriesContract,
-            ,//soulboundAccessoriesContract,
-            ,//rewardsContract
-            TestUtils _testUtils
-        )
-         =
-        TestSetup.deploy(NUM_MILADYS_MINTED, MILADY_AUTHORITY_ADDRESS);
-
-        miladysContract = _miladysContract;
-        testUtils = _testUtils;
-    }
     
     function test_expectedPermissions() public {
         // send a Milady to a new address `firstNFTHolder`
@@ -80,28 +57,5 @@ contract TGATests is Test {
         tga.bond(bondedAccount);
         vm.prank(bondedAccount);
         tga.bond(someOtherAddress);
-    }
-
-    // define functions to allow receiving ether and NFTs
-
-    receive() external payable {}
-
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes calldata
-    ) external pure returns (bytes4) {
-        return IERC721Receiver.onERC721Received.selector;
-    }
-
-    function onERC1155Received(
-        address,
-        address,
-        uint256,
-        uint256,
-        bytes calldata
-    ) external returns (bytes4) {
-        return IERC1155Receiver.onERC1155Received.selector;
     }
 }
