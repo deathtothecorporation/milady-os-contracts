@@ -86,6 +86,6 @@ contract SoulboundAccessories is ERC1155 {
         if (from == address(0x0)) {
             return; // allow transfers from 0x0, i.e. mints
         }
-        revert("These accessories are soulbound to the Milady Avatar and cannot be transferred");
+        revert("Cannot transfer soulbound tokens");
     }
 }

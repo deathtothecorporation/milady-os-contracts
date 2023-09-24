@@ -74,5 +74,17 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
         // Half of this (0.0001) should have been sent to the rewards contract, then distributed to the Milady
         // Thus the avatar's TBA should have a balance of 0.0001 ETH
         require(payable(address(avatar0TGA)).balance == 0.0001 ether);
+
+        // test solvency by burning the two accessories we minted
+        // we should have one in the 0x1 address and one in address(this)
+        liquidAccessoriesContract.burnAccessory(blueHatAccessoryId, 1, payable(address(0x3)));
+        vm.prank(address(0x1));
+        liquidAccessoriesContract.burnAccessory(blueHatAccessoryId, 1, payable(address(0x3)));
+
+        // the funds recipient (0x2) should have gotten the burnReward, 0.001 + 0.002 ETH
+        require(payable(address(0x3)).balance == 0.003 ether);
+
+        // there should be 0 remaining ether in the liquidAccessories contract
+        require(payable(address(liquidAccessoriesContract)).balance == 0);
     }
 }
