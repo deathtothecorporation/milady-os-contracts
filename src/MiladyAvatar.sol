@@ -105,7 +105,7 @@ contract MiladyAvatar is IERC721 {
         return false;
     }
     function revertWithSoulboundMessage() pure internal {
-        revert("Milady Avatars cannot be moved from their soulbound Milady.");
+        revert("Cannot transfer soulbound tokens");
     }
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return interfaceId == type(IERC721).interfaceId;
