@@ -35,6 +35,13 @@ contract TestUtils {
 
     function getTGA(IERC721 tokenContract, uint tokenId)
         public
+        returns (TokenGatedAccount)
+    {
+        return TokenGatedAccount(getTgaAddress(tokenContract, tokenId));
+    }
+
+    function getTgaAddress(IERC721 tokenContract, uint tokenId)
+        public
         returns(address payable)
     {
         return payable(tbaRegistry.account(

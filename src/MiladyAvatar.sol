@@ -177,22 +177,19 @@ contract MiladyAvatar is IERC721 {
     {
         if (equipSlots[miladyId][accType] != 0) {
             rewardsContract.deregisterMiladyForRewardsForAccessoryAndClaim(miladyId, equipSlots[miladyId][accType], getPayableAvatarTBA(miladyId));
+
             equipSlots[miladyId][accType] = 0;
         }
     }
 
-    // convenience functions
-
-    function unequipAccessoryByIdIfEquipped(uint miladyId, uint accessoryId)
+    function preTransferUnequipById(uint miladyId, uint accessoryId)
         external
     {
+        require(msg.sender == address(liquidAccessoriesContract), "msg.sender not liquidAccessories contract");
+
         (uint128 accType, ) = AccessoryUtils.idToTypeAndVariantHashes(accessoryId);
-        uint nullAccessoryForThisType = AccessoryUtils.typeAndVariantHashesToId(accType, 0);
 
-        uint[] memory accessoryIds = new uint[](1);
-        accessoryIds[0] = nullAccessoryForThisType;
-
-        updateEquipSlotsByAccessoryIds(miladyId, accessoryIds);
+        _unequipAccessoryByTypeIfEquipped(miladyId, accType);
     }
 
     // Get the TokenGatedAccount for a particular Milady Avatar.

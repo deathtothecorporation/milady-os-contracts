@@ -43,17 +43,6 @@ library TestSetup {
 
         // mint miladys to msg.sender for testing
         miladyContract.mintMiladys{value:60000000000000000*numMiladysToMint}(numMiladysToMint);
-
-        for (uint i=0; i<numMiladysToMint; i++) {
-            tbaRegistry.createAccount(
-                address(tbaAccountImpl),
-                31337, // chain id of Forge's test chain
-                address(miladyContract),
-                i,
-                0,
-                ""
-            );
-        }
         
         (
             miladyAvatarContract, liquidAccessoriesContract, soulboundAccessoriesContract, rewardsContract
@@ -69,5 +58,25 @@ library TestSetup {
             "",
             ""
         );
+
+        for (uint i=0; i<numMiladysToMint; i++) {
+            tbaRegistry.createAccount(
+                address(tbaAccountImpl),
+                31337, // chain id of Forge's test chain
+                address(miladyContract),
+                i,
+                0,
+                ""
+            );
+
+            tbaRegistry.createAccount(
+                address(tbaAccountImpl),
+                31337, // chain id of Forge's test chain
+                address(miladyAvatarContract),
+                i,
+                0,
+                ""
+            );
+        }
     }
 }

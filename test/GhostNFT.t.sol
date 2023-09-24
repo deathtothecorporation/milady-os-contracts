@@ -39,17 +39,17 @@ contract GhostNFT is Test {
     }
 
     function test_ownershipTracks() public {
-        assert(miladyAvatarContract.ownerOf(0) == testUtils.getTGA(miladyContract, 0));
+        assert(miladyAvatarContract.ownerOf(0) == testUtils.getTgaAddress(miladyContract, 0));
 
         miladyContract.transferFrom(address(this), address(0x2), 0);
 
-        assert(miladyAvatarContract.ownerOf(0) == testUtils.getTGA(miladyContract, 0));
+        assert(miladyAvatarContract.ownerOf(0) == testUtils.getTgaAddress(miladyContract, 0));
     }
 
     function test_balanceOfForTGAIs1(uint miladyId) public {
         vm.assume(miladyId <= 9999);
 
-        require(miladyAvatarContract.balanceOf(testUtils.getTGA(miladyContract, 0)) == 1);
+        require(miladyAvatarContract.balanceOf(testUtils.getTgaAddress(miladyContract, 0)) == 1);
     }
 
     function test_balanceOfRandomAcccountIs0(address randomAccount) public {
