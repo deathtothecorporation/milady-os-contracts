@@ -12,7 +12,7 @@ import "./TestConstants.sol";
 
 contract MiladyOSTestBase is Test {
     TBARegistry tbaRegistry;
-    TokenGatedAccount tbaAccountImpl;
+    // TokenGatedAccount tbaAccountImpl;
     Miladys miladysContract;
     MiladyAvatar miladyAvatarContract;
     LiquidAccessories liquidAccessoriesContract;
@@ -23,7 +23,7 @@ contract MiladyOSTestBase is Test {
     function setUp() public {
         (
             tbaRegistry,
-            tbaAccountImpl,
+            ,// tbaAccountImpl,
             miladysContract,
             miladyAvatarContract,
             liquidAccessoriesContract,
