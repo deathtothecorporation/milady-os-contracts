@@ -12,10 +12,97 @@ import "../src/MiladyAvatar.sol";
 import "./MiladyOSTestBase.sol";
 
 contract LiquidAccessoriesTests is MiladyOSTestBase {
+    function test_autoUnequip() public {
+        uint redHatAccessoryId = AccessoryUtils.plaintextAccessoryTextToId("hat", "red hat");
+        uint greenHatAccessoryId = AccessoryUtils.plaintextAccessoryTextToId("hat", "green hat");
+        uint blueHatAccessoryId = AccessoryUtils.plaintextAccessoryTextToId("hat", "blue hat");
+
+        uint[] memory accessoriesToMint = new uint[](3);
+        accessoriesToMint[0] = redHatAccessoryId;
+        accessoriesToMint[1] = greenHatAccessoryId;
+        accessoriesToMint[2] = blueHatAccessoryId;
+        uint[] memory amounts = new uint[](3);
+        amounts[0] = 1;
+        amounts[1] = 1;
+        amounts[2] = 1;
+
+        // should cost 0.0011 ETH per first item for each set, so 0.0033 ETH
+        address payable overpayAddress = payable(address(uint160(10)));
+        liquidAccessoriesContract.mintAccessories{value:0.0033 ether}(accessoriesToMint, amounts, overpayAddress);
+        require(overpayAddress.balance == 0);
+
+        require(liquidAccessoriesContract.balanceOf(address(this), redHatAccessoryId) == 1);
+        require(liquidAccessoriesContract.balanceOf(address(this), greenHatAccessoryId) == 1);
+        require(liquidAccessoriesContract.balanceOf(address(this), blueHatAccessoryId) == 1);
+
+        // transfer the accessories to the avatarTGA
+        TokenGatedAccount avatar0TGA = testUtils.getTGA(avatarContract, 0);
+        liquidAccessoriesContract.safeTransferFrom(address(this), address(avatar0TGA), redHatAccessoryId, 1, "");
+        liquidAccessoriesContract.safeTransferFrom(address(this), address(avatar0TGA), greenHatAccessoryId, 1, "");
+        liquidAccessoriesContract.safeTransferFrom(address(this), address(avatar0TGA), blueHatAccessoryId, 1, "");
+
+        // now equip one, then another, and make sure the auto unequip works
+        vm.startPrank(address(testUtils.getTGA(miladysContract, 0)));
+        (uint128 hatType, ) = AccessoryUtils.idToTypeAndVariantHashes(redHatAccessoryId);
+
+        uint[] memory listOfJustRedHatId = new uint[](1);
+        listOfJustRedHatId[0] = redHatAccessoryId;
+        avatarContract.updateEquipSlotsByAccessoryIds(0, listOfJustRedHatId);
+        require(avatarContract.equipSlots(0, hatType) == redHatAccessoryId);
+        (, uint totalHoldersForRedHatRewards) = rewardsContract.rewardInfoForAccessory(redHatAccessoryId);
+        require(totalHoldersForRedHatRewards == 1);
+
+        uint[] memory listOfJustBlueHatId = new uint[](1);
+        listOfJustBlueHatId[0] = blueHatAccessoryId;
+        avatarContract.updateEquipSlotsByAccessoryIds(0, listOfJustBlueHatId);
+        require(avatarContract.equipSlots(0, hatType) == blueHatAccessoryId);
+        (, totalHoldersForRedHatRewards) = rewardsContract.rewardInfoForAccessory(redHatAccessoryId);
+        require(totalHoldersForRedHatRewards == 0);
+    }
+    function test_autoUnequipBatch() public {
+        uint redHatAccessoryId = AccessoryUtils.plaintextAccessoryTextToId("hat", "red hat");
+        uint greenHatAccessoryId = AccessoryUtils.plaintextAccessoryTextToId("hat", "green hat");
+        uint blueHatAccessoryId = AccessoryUtils.plaintextAccessoryTextToId("hat", "blue hat");
+
+        uint[] memory accessoriesToMint = new uint[](3);
+        accessoriesToMint[0] = redHatAccessoryId;
+        accessoriesToMint[1] = greenHatAccessoryId;
+        accessoriesToMint[2] = blueHatAccessoryId;
+        uint[] memory amounts = new uint[](3);
+        amounts[0] = 1;
+        amounts[1] = 1;
+        amounts[2] = 1;
+
+        // should cost 0.0011 ETH per first item for each set, so 0.0033 ETH
+        address payable overpayAddress = payable(address(uint160(10)));
+        liquidAccessoriesContract.mintAccessories{value:0.0033 ether}(accessoriesToMint, amounts, overpayAddress);
+        require(overpayAddress.balance == 0);
+
+        require(liquidAccessoriesContract.balanceOf(address(this), redHatAccessoryId) == 1);
+        require(liquidAccessoriesContract.balanceOf(address(this), greenHatAccessoryId) == 1);
+        require(liquidAccessoriesContract.balanceOf(address(this), blueHatAccessoryId) == 1);
+
+        // transfer the accessories to the avatarTGA
+        TokenGatedAccount avatar0TGA = testUtils.getTGA(avatarContract, 0);
+        liquidAccessoriesContract.safeTransferFrom(address(this), address(avatar0TGA), redHatAccessoryId, 1, "");
+        liquidAccessoriesContract.safeTransferFrom(address(this), address(avatar0TGA), greenHatAccessoryId, 1, "");
+        liquidAccessoriesContract.safeTransferFrom(address(this), address(avatar0TGA), blueHatAccessoryId, 1, "");
+
+        // equip all 3 in a batch, and make sure only the last one sticks
+        vm.startPrank(address(testUtils.getTGA(miladysContract, 0)));
+        (uint128 hatType, ) = AccessoryUtils.idToTypeAndVariantHashes(redHatAccessoryId);
+
+        avatarContract.updateEquipSlotsByAccessoryIds(0, accessoriesToMint);
+        require(avatarContract.equipSlots(0, hatType) == blueHatAccessoryId);
+        (, uint totalHoldersForRedHatRewards) = rewardsContract.rewardInfoForAccessory(redHatAccessoryId);
+        require(totalHoldersForRedHatRewards == 0);
+        (, uint totalHoldersForBlueHatRewards) = rewardsContract.rewardInfoForAccessory(blueHatAccessoryId);
+        require(totalHoldersForBlueHatRewards == 1);
+    }
     function test_revenueFlow() public {
         require(liquidAccessoriesContract.getBurnRewardForItemNumber(0) == 0.001 ether);
         require(liquidAccessoriesContract.getMintCostForItemNumber(0) == 0.0011 ether);
-        vm.expectRevert();
+        vm.expectRevert("Not enough supply of that accessory");
         liquidAccessoriesContract.getBurnRewardForReturnedAccessories(0, 1);
         require(liquidAccessoriesContract.getMintCostForNewAccessories(0, 1) == 0.0011 ether);
 
