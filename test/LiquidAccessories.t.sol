@@ -100,6 +100,12 @@ contract LiquidAccessoriesTests is Test {
         require(liquidAccessoriesContract.balanceOf(address(avatar0TGA), blueHatAccessoryId) == 0);
         (, totalHolders) = rewardsContract.rewardInfoForAccessory(blueHatAccessoryId);
         require(totalHolders == 0);
+
+        // we can also verify the rewards were distributed upon the auto-unequip
+        // The mint during equip should have had a freeRevenue of (0.0022 - 0.002) 0.0002.
+        // Half of this (0.0001) should have been sent to the rewards contract, then distributed to the Milady
+        // Thus the avatar's TBA should have a balance of 0.0001 ETH
+        require(payable(address(avatar0TGA)).balance == 0.0001 ether);
     }
 
     // define functions to allow receiving ether and NFTs
