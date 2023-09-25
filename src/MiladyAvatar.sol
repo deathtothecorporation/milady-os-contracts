@@ -19,11 +19,11 @@ contract MiladyAvatar is IERC721 {
     Rewards public rewardsContract;
     
     // state needed for TBA determination
-    TBARegistry tbaRegistry;
-    IERC6551Account tbaAccountImpl;
-    uint chainId;
+    TBARegistry public tbaRegistry;
+    IERC6551Account public tbaAccountImpl;
+    uint public chainId;
 
-    string baseURI;
+    string public baseURI;
 
     // only used for initial deploy
     address deployer;
@@ -49,7 +49,7 @@ contract MiladyAvatar is IERC721 {
             Rewards _rewardsContract)
         external
     {
-        require(msg.sender == deployer, "Only callable by the initial deployer");
+        require(msg.sender == deployer, "Caller not initial deployer");
         require(address(liquidAccessoriesContract) == address(0), "Contracts already set");
         
         liquidAccessoriesContract = _liquidAccessoriesContract;
