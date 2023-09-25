@@ -29,11 +29,11 @@ contract MiladyAvatar is IERC721 {
     address deployer;
 
     constructor(
-        IERC721 _miladysContract,
-        TBARegistry _tbaRegistry,
-        TokenGatedAccount _tbaAccountImpl,
-        uint _chainId,
-        string memory _baseURI
+            IERC721 _miladysContract,
+            TBARegistry _tbaRegistry,
+            TokenGatedAccount _tbaAccountImpl,
+            uint _chainId,
+            string memory _baseURI
     ) {
         deployer = msg.sender;
         miladysContract = _miladysContract;
