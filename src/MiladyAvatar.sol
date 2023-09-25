@@ -182,26 +182,26 @@ contract MiladyAvatar is IERC721 {
 
     // core function for equip logic.
     // Unequips items if equip would overwrite for that accessory type
-    function _equipAccessoryIfOwned(uint miladyId, uint accessoryId)
+    function _equipAccessoryIfOwned(uint _miladyId, uint _accessoryId)
         internal
     {
-        address avatarTBA = getAvatarTBA(miladyId);
+        address avatarTBA = getAvatarTBA(_miladyId);
 
         require(
-            liquidAccessoriesContract.balanceOf(address(avatarTBA), accessoryId) > 0
-         || soulboundAccessoriesContract.balanceOf(address(avatarTBA), accessoryId) > 0,
-            "That avatar does not own that accessory."
+            liquidAccessoriesContract.balanceOf(address(avatarTBA), _accessoryId) > 0
+         || soulboundAccessoriesContract.balanceOf(address(avatarTBA), _accessoryId) > 0,
+            "Unowned accessory"
         );
 
-        (uint128 accType, uint accVariant) = AccessoryUtils.idToTypeAndVariantHashes(accessoryId);
+        (uint128 accType, uint accVariant) = AccessoryUtils.idToTypeAndVariantHashes(_accessoryId);
         assert(accVariant != 0); // take out for gas savings?
 
         _unequipAccessoryByTypeIfEquipped(miladyId, accType);
-        rewardsContract.registerMiladyForRewardsForAccessory(miladyId, accessoryId);
+        rewardsContract.registerMiladyForRewardsForAccessory(_miladyId, _accessoryId);
 
-        equipSlots[miladyId][accType] = accessoryId;
+        equipSlots[miladyId][accType] = _accessoryId;
 
-        emit AccessoryEquipped(miladyId, accessoryId);
+        emit AccessoryEquipped(_miladyId, _accessoryId);
     }
 
     event AccessoryUnequipped(uint miladyId, uint accessoryId);
