@@ -5,14 +5,21 @@
 pragma solidity ^0.8.13;
 
 import "openzeppelin/token/ERC721/IERC721.sol";
-import "./TBA/TBARegistry.sol";
-import "./TBA/TokenGatedAccount.sol";
+import "./TGA/TBARegistry.sol";
+import "./TGA/TokenGatedAccount.sol";
 import "./MiladyAvatar.sol";
 import "./LiquidAccessories.sol";
 import "./SoulboundAccessories.sol";
 import "./Rewards.sol";
 
 library Deployer {
+    event Deployed(
+        address avatarContractAddress,
+        address liquidAccessoriesContractAddress,
+        address soulboundAccessoriesContractAddress,
+        address rewardsContractAddress
+    );
+
     function deploy(
         TBARegistry tbaRegistry,
         TokenGatedAccount tbaAccountImpl,
@@ -60,5 +67,12 @@ library Deployer {
         avatarContract.setOtherContracts(liquidAccessoriesContract, soulboundAccessoriesContract, rewardsContract);
         liquidAccessoriesContract.setAvatarContract(avatarContract);
         soulboundAccessoriesContract.setAvatarContract(avatarContract);
+
+        emit Deployed(
+            address(avatarContract),
+            address(liquidAccessoriesContract),
+            address(soulboundAccessoriesContract),
+            address(rewardsContract)
+        );
     }
 }

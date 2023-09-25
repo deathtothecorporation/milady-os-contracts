@@ -11,29 +11,10 @@ import "openzeppelin/token/ERC1155/IERC1155Receiver.sol";
 import "../src/Rewards.sol";
 import "../src/Deployer.sol";
 import "../src/AccessoryUtils.sol";
-import "./TestConstants.sol";
+import "./MiladyOSTestBase.sol";
 import "./Miladys.sol";
-import "./TestSetup.t.sol";
 
-contract RewardsTest is Test {
-    Rewards rewardsContract;
-    Miladys miladyContract;
-    SoulboundAccessories soulboundAccessoriesContract;
-
-    function setUp() external {
-        (
-            ,//TBARegistry tbaRegistry,
-            ,//TokenGatedAccount tbaAccountImpl,
-            miladyContract,
-            ,//MiladyAvatar miladyAvatarContract,
-            ,//LiquidAccessories liquidAccessoriesContract,
-            soulboundAccessoriesContract,
-            rewardsContract
-        )
-         =
-        TestSetup.deploy(NUM_MILADYS_MINTED, MILADY_AUTHORITY_ADDRESS);
-    }
-
+contract RewardsTest is MiladyOSTestBase {
     function test_basicRewards() external {
         // prepare milady with its soulbound accessories
         AccessoryUtils.PlaintextAccessoryInfo[] memory milady0AccessoriesPlaintext = new AccessoryUtils.PlaintextAccessoryInfo[](3);
@@ -101,28 +82,5 @@ contract RewardsTest is Test {
         rewardsContract.claimRewardsForMilady(1, milady1Accessories, payable(address(this)));
         balancePostClaim = address(this).balance;
         require(balancePostClaim - balancePreClaim == expectedRewardsForMilady1);
-    }
-
-    // define functions to allow receiving ether and NFTs
-
-    receive() external payable {}
-
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes calldata
-    ) external pure returns (bytes4) {
-        return IERC721Receiver.onERC721Received.selector;
-    }
-
-    function onERC1155Received(
-        address,
-        address,
-        uint256,
-        uint256,
-        bytes calldata
-    ) external returns (bytes4) {
-        return IERC1155Receiver.onERC1155Received.selector;
     }
 }

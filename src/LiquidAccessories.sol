@@ -5,20 +5,19 @@
 pragma solidity ^0.8.13;
 
 import "openzeppelin/token/ERC1155/ERC1155.sol";
-import "./TBA/TBARegistry.sol";
+import "./TGA/TBARegistry.sol";
 import "./AccessoryUtils.sol";
 import "./MiladyAvatar.sol";
 import "./Rewards.sol";
 
 contract LiquidAccessories is ERC1155 {
     TBARegistry public tbaRegistry;
-    MiladyAvatar public miladyAvatarContract;
+    MiladyAvatar public avatarContract;
 
     Rewards rewardsContract;
     address payable revenueRecipient;
 
-    // only used for initial deploy
-    address deployer;
+    address deployer; // only used for initial deploy
 
     constructor(TBARegistry _tbaRegistry, Rewards _rewardsContract, address payable _revenueRecipient, string memory uri_)
         ERC1155(uri_)
@@ -32,121 +31,150 @@ contract LiquidAccessories is ERC1155 {
         require(address(tbaRegistry) != address(0), "tbaRegistry cannot be the 0x0 address");
     }
 
-    function setAvatarContract(MiladyAvatar _miladyAvatarContract)
+    function setAvatarContract(MiladyAvatar _avatarContract)
         external
     {
         require(msg.sender == deployer, "Only callable by the initial deployer");
-        require(address(miladyAvatarContract) == address(0), "avatar contract already set");
+        require(address(avatarContract) == address(0), "avatar contract already set");
 
-        miladyAvatarContract = _miladyAvatarContract;
+        avatarContract = _avatarContract;
     }
     
     mapping(uint => uint) public liquidAccessorySupply;
 
-    function mintAccessoryAndDisburseRevenue(uint accessoryId, address payable overpayReturnAddress)
-        public
+    function mintAccessories(uint[] calldata accessoryIds, uint[] calldata amounts, address recipient, address payable overpayReturnAddress)
+        external
         payable
     {
-        uint buyPrice = getBuyPriceOfNewAccessory(accessoryId);
-        require (msg.value >= buyPrice, "Not enough ether included to buy that accessory.");
+        require(accessoryIds.length == amounts.length, "array arguments must have the same length");
+        
+        uint totalMintCost;
+        for (uint i=0; i<accessoryIds.length; i++) {
+            totalMintCost += getMintCostForNewAccessories(accessoryIds[i], amounts[i]);
+        }
+        require(msg.value >= totalMintCost, "Not enough ether included to buy that accessory.");
 
-        liquidAccessorySupply[accessoryId] ++;
+        for (uint i=0; i<accessoryIds.length; i++) {
+            _mintAccessoryAndDisburseRevenue(accessoryIds[i], amounts[i], recipient);
+        }
 
-        _mint(msg.sender, uint256(accessoryId), 1, "");
+        if (msg.value > totalMintCost) {
+            // return extra in case of overpayment
+            // schalk: is this the appropriate tfer func to use?
+            overpayReturnAddress.transfer(msg.value - totalMintCost);
+        }
+    }
+
+    function _mintAccessoryAndDisburseRevenue(uint accessoryId, uint amount, address recipient)
+        internal
+    {
+        uint mintCost = _mintAccessory(accessoryId, amount, recipient);
 
         // let's now take revenue.
-        // now that we've minted, we can get the current sell price, to know how much we can skim off the top
-        uint sellPrice = getSellPriceOfAccessory(accessoryId);
-        uint totalRevenue = buyPrice - sellPrice;
+        uint burnReward = getBurnRewardForReturnedAccessories(accessoryId, amount);
+        uint freeRevenue = mintCost - burnReward;
 
         // If no one is currently equipping the accessory, the rewards contract will revert.
         // We test for this and just send everything to revenueRecipient if that's the case.
         (, uint numEligibleRewardRecipients) = rewardsContract.rewardInfoForAccessory(accessoryId);
         if (numEligibleRewardRecipients == 0) {
             // syntax / which transfer func?
-            revenueRecipient.transfer(totalRevenue);
+            revenueRecipient.transfer(freeRevenue);
         }
         else {
-            uint halfRevenue = totalRevenue / 2;
+            uint halfFreeRevenue = freeRevenue / 2;
 
-            rewardsContract.accrueRewardsForAccessory{value:halfRevenue}(accessoryId);
+            rewardsContract.accrueRewardsForAccessory{value:halfFreeRevenue}(accessoryId);
 
-            // using `totalRevenue-halfRevenue` instead of simply `halfRevenue` to handle rounding errors from div by 2
+            // using `totalRevenue-halfFreeRevenue` instead of simply `halfFreeRevenue` to handle rounding errors from div by 2
             // schalk: is this the appropriate tfer func to use?
-            revenueRecipient.transfer(totalRevenue - halfRevenue);
+            revenueRecipient.transfer(freeRevenue - halfFreeRevenue);
         }
+    }
 
-        if (msg.value > buyPrice) {
-            // return extra in case of overpayment
-            // schalk: is this the appropriate tfer func to use?
-            overpayReturnAddress.transfer(msg.value - buyPrice);
-        }
+    function _mintAccessory(uint accessoryId, uint amount, address recipient)
+        internal
+        returns (uint cost)
+    {
+        cost = getMintCostForNewAccessories(accessoryId, amount);
+
+        liquidAccessorySupply[accessoryId] += amount;
+
+        _mint(recipient, accessoryId, amount, "");
+    }
+
+    function burnAccessory(uint accessoryId, uint amount, address payable fundsRecipient)
+        public
+    {
+        require(balanceOf(msg.sender, accessoryId) >= amount, "You don't own that many of that accessory.");
+
+        uint burnReward = getBurnRewardForReturnedAccessories(accessoryId, amount);
+        
+        liquidAccessorySupply[accessoryId] -= amount;
+
+        _burn(msg.sender, accessoryId, amount);
+
+        fundsRecipient.transfer(burnReward);
     }
 
     // batch call of the previous function
-    function mintAccessoriesAndDisburseRevenue(uint[] calldata accessoryIds, uint[] calldata numBuysOfAccessory, address payable overpayReturnAddress)
+    function burnAccessories(uint[] calldata accessoryIds, uint[] calldata amounts, address payable fundsRecipient)
         external
         payable
     {
-        require(accessoryIds.length == numBuysOfAccessory.length, "array arguments must have the same length");
+        require(accessoryIds.length == amounts.length, "array arguments must have the same length");
 
         for (uint i=0; i<accessoryIds.length; i++) {
-            for (uint j=0; j<numBuysOfAccessory[i]; j++) {
-                // schalk: is there a concern of re-entry here? I don't think so, since this call always changes state then disburses funds...?
-                mintAccessoryAndDisburseRevenue(accessoryIds[i], overpayReturnAddress);
-            }
+            burnAccessory(accessoryIds[i], amounts[i], fundsRecipient);
         }
     }
 
-    function returnAccessory(uint accessory, address payable fundsRecipient)
-        public
-    {
-        require(balanceOf(msg.sender, accessory) > 0, "You don't own that accessory.");
-
-        uint sellPrice = getSellPriceOfAccessory(accessory);
-
-        fundsRecipient.transfer(sellPrice);
-        
-        liquidAccessorySupply[accessory] --;
-
-        _burn(msg.sender, accessory, 1);
-    }
-
-    function getBuyPriceOfNewAccessory(uint accessory)
+    function getMintCostForNewAccessories(uint accessoryId, uint amount)
         public
         view
         returns (uint)
     {
-        uint currentSupplyOfAccessory = liquidAccessorySupply[accessory];
-        return getBuyPriceGivenSupply(currentSupplyOfAccessory + 1);
+        uint currentSupplyOfAccessory = liquidAccessorySupply[accessoryId];
+
+        uint totalCost;
+        for (uint i=0; i<amount; i++) {
+            totalCost += getMintCostForItemNumber(currentSupplyOfAccessory + i);
+        }
+        return totalCost;
     }
 
-    function getSellPriceOfAccessory(uint accessory)
+    function getBurnRewardForReturnedAccessories(uint accessoryId, uint amount)
         public
         view
         returns (uint)
     {
-        uint currentSupplyOfAccessory = liquidAccessorySupply[accessory];
-        return getSellPriceGivenSupply(currentSupplyOfAccessory);
+        uint currentSupplyOfAccessory = liquidAccessorySupply[accessoryId];
+        require(amount <= currentSupplyOfAccessory, "Not enough supply of that accessory");
+
+        uint totalReward;
+        for (uint i=0; i<amount; i++) {
+            totalReward += getBurnRewardForItemNumber((currentSupplyOfAccessory - 1) - i);
+        }
+        return totalReward;
     }
 
-    function getBuyPriceGivenSupply(uint supply)
+    function getMintCostForItemNumber(uint itemNumber)
         public
         pure
         returns (uint)
     {
         return
-            ((getSellPriceGivenSupply(supply + 1) * 1100))
+            ((getBurnRewardForItemNumber(itemNumber) * 1100))
             / 1000
         ;
     }
 
-    function getSellPriceGivenSupply(uint supply)
+    function getBurnRewardForItemNumber(uint itemNumber)
         public
         pure
         returns (uint)
     {
-        return 0.001 ether * supply;
+        return 0.001 ether * (itemNumber + 1);
     }
 
     // We need to make sure the equip status is updated if we send away an accessory that is currently equipped.
@@ -159,7 +187,7 @@ contract LiquidAccessories is ERC1155 {
             // check if we're sending from a miladyAvatar TBA
             (address tbaTokenContract, uint tbaTokenId) = tbaRegistry.registeredAccounts(from);
             // tbaTokenContract == 0x0 if not a TBA
-            if (tbaTokenContract == address(miladyAvatarContract)) {
+            if (tbaTokenContract == address(avatarContract)) {
                 
                 // next 3 lines for clarity. possible todo: remove for gas savings
                 uint accessoryId = ids[i];
@@ -169,7 +197,7 @@ contract LiquidAccessories is ERC1155 {
                 // check if this transfer would result in a 0 balance
                 if (requestedAmountToTransfer == balanceOf(from, accessoryId)) { // if requestedAmountToTransfer is > balance, OZ's 1155 logic will catch and revert
                     //unequip if it's equipped
-                    miladyAvatarContract.unequipAccessoryByIdIfEquipped(miladyId, accessoryId);
+                    avatarContract.preTransferUnequipById(miladyId, accessoryId);
                 }
             }
         }

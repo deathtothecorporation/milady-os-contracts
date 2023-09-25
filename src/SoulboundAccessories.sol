@@ -5,14 +5,14 @@
 pragma solidity ^0.8.13;
 
 import "openzeppelin/token/ERC1155/ERC1155.sol";
-import "./TBA/IERC6551Registry.sol";
-import "./TBA/IERC6551Account.sol";
-import "./TBA/TokenGatedAccount.sol";
+import "./TGA/IERC6551Registry.sol";
+import "./TGA/IERC6551Account.sol";
+import "./TGA/TokenGatedAccount.sol";
 import "./AccessoryUtils.sol";
 import "./MiladyAvatar.sol";
 
 contract SoulboundAccessories is ERC1155 {
-    MiladyAvatar public miladyAvatarContract;
+    MiladyAvatar public avatarContract;
 
     // state needed for TBA determination
     IERC6551Registry public tbaRegistry;
@@ -44,14 +44,16 @@ contract SoulboundAccessories is ERC1155 {
         miladyAuthority = _miladyAuthority;
     }
 
-    function setAvatarContract(MiladyAvatar _miladyAvatarContract)
+    function setAvatarContract(MiladyAvatar _avatarContract)
         external
     {
         require(msg.sender == deployer, "Not initial deployer");
-        require(address(miladyAvatarContract) == address(0), "Avatar already set");
+        require(address(avatarContract) == address(0), "Avatar already set");
 
-        miladyAvatarContract = _miladyAvatarContract;
+        avatarContract = _avatarContract;
     }
+
+    event MiladyOnboarded(uint miladyId, uint[] accessories);
 
     function mintAndEquipSoulboundAccessories(uint miladyId, uint[] calldata accessories)
         external
@@ -64,7 +66,7 @@ contract SoulboundAccessories is ERC1155 {
         address avatarTbaAddress = tbaRegistry.account(
             address(tbaAccountImpl),
             chainId,
-            address(miladyAvatarContract),
+            address(avatarContract),
             miladyId,
             0
         );
@@ -74,8 +76,11 @@ contract SoulboundAccessories is ERC1155 {
             listOf1s[i] = 1;
         }
 
-        _mintBatch(avatarTbaAddress, accessories, listOf1s);
-        miladyAvatarContract.equipSoulboundAccessories(miladyId, accessories);
+        _mintBatch(avatarTbaAddress, accessories, listOf1s, "");
+
+        avatarContract.equipSoulboundAccessories(miladyId, accessories);
+
+        emit MiladyOnboarded(miladyId, accessories);
     }
 
     // disable all token transfers, making these soulbound.
@@ -86,6 +91,6 @@ contract SoulboundAccessories is ERC1155 {
         if (from == address(0x0)) {
             return; // allow transfers from 0x0, i.e. mints
         }
-        revert("These accessories are soulbound to the Milady Avatar and cannot be transferred");
+        revert("Cannot transfer soulbound tokens");
     }
 }

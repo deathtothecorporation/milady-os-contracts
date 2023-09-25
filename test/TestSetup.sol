@@ -7,14 +7,15 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
-import "../src/TBA/TokenGatedAccount.sol";
-import "../src/TBA/TBARegistry.sol";
+import "../src/TGA/TokenGatedAccount.sol";
+import "../src/TGA/TBARegistry.sol";
 import "../src/MiladyAvatar.sol";
 import "../src/LiquidAccessories.sol";
 import "../src/SoulboundAccessories.sol";
 import "../src/Rewards.sol";
 import "../src/Deployer.sol";
 import "./TestConstants.sol";
+import "./TestUtils.sol";
 import "./Miladys.sol";
 
 library TestSetup {
@@ -25,14 +26,17 @@ library TestSetup {
         TBARegistry tbaRegistry,
         TokenGatedAccount tbaAccountImpl,
         Miladys miladyContract,
-        MiladyAvatar miladyAvatarContract,
+        MiladyAvatar avatarContract,
         LiquidAccessories liquidAccessoriesContract,
         SoulboundAccessories soulboundAccessoriesContract,
-        Rewards rewardsContract
+        Rewards rewardsContract,
+        TestUtils testUtils
     )
     {
         tbaRegistry = new TBARegistry();
         tbaAccountImpl = new TokenGatedAccount();
+
+        testUtils = new TestUtils(tbaRegistry, tbaAccountImpl);
 
         miladyContract = new Miladys();
         miladyContract.flipSaleState();
@@ -41,7 +45,7 @@ library TestSetup {
         miladyContract.mintMiladys{value:60000000000000000*numMiladysToMint}(numMiladysToMint);
         
         (
-            miladyAvatarContract, liquidAccessoriesContract, soulboundAccessoriesContract, rewardsContract
+            avatarContract, liquidAccessoriesContract, soulboundAccessoriesContract, rewardsContract
         ) =
         Deployer.deploy(
             tbaRegistry,
@@ -54,5 +58,25 @@ library TestSetup {
             "",
             ""
         );
+
+        for (uint i=0; i<numMiladysToMint; i++) {
+            tbaRegistry.createAccount(
+                address(tbaAccountImpl),
+                31337, // chain id of Forge's test chain
+                address(miladyContract),
+                i,
+                0,
+                ""
+            );
+
+            tbaRegistry.createAccount(
+                address(tbaAccountImpl),
+                31337, // chain id of Forge's test chain
+                address(avatarContract),
+                i,
+                0,
+                ""
+            );
+        }
     }
 }
