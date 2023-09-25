@@ -178,6 +178,44 @@ contract MiladyAvatar is IERC721 {
         }
     }
 
+    function equipAccessory(uint _miladyId, uint _accessoryId)
+        public
+    {
+        require(msg.sender == ownerOf(_miladyId), "Not Milday owner");
+        require(
+            liquidAccessoriesContract.balanceOf(address(avatarTBA), _accessoryId) > 0
+         || soulboundAccessoriesContract.balanceOf(address(avatarTBA), _accessoryId) > 0,
+            "Unowned accessory"
+        );
+
+        (uint128 accType, uint128 accVariant) = AccessoryUtils.idToTypeAndVariantHashes(_accessoryId);
+
+        if (accVariant != 0)
+        {
+            // equipSlots[miladyId][accType] = 0; // implied
+            emit AccessoryUnequipped(miladyId, equipSlots[miladyId][accType]);
+            equipSlots[miladyId][accType] = accVariant;
+            emit AccessoryEquipped(miladyId, equipSlots[miladyId][accType]);
+            rewardsContract.registerMiladyForRewardsForAccessoryAndClaim(_miladyId, _accessoryId);
+        }
+        else
+        {
+            equipSlots[miladyId][accType] = 0;
+            emit AccessoryUnequipped(miladyId, equipSlots[miladyId][accType]);
+            rewardsContract.deregisterMiladyForRewardsForAccessoryAndClaim(_miladyId, _accessoryId);
+        }
+    }
+
+    function equipAccessories(uint _miladyId, uint[] memory _accessoryIds)
+        public
+    {
+        // Logan <| This is not gas efficient but greatly reduces the complexity of the code
+        // Logan <| The gas wins here are limited anyways due to registering and deregistering for rewards
+        for (uint i=0; i<_accessoryIds.length; i++) {
+            equipAccessory(_miladyId, _accessoryIds[i]);
+        }
+    }
+
     event AccessoryEquipped(uint miladyId, uint accessoryId);
 
     // core function for equip logic.
