@@ -27,6 +27,8 @@ contract Rewards {
         uint amountClaimedBeforeDivision;
     }
 
+    event RewardsAccrued(uint accessoryId, uint amount);
+
     function accrueRewardsForAccessory(uint accessoryId)
         payable
         external
@@ -35,11 +37,14 @@ contract Rewards {
         require(rewardInfoForAccessory[accessoryId].totalHolders > 0, "That accessory has no eligible recipients");
 
         rewardInfoForAccessory[accessoryId].totalRewardsAccrued += msg.value;
+
+        emit RewardsAccrued(accessoryId, msg.value);
     }
+
+    event MiladyRegisteredForRewards(uint miladyId, uint accessoryId);
 
     function registerMiladyForRewardsForAccessory(uint miladyId, uint accessoryId)
         external
-        
     {
         require(msg.sender == avatarContractAddress, "msg.sender is not authorized to call this function.");
         
@@ -53,7 +58,11 @@ contract Rewards {
         rewardInfoForAccessory[accessoryId].totalHolders ++;
 
         miladyRewardInfo.isRegistered = true;
+
+        emit MiladyRegisteredForRewards(miladyId, accessoryId);
     }
+
+    event MiladyDeregisteredForRewards(uint miladyId, uint accessoryId);
 
     function deregisterMiladyForRewardsForAccessoryAndClaim(uint miladyId, uint accessoryId, address payable recipient)
         external
@@ -69,6 +78,8 @@ contract Rewards {
         rewardInfoForAccessory[accessoryId].totalHolders --;
 
         miladyRewardInfo.isRegistered = false;
+
+        emit MiladyDeregisteredForRewards(miladyId, accessoryId);
     }
 
     function claimRewardsForMilady(uint miladyId, uint[] calldata accessoriesToClaimFor, address payable recipient)
@@ -80,6 +91,8 @@ contract Rewards {
             _claimRewardsForMiladyForAccessory(miladyId, accessoriesToClaimFor[i], recipient);
         }
     }
+
+    event RewardsClaimed(uint miladyId, uint accessoryId, address recipient);
 
     function _claimRewardsForMiladyForAccessory(uint miladyId, uint accessoryId, address payable recipient)
         internal
@@ -94,6 +107,8 @@ contract Rewards {
 
         // Schalk: Should we be doing something more elaborate/careful here?
         recipient.transfer(amountToSend);
+
+        emit RewardsClaimed(miladyId, accessoryId, recipient);
     }
 
     function getAmountClaimableForMiladyAndAccessory(uint miladyId, uint accessoryId)

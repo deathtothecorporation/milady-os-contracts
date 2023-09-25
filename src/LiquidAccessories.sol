@@ -17,8 +17,7 @@ contract LiquidAccessories is ERC1155 {
     Rewards rewardsContract;
     address payable revenueRecipient;
 
-    // only used for initial deploy
-    address deployer;
+    address deployer; // only used for initial deploy
 
     constructor(TBARegistry _tbaRegistry, Rewards _rewardsContract, address payable _revenueRecipient, string memory uri_)
         ERC1155(uri_)
@@ -43,7 +42,7 @@ contract LiquidAccessories is ERC1155 {
     
     mapping(uint => uint) public liquidAccessorySupply;
 
-    function mintAccessories(uint[] calldata accessoryIds, uint[] calldata amounts, address payable overpayReturnAddress)
+    function mintAccessories(uint[] calldata accessoryIds, uint[] calldata amounts, address recipient, address payable overpayReturnAddress)
         external
         payable
     {
@@ -56,7 +55,7 @@ contract LiquidAccessories is ERC1155 {
         require(msg.value >= totalMintCost, "Not enough ether included to buy that accessory.");
 
         for (uint i=0; i<accessoryIds.length; i++) {
-            _mintAccessoryAndDisburseRevenue(accessoryIds[i], amounts[i]);
+            _mintAccessoryAndDisburseRevenue(accessoryIds[i], amounts[i], recipient);
         }
 
         if (msg.value > totalMintCost) {
@@ -66,10 +65,10 @@ contract LiquidAccessories is ERC1155 {
         }
     }
 
-    function _mintAccessoryAndDisburseRevenue(uint accessoryId, uint amount)
+    function _mintAccessoryAndDisburseRevenue(uint accessoryId, uint amount, address recipient)
         internal
     {
-        uint mintCost = _mintAccessory(accessoryId, amount);
+        uint mintCost = _mintAccessory(accessoryId, amount, recipient);
 
         // let's now take revenue.
         uint burnReward = getBurnRewardForReturnedAccessories(accessoryId, amount);
@@ -93,7 +92,7 @@ contract LiquidAccessories is ERC1155 {
         }
     }
 
-    function _mintAccessory(uint accessoryId, uint amount)
+    function _mintAccessory(uint accessoryId, uint amount, address recipient)
         internal
         returns (uint cost)
     {
@@ -101,7 +100,7 @@ contract LiquidAccessories is ERC1155 {
 
         liquidAccessorySupply[accessoryId] += amount;
 
-        _mint(msg.sender, accessoryId, amount, "");
+        _mint(recipient, accessoryId, amount, "");
     }
 
     function burnAccessory(uint accessoryId, uint amount, address payable fundsRecipient)

@@ -53,6 +53,8 @@ contract SoulboundAccessories is ERC1155 {
         avatarContract = _avatarContract;
     }
 
+    event MiladyOnboarded(uint miladyId, uint[] accessories);
+
     function mintAndEquipSoulboundAccessories(uint miladyId, uint[] calldata accessories)
         external
     {
@@ -75,7 +77,10 @@ contract SoulboundAccessories is ERC1155 {
         }
 
         _mintBatch(avatarTbaAddress, accessories, listOf1s, "");
+
         avatarContract.equipSoulboundAccessories(miladyId, accessories);
+
+        emit MiladyOnboarded(miladyId, accessories);
     }
 
     // disable all token transfers, making these soulbound.
