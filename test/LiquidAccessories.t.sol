@@ -47,14 +47,14 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
 
         uint[] memory listOfJustRedHatId = new uint[](1);
         listOfJustRedHatId[0] = redHatAccessoryId;
-        avatarContract.updateEquipSlotsByAccessoryIds(0, listOfJustRedHatId);
+        avatarContract.equipAccessories(0, listOfJustRedHatId);
         require(avatarContract.equipSlots(0, hatType) == redHatAccessoryId);
         (, uint totalHoldersForRedHatRewards) = rewardsContract.rewardInfoForAccessory(redHatAccessoryId);
         require(totalHoldersForRedHatRewards == 1);
 
         uint[] memory listOfJustBlueHatId = new uint[](1);
         listOfJustBlueHatId[0] = blueHatAccessoryId;
-        avatarContract.updateEquipSlotsByAccessoryIds(0, listOfJustBlueHatId);
+        avatarContract.equipAccessories(0, listOfJustBlueHatId);
         require(avatarContract.equipSlots(0, hatType) == blueHatAccessoryId);
         (, totalHoldersForRedHatRewards) = rewardsContract.rewardInfoForAccessory(redHatAccessoryId);
         require(totalHoldersForRedHatRewards == 0);
@@ -92,7 +92,7 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
         vm.startPrank(address(testUtils.getTGA(miladysContract, 0)));
         (uint128 hatType, ) = AccessoryUtils.idToTypeAndVariantHashes(redHatAccessoryId);
 
-        avatarContract.updateEquipSlotsByAccessoryIds(0, accessoriesToMint);
+        avatarContract.equipAccessories(0, accessoriesToMint);
         require(avatarContract.equipSlots(0, hatType) == blueHatAccessoryId);
         (, uint totalHoldersForRedHatRewards) = rewardsContract.rewardInfoForAccessory(redHatAccessoryId);
         require(totalHoldersForRedHatRewards == 0);
@@ -128,7 +128,7 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
 
         // let's now equip it on an Avatar and try again
         liquidAccessoriesContract.safeTransferFrom(address(this), address(avatar0TGA), blueHatAccessoryId, 1, "");
-        milady0TGA.executeCall(address(avatarContract), 0, abi.encodeCall(avatarContract.updateEquipSlotsByAccessoryIds, (0, listOfBlueHatAccessoryId) ));
+        milady0TGA.executeCall(address(avatarContract), 0, abi.encodeCall(avatarContract.equipAccessories, (0, listOfBlueHatAccessoryId) ));
 
         // clear out PROJECT_REVENUE_RECIPIENT to make logic below simpler
         vm.prank(PROJECT_REVENUE_RECIPIENT);
