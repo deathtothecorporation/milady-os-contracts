@@ -86,7 +86,7 @@ contract MiladyAvatar is IERC721 {
         }
     }
 
-    event AccessoryEquipped(uint miladyId, uint accessoryId);
+    event AccessoryEquipped(uint indexed miladyId, uint indexed accessoryId);
 
     // core function for equip logic.
     // Unequips items if equip would overwrite for that accessory type
@@ -112,7 +112,7 @@ contract MiladyAvatar is IERC721 {
         emit AccessoryEquipped(miladyId, accessoryId);
     }
 
-    event AccessoryUnequipped(uint miladyId, uint accessoryId);
+    event AccessoryUnequipped(uint indexed miladyId, uint indexed accessoryId);
 
     // core function for unequip logic
     function _unequipAccessoryByTypeIfEquipped(uint miladyId, uint128 accType)
