@@ -64,9 +64,11 @@ contract MiladyAvatar is IERC721 {
         public
     {
         require(msg.sender == ownerOf(_miladyId), "Not Milday owner");
+
+        address payable avatarTBA = payable(getAvatarTBA(_miladyId));
         require(
-            liquidAccessoriesContract.balanceOf(address(avatarTBA), _accessoryId) > 0
-         || soulboundAccessoriesContract.balanceOf(address(avatarTBA), _accessoryId) > 0,
+            liquidAccessoriesContract.balanceOf(avatarTBA, _accessoryId) > 0
+         || soulboundAccessoriesContract.balanceOf(avatarTBA, _accessoryId) > 0,
             "Unowned accessory"
         );
 
@@ -74,17 +76,17 @@ contract MiladyAvatar is IERC721 {
 
         if (accVariant != 0)
         {
-            // equipSlots[miladyId][accType] = 0; // implied
-            emit AccessoryUnequipped(miladyId, equipSlots[miladyId][accType]);
-            equipSlots[miladyId][accType] = accVariant;
-            emit AccessoryEquipped(miladyId, equipSlots[miladyId][accType]);
-            rewardsContract.registerMiladyForRewardsForAccessoryAndClaim(_miladyId, _accessoryId);
+            // equipSlots[_miladyId][accType] = 0; // implied
+            emit AccessoryUnequipped(_miladyId, equipSlots[_miladyId][accType]);
+            equipSlots[_miladyId][accType] = accVariant;
+            emit AccessoryEquipped(_miladyId, equipSlots[_miladyId][accType]);
+            rewardsContract.registerMiladyForRewardsForAccessory(_miladyId, _accessoryId);
         }
         else
         {
-            equipSlots[miladyId][accType] = 0;
-            emit AccessoryUnequipped(miladyId, equipSlots[miladyId][accType]);
-            rewardsContract.deregisterMiladyForRewardsForAccessoryAndClaim(_miladyId, _accessoryId);
+            equipSlots[_miladyId][accType] = 0;
+            emit AccessoryUnequipped(_miladyId, equipSlots[_miladyId][accType]);
+            rewardsContract.deregisterMiladyForRewardsForAccessoryAndClaim(_miladyId, _accessoryId, avatarTBA);
         }
     }
 
