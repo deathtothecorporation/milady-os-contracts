@@ -15,9 +15,9 @@ contract SoulboundAccessories is ERC1155 {
     MiladyAvatar public miladyAvatarContract;
 
     // state needed for TBA determination
-    IERC6551Registry tbaRegistry;
-    IERC6551Account tbaAccountImpl;
-    uint chainId;
+    IERC6551Registry public tbaRegistry;
+    IERC6551Account public tbaAccountImpl;
+    uint public chainId;
 
     address public miladyAuthority;
 
@@ -51,8 +51,6 @@ contract SoulboundAccessories is ERC1155 {
         require(address(miladyAvatarContract) == address(0), "Avatar already set");
 
         miladyAvatarContract = _miladyAvatarContract;
-
-        // Todo : @Logan @Schalk, put in an event here? Or is it not necessary?
     }
 
     function mintAndEquipSoulboundAccessories(uint miladyId, uint[] calldata accessories)
@@ -71,12 +69,13 @@ contract SoulboundAccessories is ERC1155 {
             0
         );
 
-        for (uint i=0; i<accessories.length; i++) {
-            _mint(avatarTbaAddress, accessories[i], 1, "");
-            miladyAvatarContract.equipSoulboundAccessory(miladyId, accessories[i]);
+        uint[] memory listOf1s = new uint[](accessories.length);
+        for (uint i=0; i<listOf1s.length; i++) {
+            listOf1s[i] = 1;
         }
 
-        // Todo : @Logan <| Event here?
+        _mintBatch(avatarTbaAddress, accessories, listOf1s);
+        miladyAvatarContract.equipSoulboundAccessories(miladyId, accessories);
     }
 
     // disable all token transfers, making these soulbound.
