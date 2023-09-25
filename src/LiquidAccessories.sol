@@ -197,7 +197,9 @@ contract LiquidAccessories is ERC1155 {
                 // check if this transfer would result in a 0 balance
                 if (requestedAmountToTransfer == balanceOf(from, accessoryId)) { // if requestedAmountToTransfer is > balance, OZ's 1155 logic will catch and revert
                     //unequip if it's equipped
-                    avatarContract.preTransferUnequipById(miladyId, accessoryId);
+                    (uint128 accType,) = AccessoryUtils.idToTypeAndVariantHashes(_accessoryId);
+                    unequipedAccessoryId = AccessoryUtils.typeAndVariantHashesToId(accType, 0);
+                    avatarContract.equipAccessory(miladyId, unequipedAccessoryId);
                 }
             }
         }

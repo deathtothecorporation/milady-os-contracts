@@ -78,7 +78,8 @@ contract SoulboundAccessories is ERC1155 {
 
         _mintBatch(avatarTbaAddress, _accessories, listOf1s, "");
 
-        avatarContract.equipSoulboundAccessories(_miladyId, _accessories);
+        // the special equip function that is no longer needed
+        avatarContract.equipAccessories(_miladyId, _accessories);
 
         emit MiladyOnboarded(_miladyId);
     }
