@@ -57,83 +57,6 @@ contract MiladyAvatar is IERC721 {
         rewardsContract = _rewardsContract;
     }
 
-    function name() external pure returns (string memory) {
-        return "Milady Avatar";
-    }
-
-    function symbol() external pure returns (string memory) {
-        return "MILA";
-    }
-
-    function tokenURI(uint256 tokenId) 
-        external 
-        view 
-        returns (string memory) 
-    {
-        require(tokenId <= 9999, "Invalid Milady/Avatar id");
-
-        return string(abi.encodePacked(baseURI, Strings.toString(tokenId)));
-    }
-
-    function balanceOf(address who) 
-        external 
-        view 
-        returns 
-        (uint256 balance) 
-    {
-        (address tbaContractAddress,) = tbaRegistry.registeredAccounts(who);
-        if (tbaContractAddress == address(miladysContract)) {
-            return 1;
-        }
-        else return 0;
-    }
-
-    function ownerOf(uint256 tokenId) 
-        public 
-        view 
-        returns (address owner) 
-    {
-        require(tokenId <= 9999, "Invalid Milady/Avatar id");
-
-        return tbaRegistry.account(address(tbaAccountImpl), chainId, address(miladysContract), tokenId, 0);
-    }
-
-    function safeTransferFrom(address, address, uint256, bytes calldata) external {
-        revertWithSoulboundMessage();
-    }
-    
-    function safeTransferFrom(address, address, uint256) external {
-        revertWithSoulboundMessage();
-    }
-
-    function transferFrom(address, address, uint256) external {
-        revertWithSoulboundMessage();
-    }
-
-    function approve(address, uint256) external {
-        revertWithSoulboundMessage();
-    }
-
-    function setApprovalForAll(address, bool) external {
-        revertWithSoulboundMessage();
-    }
-
-    function getApproved(uint256) external view returns (address operator) {
-        revertWithSoulboundMessage();
-    }
-
-    function isApprovedForAll(address, address) external view returns (bool) {
-        return false;
-    }
-
-    function revertWithSoulboundMessage() pure internal {
-        revert("Cannot transfer soulbound tokens");
-    }
-
-    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
-        return interfaceId == type(IERC721).interfaceId;
-    }
-
     // each avatar has equip slots for each accessory type
     mapping (uint => mapping (uint128 => uint)) public equipSlots;
 
@@ -284,4 +207,82 @@ contract MiladyAvatar is IERC721 {
     }
 
     // todo: needs uri function?
+
+    // perfunctory
+        function name() external pure returns (string memory) {
+        return "Milady Avatar";
+    }
+
+    function symbol() external pure returns (string memory) {
+        return "MILA";
+    }
+
+    function tokenURI(uint256 tokenId) 
+        external 
+        view 
+        returns (string memory) 
+    {
+        require(tokenId <= 9999, "Invalid Milady/Avatar id");
+
+        return string(abi.encodePacked(baseURI, Strings.toString(tokenId)));
+    }
+
+    function balanceOf(address who) 
+        external 
+        view 
+        returns 
+        (uint256 balance) 
+    {
+        (address tbaContractAddress,) = tbaRegistry.registeredAccounts(who);
+        if (tbaContractAddress == address(miladysContract)) {
+            return 1;
+        }
+        else return 0;
+    }
+
+    function ownerOf(uint256 tokenId) 
+        public 
+        view 
+        returns (address owner) 
+    {
+        require(tokenId <= 9998, "Invalid Milady/Avatar id");
+
+        return tbaRegistry.account(address(tbaAccountImpl), chainId, address(miladysContract), tokenId, 0);
+    }
+
+    function safeTransferFrom(address, address, uint256, bytes calldata) external {
+        revertWithSoulboundMessage();
+    }
+    
+    function safeTransferFrom(address, address, uint256) external {
+        revertWithSoulboundMessage();
+    }
+
+    function transferFrom(address, address, uint256) external {
+        revertWithSoulboundMessage();
+    }
+
+    function approve(address, uint256) external {
+        revertWithSoulboundMessage();
+    }
+
+    function setApprovalForAll(address, bool) external {
+        revertWithSoulboundMessage();
+    }
+
+    function getApproved(uint256) external view returns (address operator) {
+        revertWithSoulboundMessage();
+    }
+
+    function isApprovedForAll(address, address) external view returns (bool) {
+        return false;
+    }
+
+    function revertWithSoulboundMessage() pure internal {
+        revert("Cannot transfer soulbound tokens");
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return interfaceId == type(IERC721).interfaceId;
+    }
 }
