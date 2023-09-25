@@ -29,11 +29,11 @@ contract MiladyAvatar is IERC721 {
     address deployer;
 
     constructor(
-        IERC721 _miladysContract,
-        TBARegistry _tbaRegistry,
-        TokenGatedAccount _tbaAccountImpl,
-        uint _chainId,
-        string memory _baseURI
+            IERC721 _miladysContract,
+            TBARegistry _tbaRegistry,
+            TokenGatedAccount _tbaAccountImpl,
+            uint _chainId,
+            string memory _baseURI
     ) {
         deployer = msg.sender;
 
@@ -46,7 +46,10 @@ contract MiladyAvatar is IERC721 {
         baseURI = _baseURI;
     }
 
-    function setOtherContracts(LiquidAccessories _liquidAccessoriesContract, SoulboundAccessories _soulboundAccessoriesContract, Rewards _rewardsContract)
+    function setOtherContracts(
+            LiquidAccessories _liquidAccessoriesContract, 
+            SoulboundAccessories _soulboundAccessoriesContract, 
+            Rewards _rewardsContract)
         external
     {
         require(msg.sender == deployer, "Only callable by the initial deployer");
@@ -65,48 +68,71 @@ contract MiladyAvatar is IERC721 {
         return "MILA";
     }
 
-    function tokenURI(uint256 tokenId) external view returns (string memory) {
+    function tokenURI(uint256 tokenId) 
+        external 
+        view 
+        returns (string memory) 
+    {
         require(tokenId <= 9999, "Invalid Milady/Avatar id");
 
         return string(abi.encodePacked(baseURI, Strings.toString(tokenId)));
     }
 
-    function balanceOf(address who) external view returns (uint256 balance) {
+    function balanceOf(address who) 
+        external 
+        view 
+        returns 
+        (uint256 balance) 
+    {
         (address tbaContractAddress,) = tbaRegistry.registeredAccounts(who);
         if (tbaContractAddress == address(miladysContract)) {
             return 1;
         }
         else return 0;
     }
-    function ownerOf(uint256 tokenId) public view returns (address owner) {
+
+    function ownerOf(uint256 tokenId) 
+        public 
+        view 
+        returns (address owner) 
+    {
         require(tokenId <= 9999, "Invalid Milady/Avatar id");
 
         return tbaRegistry.account(address(tbaAccountImpl), chainId, address(miladysContract), tokenId, 0);
     }
+
     function safeTransferFrom(address, address, uint256, bytes calldata) external {
         revertWithSoulboundMessage();
     }
+    
     function safeTransferFrom(address, address, uint256) external {
         revertWithSoulboundMessage();
     }
+
     function transferFrom(address, address, uint256) external {
         revertWithSoulboundMessage();
     }
+
     function approve(address, uint256) external {
         revertWithSoulboundMessage();
     }
+
     function setApprovalForAll(address, bool) external {
         revertWithSoulboundMessage();
     }
+
     function getApproved(uint256) external view returns (address operator) {
         revertWithSoulboundMessage();
     }
+
     function isApprovedForAll(address, address) external view returns (bool) {
         return false;
     }
+
     function revertWithSoulboundMessage() pure internal {
         revert("Cannot transfer soulbound tokens");
     }
+
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return interfaceId == type(IERC721).interfaceId;
     }
@@ -140,7 +166,10 @@ contract MiladyAvatar is IERC721 {
         }
     }
 
-    function _updateEquipSlotByTypeAndVariant(uint miladyId, uint128 accType, uint128 accVariantOrNull)
+    function _updateEquipSlotByTypeAndVariant(
+            uint miladyId, 
+            uint128 accType, 
+            uint128 accVariantOrNull)
         internal
     {
         if (accVariantOrNull == 0) {
