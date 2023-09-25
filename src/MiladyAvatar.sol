@@ -193,8 +193,7 @@ contract MiladyAvatar is IERC721 {
             "Unowned accessory"
         );
 
-        (uint128 accType, uint accVariant) = AccessoryUtils.idToTypeAndVariantHashes(_accessoryId);
-        assert(accVariant != 0); // take out for gas savings?
+        (uint128 accType,) = AccessoryUtils.idToTypeAndVariantHashes(_accessoryId);
 
         _unequipAccessoryByTypeIfEquipped(miladyId, accType);
         rewardsContract.registerMiladyForRewardsForAccessory(_miladyId, _accessoryId);
