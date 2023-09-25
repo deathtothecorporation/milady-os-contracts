@@ -152,6 +152,10 @@ contract MiladyAvatar is IERC721 {
         }
     }
 
+    event AccessoryEquipped(uint miladyId, uint accessoryId);
+
+    // core function for equip logic.
+    // Unequips items if equip would overwrite for that accessory type
     function _equipAccessoryIfOwned(uint miladyId, uint accessoryId)
         internal
     {
@@ -170,13 +174,20 @@ contract MiladyAvatar is IERC721 {
         rewardsContract.registerMiladyForRewardsForAccessory(miladyId, accessoryId);
 
         equipSlots[miladyId][accType] = accessoryId;
+
+        emit AccessoryEquipped(miladyId, accessoryId);
     }
 
+    event AccessoryUnequipped(uint miladyId, uint accessoryId);
+
+    // core function for unequip logic
     function _unequipAccessoryByTypeIfEquipped(uint miladyId, uint128 accType)
         internal
     {
         if (equipSlots[miladyId][accType] != 0) {
             rewardsContract.deregisterMiladyForRewardsForAccessoryAndClaim(miladyId, equipSlots[miladyId][accType], getPayableAvatarTBA(miladyId));
+
+            emit AccessoryUnequipped(miladyId, equipSlots[miladyId][accType]);
 
             equipSlots[miladyId][accType] = 0;
         }

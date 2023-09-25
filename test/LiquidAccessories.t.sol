@@ -28,7 +28,7 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
 
         // should cost 0.0011 ETH per first item for each set, so 0.0033 ETH
         address payable overpayAddress = payable(address(uint160(10)));
-        liquidAccessoriesContract.mintAccessories{value:0.0033 ether}(accessoriesToMint, amounts, overpayAddress);
+        liquidAccessoriesContract.mintAccessories{value:0.0033 ether}(accessoriesToMint, amounts, address(this), overpayAddress);
         require(overpayAddress.balance == 0);
 
         require(liquidAccessoriesContract.balanceOf(address(this), redHatAccessoryId) == 1);
@@ -75,7 +75,7 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
 
         // should cost 0.0011 ETH per first item for each set, so 0.0033 ETH
         address payable overpayAddress = payable(address(uint160(10)));
-        liquidAccessoriesContract.mintAccessories{value:0.0033 ether}(accessoriesToMint, amounts, overpayAddress);
+        liquidAccessoriesContract.mintAccessories{value:0.0033 ether}(accessoriesToMint, amounts, address(this), overpayAddress);
         require(overpayAddress.balance == 0);
 
         require(liquidAccessoriesContract.balanceOf(address(this), redHatAccessoryId) == 1);
@@ -116,7 +116,7 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
         // Mint the first accessory
         // this should cost 0.0011 eth
         address payable overpayAddress = payable(address(uint160(10)));
-        liquidAccessoriesContract.mintAccessories{value:0.0011 ether}(listOfBlueHatAccessoryId, amounts, overpayAddress);
+        liquidAccessoriesContract.mintAccessories{value:0.0011 ether}(listOfBlueHatAccessoryId, amounts, address(this), overpayAddress);
         require(overpayAddress.balance == 0);
 
         // because no one has equipped this yet, all of the revenue should have gone to PROJECT_REVENUE_RECIPIENT
@@ -136,7 +136,7 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
 
         // mint an additional blue hat.
         // this should cost 0.0022 eth, so let's include 0.0023 eth and verify the overpay address got back 0.0001 eth
-        liquidAccessoriesContract.mintAccessories{value:0.0023 ether}(listOfBlueHatAccessoryId, amounts, overpayAddress);
+        liquidAccessoriesContract.mintAccessories{value:0.0023 ether}(listOfBlueHatAccessoryId, amounts, address(this), overpayAddress);
         require(overpayAddress.balance == 0.0001 ether);
 
         expectedRevenue = 0.0002 ether;

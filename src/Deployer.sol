@@ -13,6 +13,13 @@ import "./SoulboundAccessories.sol";
 import "./Rewards.sol";
 
 library Deployer {
+    event Deployed(
+        address avatarContractAddress,
+        address liquidAccessoriesContractAddress,
+        address soulboundAccessoriesContractAddress,
+        address rewardsContractAddress
+    );
+
     function deploy(
         TBARegistry tbaRegistry,
         TokenGatedAccount tbaAccountImpl,
@@ -60,5 +67,12 @@ library Deployer {
         avatarContract.setOtherContracts(liquidAccessoriesContract, soulboundAccessoriesContract, rewardsContract);
         liquidAccessoriesContract.setAvatarContract(avatarContract);
         soulboundAccessoriesContract.setAvatarContract(avatarContract);
+
+        emit Deployed(
+            address(avatarContract),
+            address(liquidAccessoriesContract),
+            address(soulboundAccessoriesContract),
+            address(rewardsContract)
+        );
     }
 }
