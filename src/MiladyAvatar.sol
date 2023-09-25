@@ -62,6 +62,8 @@ contract MiladyAvatar is IERC721 {
 
     // A special function to allow the soulbound accessories to "auto equip" themselves upon mint
     // See `SoulboundAccessories.mintSoulboundAccessories`.
+
+    // todo : @Logan <| did you do external with calldata on purpose here or was it accidental?
     function equipSoulboundAccessories(uint _miladyId, uint[] calldata _accessoryIds)
         external
     {
