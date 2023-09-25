@@ -95,7 +95,9 @@ contract SoulboundAccessories is ERC1155 {
     }
 
     // prevents spurious approvals
-    function setApprovalForAll(address, bool) public virtual override {
-        revert("Cannot approve soulbound tokens");
+    function _setApprovalForAll(address, bool) 
+        internal 
+        override {
+            revert("Cannot approve soulbound tokens");
     }
 }
