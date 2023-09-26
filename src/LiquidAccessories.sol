@@ -90,6 +90,8 @@ contract LiquidAccessories is ERC1155 {
             // schalk: is this the appropriate tfer func to use?
             revenueRecipient.transfer(freeRevenue - halfFreeRevenue);
         }
+
+        // todo: minimum out to prevent sandwich attacks for both mint and burn
     }
 
     function _mintAccessory(uint accessoryId, uint amount, address recipient)
