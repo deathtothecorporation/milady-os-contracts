@@ -57,6 +57,117 @@ contract MiladyAvatar is IERC721 {
         rewardsContract = _rewardsContract;
     }
 
+    // each avatar has equip slots for each accessory type
+    mapping (uint => mapping (uint128 => uint)) public equipSlots;
+    
+    // main entry point for a user to change their Avatar's appearance / equip status
+    // If an accessoryId's unpacked accVariant == 0, we interpret this as an unequip action
+    function updateEquipSlotsByAccessoryIds(uint miladyId, uint[] memory accessoryIds)
+        public
+    {
+        require(msg.sender == ownerOf(miladyId), "You don't own that Milady Avatar");
+
+        for (uint i=0; i<accessoryIds.length; i++) {
+            (uint128 accType, uint128 accVariant) = AccessoryUtils.idToTypeAndVariantHashes(accessoryIds[i]);
+
+            _updateEquipSlotByTypeAndVariant(miladyId, accType, accVariant);
+        }
+    }
+
+    function _updateEquipSlotByTypeAndVariant(uint miladyId, uint128 accType, uint128 accVariantOrNull)
+        internal
+    {
+        if (accVariantOrNull == 0) {
+            _unequipAccessoryByTypeIfEquipped(miladyId, accType);
+        }
+        else {
+            uint accessoryId = AccessoryUtils.typeAndVariantHashesToId(accType, accVariantOrNull);
+            _equipAccessoryIfOwned(miladyId, accessoryId);
+        }
+    }
+
+    event AccessoryEquipped(uint indexed miladyId, uint indexed accessoryId);
+
+    // core function for equip logic.
+    // Unequips items if equip would overwrite for that accessory type
+    function _equipAccessoryIfOwned(uint miladyId, uint accessoryId)
+        internal
+    {
+        address avatarTBA = getAvatarTBA(miladyId);
+
+        require(
+            liquidAccessoriesContract.balanceOf(address(avatarTBA), accessoryId) > 0
+         || soulboundAccessoriesContract.balanceOf(address(avatarTBA), accessoryId) > 0,
+            "That avatar does not own that accessory."
+        );
+
+        (uint128 accType, uint accVariant) = AccessoryUtils.idToTypeAndVariantHashes(accessoryId);
+        assert(accVariant != 0); // take out for gas savings?
+
+        _unequipAccessoryByTypeIfEquipped(miladyId, accType);
+        rewardsContract.registerMiladyForRewardsForAccessory(miladyId, accessoryId);
+
+        equipSlots[miladyId][accType] = accessoryId;
+
+        emit AccessoryEquipped(miladyId, accessoryId);
+    }
+
+    event AccessoryUnequipped(uint indexed miladyId, uint indexed accessoryId);
+
+    // core function for unequip logic
+    function _unequipAccessoryByTypeIfEquipped(uint miladyId, uint128 accType)
+        internal
+    {
+        if (equipSlots[miladyId][accType] != 0) {
+            rewardsContract.deregisterMiladyForRewardsForAccessoryAndClaim(miladyId, equipSlots[miladyId][accType], getPayableAvatarTBA(miladyId));
+
+            emit AccessoryUnequipped(miladyId, equipSlots[miladyId][accType]);
+
+            equipSlots[miladyId][accType] = 0;
+        }
+    }
+
+    // Allows soulbound accessories to "auto equip" themselves upon mint
+    // See `SoulboundAccessories.mintSoulboundAccessories`.
+    function equipSoulboundAccessories(uint miladyId, uint[] calldata accessoryIds)
+        external
+    {
+        require(msg.sender == address(soulboundAccessoriesContract), "not called by SoulboundAccessories");
+
+        for (uint i=0; i<accessoryIds.length; i++) {
+            _equipAccessoryIfOwned(miladyId, accessoryIds[i]);
+        }
+    }
+
+    // Allows liquid accessoires to "auto unequip" themselves upon transfer away
+    // See `LiquidAccessories._beforeTokenTransfer`.
+    function preTransferUnequipById(uint miladyId, uint accessoryId)
+        external
+    {
+        require(msg.sender == address(liquidAccessoriesContract), "msg.sender not liquidAccessories contract");
+
+        (uint128 accType, ) = AccessoryUtils.idToTypeAndVariantHashes(accessoryId);
+
+        _unequipAccessoryByTypeIfEquipped(miladyId, accType);
+    }
+
+    // Get the TokenGatedAccount for a particular Milady Avatar.
+    function getAvatarTBA(uint miladyId)
+        public
+        view
+        returns (address)
+    {
+        return tbaRegistry.account(address(tbaAccountImpl), block.chainid, address(this), miladyId, 0);
+    }
+
+    function getPayableAvatarTBA(uint miladyId)
+        public
+        view
+        returns (address payable)
+    {
+        return payable(getAvatarTBA(miladyId));
+    }
+
     function name() external pure returns (string memory) {
         return "Milady Avatar";
     }
@@ -133,117 +244,4 @@ contract MiladyAvatar is IERC721 {
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return interfaceId == type(IERC721).interfaceId;
     }
-
-    // each avatar has equip slots for each accessory type
-    mapping (uint => mapping (uint128 => uint)) public equipSlots;
-
-    // A special function to allow the soulbound accessories to "auto equip" themselves upon mint
-    // See `SoulboundAccessories.mintSoulboundAccessories`.
-    function equipSoulboundAccessories(uint _miladyId, uint[] calldata _accessoryIds)
-        external
-    {
-        require(msg.sender == address(soulboundAccessoriesContract), "Not SoulboundAccessories");
-
-        for (uint i=0; i<_accessoryIds.length; i++) {
-            _equipAccessoryIfOwned(_miladyId, _accessoryIds[i]);
-        }
-    }
-    
-    // main entry point for a user to change their Avatar's appearance / equip status
-    // If an accessoryId's unpacked accVariant == 0, we interpret this as an unequip action
-    function updateEquipSlotsByAccessoryIds(uint miladyId, uint[] memory accessoryIds)
-        public
-    {
-        require(msg.sender == ownerOf(miladyId), "You don't own that Milady Avatar");
-
-        for (uint i=0; i<accessoryIds.length; i++) {
-            (uint128 accType, uint128 accVariant) = AccessoryUtils.idToTypeAndVariantHashes(accessoryIds[i]);
-
-            _updateEquipSlotByTypeAndVariant(miladyId, accType, accVariant);
-        }
-    }
-
-    function _updateEquipSlotByTypeAndVariant(
-            uint miladyId, 
-            uint128 accType, 
-            uint128 accVariantOrNull)
-        internal
-    {
-        if (accVariantOrNull == 0) {
-            _unequipAccessoryByTypeIfEquipped(miladyId, accType);
-        }
-        else {
-            uint accessoryId = AccessoryUtils.typeAndVariantHashesToId(accType, accVariantOrNull);
-            _equipAccessoryIfOwned(miladyId, accessoryId);
-        }
-    }
-
-    event AccessoryEquipped(uint miladyId, uint accessoryId);
-
-    // core function for equip logic.
-    // Unequips items if equip would overwrite for that accessory type
-    function _equipAccessoryIfOwned(uint _miladyId, uint _accessoryId)
-        internal
-    {
-        address avatarTBA = getAvatarTBA(_miladyId);
-
-        require(
-            liquidAccessoriesContract.balanceOf(address(avatarTBA), _accessoryId) > 0
-         || soulboundAccessoriesContract.balanceOf(address(avatarTBA), _accessoryId) > 0,
-            "Unowned accessory"
-        );
-
-        (uint128 accType,) = AccessoryUtils.idToTypeAndVariantHashes(_accessoryId);
-
-        _unequipAccessoryByTypeIfEquipped(miladyId, accType);
-        rewardsContract.registerMiladyForRewardsForAccessory(_miladyId, _accessoryId);
-
-        equipSlots[miladyId][accType] = _accessoryId;
-
-        emit AccessoryEquipped(_miladyId, _accessoryId);
-    }
-
-    event AccessoryUnequipped(uint miladyId, uint accessoryId);
-
-    // core function for unequip logic
-    function _unequipAccessoryByTypeIfEquipped(uint miladyId, uint128 accType)
-        internal
-    {
-        if (equipSlots[miladyId][accType] != 0) {
-            rewardsContract.deregisterMiladyForRewardsForAccessoryAndClaim(miladyId, equipSlots[miladyId][accType], getPayableAvatarTBA(miladyId));
-
-            emit AccessoryUnequipped(miladyId, equipSlots[miladyId][accType]);
-
-            equipSlots[miladyId][accType] = 0;
-        }
-    }
-
-    function preTransferUnequipById(uint miladyId, uint accessoryId)
-        external
-    {
-        require(msg.sender == address(liquidAccessoriesContract), "msg.sender not liquidAccessories contract");
-
-        (uint128 accType, ) = AccessoryUtils.idToTypeAndVariantHashes(accessoryId);
-
-        _unequipAccessoryByTypeIfEquipped(miladyId, accType);
-    }
-
-    // Get the TokenGatedAccount for a particular Milady Avatar.
-    function getAvatarTBA(uint miladyId)
-        public
-        view
-        returns (address)
-    {
-        return tbaRegistry.account(address(tbaAccountImpl), block.chainid, address(this), miladyId, 0);
-    }
-
-    function getPayableAvatarTBA(uint miladyId)
-        public
-        view
-        returns (address payable)
-    {
-        return payable(getAvatarTBA(miladyId));
-    }
-
-    // todo: needs uri function?
 }

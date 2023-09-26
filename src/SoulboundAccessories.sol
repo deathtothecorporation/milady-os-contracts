@@ -53,7 +53,7 @@ contract SoulboundAccessories is ERC1155 {
         avatarContract = _avatarContract;
     }
 
-    event MiladyOnboarded(uint _miladyId);
+    event MiladyOnboarded(uint indexed miladyId, uint[] indexed accessories);
 
     function mintAndEquipSoulboundAccessories(uint _miladyId, uint[] calldata _accessories)
         external
@@ -80,7 +80,7 @@ contract SoulboundAccessories is ERC1155 {
 
         avatarContract.equipSoulboundAccessories(_miladyId, _accessories);
 
-        emit MiladyOnboarded(_miladyId);
+        emit MiladyOnboarded(_miladyId, _accessories);
     }
 
     // disable all token transfers, making these soulbound.
@@ -95,7 +95,7 @@ contract SoulboundAccessories is ERC1155 {
     }
 
     // prevents spurious approvals
-    function _setApprovalForAll(address, bool) 
+    function _setApprovalForAll(address, address, bool) 
         internal 
         override {
             revert("Cannot approve soulbound tokens");
