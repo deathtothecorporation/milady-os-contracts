@@ -65,7 +65,7 @@ contract MiladyAvatar is IERC721 {
     function updateEquipSlotsByAccessoryIds(uint _miladyId, uint[] memory _accessoryIds)
         public
     {
-        require(msg.sender == ownerOf(_miladyId), "You don't own that Milady Avatar");
+        require(msg.sender == ownerOf(_miladyId), "Not Milday TBA");
 
         for (uint i=0; i<_accessoryIds.length; i++) {
             (uint128 accType, uint128 accVariant) = AccessoryUtils.idToTypeAndVariantHashes(_accessoryIds[i]);
