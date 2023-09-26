@@ -118,7 +118,7 @@ contract MiladyAvatar is IERC721 {
     function _unequipAccessoryByTypeIfEquipped(uint _miladyId, uint128 _accType)
         internal
     {
-        if (equipSlots[_miladyId][_accType] != 0) {
+        if (equipSlots[_miladyId][_accType] != 0) { // if "something" is equiped
             rewardsContract.deregisterMiladyForRewardsForAccessoryAndClaim(_miladyId, equipSlots[_miladyId][_accType], getPayableAvatarTBA(_miladyId));
 
             emit AccessoryUnequipped(_miladyId, equipSlots[_miladyId][_accType]);
@@ -144,7 +144,7 @@ contract MiladyAvatar is IERC721 {
     function preTransferUnequipById(uint _miladyId, uint _accessoryId)
         external
     {
-        require(msg.sender == address(liquidAccessoriesContract), "msg.sender not liquidAccessories contract");
+        require(msg.sender == address(liquidAccessoriesContract), "Not liquidAccessoriesContract");
 
         (uint128 accType, ) = AccessoryUtils.idToTypeAndVariantHashes(_accessoryId);
 
