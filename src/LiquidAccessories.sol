@@ -52,7 +52,7 @@ contract LiquidAccessories is ERC1155 {
         for (uint i=0; i<accessoryIds.length; i++) {
             totalMintCost += getMintCostForNewAccessories(accessoryIds[i], amounts[i]);
         }
-        require(msg.value >= totalMintCost, "Not enough ether included to buy that accessory.");
+        require(msg.value >= totalMintCost, "Not enough ether included to buy those accessories.");
 
         for (uint i=0; i<accessoryIds.length; i++) {
             _mintAccessoryAndDisburseRevenue(accessoryIds[i], amounts[i], recipient);
@@ -184,11 +184,11 @@ contract LiquidAccessories is ERC1155 {
         internal
         override
     {
-            // check if we're sending from a miladyAvatar TBA
-            (address tbaTokenContract, uint tbaTokenId) = tbaRegistry.registeredAccounts(from);
+        // check if we're sending from a miladyAvatar TBA
+        (address tbaTokenContract, uint tbaTokenId) = tbaRegistry.registeredAccounts(from);
         
-            // tbaTokenContract == 0x0 if not a TBA
-            if (tbaTokenContract == address(avatarContract)) {
+        // tbaTokenContract == 0x0 if not a TBA
+        if (tbaTokenContract == address(avatarContract)) {
             for (uint i=0; i<ids.length; i++) {
                 
                 // next 3 lines for clarity. possible todo: remove for gas savings
