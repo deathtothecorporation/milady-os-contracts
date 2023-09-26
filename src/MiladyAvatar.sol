@@ -64,18 +64,22 @@ contract MiladyAvatar is IERC721 {
         public
     {
         require(msg.sender == ownerOf(_miladyId), "Not Milday owner");
+        _equipAccessory(_miladyId, _accessoryId);
+    }
 
+    function _equipAccessory(uint _miladyId, uint _accessoryId)
+        internal
+    {
         address payable avatarTBA = payable(getAvatarTBA(_miladyId));
-        require(
-            liquidAccessoriesContract.balanceOf(avatarTBA, _accessoryId) > 0
-         || soulboundAccessoriesContract.balanceOf(avatarTBA, _accessoryId) > 0,
-            "Unowned accessory"
-        );
-
         (uint128 accType, uint128 accVariant) = AccessoryUtils.idToTypeAndVariantHashes(_accessoryId);
 
         if (accVariant != 0)
         {
+            require(
+                liquidAccessoriesContract.balanceOf(avatarTBA, _accessoryId) > 0
+             || soulboundAccessoriesContract.balanceOf(avatarTBA, _accessoryId) > 0,
+                "Unowned accessory"
+            );
             // equipSlots[_miladyId][accType] = 0; // implied
             emit AccessoryUnequipped(_miladyId, equipSlots[_miladyId][accType]);
             equipSlots[_miladyId][accType] = accVariant;
@@ -94,11 +98,24 @@ contract MiladyAvatar is IERC721 {
     function equipAccessories(uint _miladyId, uint[] calldata _accessoryIds)
         external
     {
-        // Logan <| This is not gas efficient but greatly reduces the complexity of the code
-        // Logan <| The gas wins here are limited anyways due to registering and deregistering for rewards
-        for (uint i=0; i<_accessoryIds.length; i++) {
-            equipAccessory(_miladyId, _accessoryIds[i]);
+        require(msg.sender == ownerOf(_miladyId), "Not Milday owner");
+        _equipAccessories(_miladyId, _accessoryIds);
+    }
+
+    function _equipAccessories(uint _miladyId, uint[] calldata _accessoryIds)
+        internal
+    {
+        for (uint i=0; i<_accessoryIds.length; i++) 
+        {
+            _equipAccessory(_miladyId, _accessoryIds[i]);
         }
+    }
+
+    function equipAccessoriesAsSoulboundAccessories(uint _miladyId, uint[] calldata _accessoryIds)
+        external
+    {
+        require(msg.sender == address(soulboundAccessoriesContract), "Not SoulboundAccessories contract");
+        _equipAccessories(_miladyId, _accessoryIds);
     }
 
     event AccessoryEquipped(uint miladyId, uint accessoryId);
