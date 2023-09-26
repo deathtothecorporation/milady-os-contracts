@@ -53,7 +53,7 @@ contract SoulboundAccessories is ERC1155 {
         avatarContract = _avatarContract;
     }
 
-    event MiladyOnboarded(uint indexed miladyId, uint[] indexed accessories);
+    event MiladyOnboarded(uint indexed _miladyId, uint[] _accessories);
 
     function mintAndEquipSoulboundAccessories(uint _miladyId, uint[] calldata _accessories)
         external
