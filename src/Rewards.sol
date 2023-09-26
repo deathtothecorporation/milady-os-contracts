@@ -67,11 +67,11 @@ contract Rewards {
     function deregisterMiladyForRewardsForAccessoryAndClaim(uint miladyId, uint accessoryId, address payable recipient)
         external
     {
-        require(msg.sender == avatarContractAddress, "msg.sender is not authorized to call this function.");
+        require(msg.sender == avatarContractAddress, "Not avatarContractAddress");
 
         MiladyRewardInfo storage miladyRewardInfo = rewardInfoForAccessory[accessoryId].miladyRewardInfo[miladyId];
 
-        require(miladyRewardInfo.isRegistered, "Milady is not registered.");
+        require(miladyRewardInfo.isRegistered, "Milady not registered");
 
         _claimRewardsForMiladyForAccessory(miladyId, accessoryId, recipient);
 

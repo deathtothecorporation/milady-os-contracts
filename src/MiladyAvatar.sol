@@ -98,7 +98,7 @@ contract MiladyAvatar is IERC721 {
         require(
             liquidAccessoriesContract.balanceOf(address(avatarTBA), _accessoryId) > 0
          || soulboundAccessoriesContract.balanceOf(address(avatarTBA), _accessoryId) > 0,
-            "That avatar does not own that accessory."
+            "Not accessory owner"
         );
 
         (uint128 accType, uint accVariant) = AccessoryUtils.idToTypeAndVariantHashes(_accessoryId);
@@ -132,7 +132,7 @@ contract MiladyAvatar is IERC721 {
     function equipSoulboundAccessories(uint _miladyId, uint[] calldata _accessoryIds)
         external
     {
-        require(msg.sender == address(soulboundAccessoriesContract), "not called by SoulboundAccessories");
+        require(msg.sender == address(soulboundAccessoriesContract), "Not soulboundAccessories");
 
         for (uint i=0; i<_accessoryIds.length; i++) {
             _equipAccessoryIfOwned(_miladyId, _accessoryIds[i]);
