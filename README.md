@@ -42,3 +42,19 @@ During or before onboarding of a particular MiladyMaker holder, a server holding
 * If a user wants to claim all claimable rewards for their Milady across all equipped items, the interface/app is expected to track/enumerate this set of equipped items off-chain. This set is then passed into `Rewards.claimRewardsForMilady` as a list.
 * This system of contracts has no conception of which types of accessories are canonical versus non-canonical, for both item categories and item variants. Thus, an agent could in theory mint any item they want (a blue mood ring, a halo, etc.) without regard for whether it was ever seen in the original Milady Maker set - and even equip it and earn rewards from other users minting that item.
   * Rather than attempt to constrain this behavior in Solidity/Ethereum, the Milady OS app and interfaces will simply ignore items it does not recognize as canonical, both for purposes of rendering and gating comms and chat. This leaves the door open in the future for adding to the set of supported items, without having to update the contracts.
+
+# Goerli Addresses (for internal testing)
+
+Will try to keep these updated! These are all on Goerli and verified.
+
+* [fakeMiladys](https://goerli.etherscan.io/address/0xd0d0ec651a9FF604E9E44Ed02C5799d641024D6F#code)
+  * This is nothing more than an ERC721 contract that allows anyone to freely mint, which the rest of the system considers Miladys. To get one of these, call the "gimme" function on etherscan, and a fresh fake Milady will be sent to the wallet that initiates the transaction.
+* [TBARegistry](https://goerli.etherscan.io/address/0x4584DbF0510E86Dcc2F36038C6473b1a0FC5Aef3#code)
+* [TokenGatedAccount](https://goerli.etherscan.io/address/0x67d12C4dB022c543cb7a678F882eDc935B898940#code)
+* [Rewards](https://goerli.etherscan.io/address/0xAd6e965DB39DcD028B6B9088482794Dbeecb57Bd#code)
+* [MiladyAvatar](https://goerli.etherscan.io/address/0xa75d842b3Dd775C7310AD6D4E6154b5723B222CF#code)
+* [LiquidAccessories](https://goerli.etherscan.io/address/0xd960e80251f965204028382c52046D9b1988f177#code)
+* [SoulboundAccessories](https://goerli.etherscan.io/address/0xE417BB57a2dAf3f5c24F507EFF81345506D1B85e#code)
+* [Rewards](https://goerli.etherscan.io/address/0xAd6e965DB39DcD028B6B9088482794Dbeecb57Bd#code)
+
+`revenueRecipient` and `miladyAuthority` are both currently Logan's address: 0xBB5eb03535FA2bCFe9FE3BBb0F9cC48385818d92. Contact him if you need to test out the soulboundAccessories stuff, as this involves a permissioned call to SoulboundAccessoires from `miladyAuthority`.
