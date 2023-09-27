@@ -44,10 +44,7 @@ library TestSetup {
         // mint miladys to msg.sender for testing
         miladyContract.mintMiladys{value:60000000000000000*numMiladysToMint}(numMiladysToMint);
         
-        (
-            avatarContract, liquidAccessoriesContract, soulboundAccessoriesContract, rewardsContract
-        ) =
-        Deployer.deploy(
+        Deployer d = new Deployer(
             tbaRegistry,
             tbaAccountImpl,
             31337, // chain id of Forge's test chain
@@ -58,6 +55,11 @@ library TestSetup {
             "",
             ""
         );
+
+        avatarContract = d.avatarContract();
+        liquidAccessoriesContract = d.liquidAccessoriesContract();
+        soulboundAccessoriesContract = d.soulboundAccessoriesContract();
+        rewardsContract = d.rewardsContract();
 
         for (uint i=0; i<numMiladysToMint; i++) {
             tbaRegistry.createAccount(

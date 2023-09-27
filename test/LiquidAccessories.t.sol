@@ -6,16 +6,15 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
-import "../src/AccessoryUtils.sol";
 import "../src/Rewards.sol";
 import "../src/MiladyAvatar.sol";
 import "./MiladyOSTestBase.sol";
 
 contract LiquidAccessoriesTests is MiladyOSTestBase {
     function test_autoUnequip() public {
-        uint redHatAccessoryId = AccessoryUtils.plaintextAccessoryTextToId("hat", "red hat");
-        uint greenHatAccessoryId = AccessoryUtils.plaintextAccessoryTextToId("hat", "green hat");
-        uint blueHatAccessoryId = AccessoryUtils.plaintextAccessoryTextToId("hat", "blue hat");
+        uint redHatAccessoryId = avatarContract.plaintextAccessoryTextToAccessoryId("hat", "red hat");
+        uint greenHatAccessoryId = avatarContract.plaintextAccessoryTextToAccessoryId("hat", "green hat");
+        uint blueHatAccessoryId = avatarContract.plaintextAccessoryTextToAccessoryId("hat", "blue hat");
 
         uint[] memory accessoriesToMint = new uint[](3);
         accessoriesToMint[0] = redHatAccessoryId;
@@ -43,7 +42,7 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
 
         // now equip one, then another, and make sure the auto unequip works
         vm.startPrank(address(testUtils.getTGA(miladysContract, 0)));
-        (uint128 hatType, ) = AccessoryUtils.idToTypeAndVariantHashes(redHatAccessoryId);
+        (uint128 hatType, ) = avatarContract.accessoryIdToTypeAndVariantIds(redHatAccessoryId);
 
         uint[] memory listOfJustRedHatId = new uint[](1);
         listOfJustRedHatId[0] = redHatAccessoryId;
@@ -60,9 +59,9 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
         require(totalHoldersForRedHatRewards == 0);
     }
     function test_autoUnequipBatch() public {
-        uint redHatAccessoryId = AccessoryUtils.plaintextAccessoryTextToId("hat", "red hat");
-        uint greenHatAccessoryId = AccessoryUtils.plaintextAccessoryTextToId("hat", "green hat");
-        uint blueHatAccessoryId = AccessoryUtils.plaintextAccessoryTextToId("hat", "blue hat");
+        uint redHatAccessoryId = avatarContract.plaintextAccessoryTextToAccessoryId("hat", "red hat");
+        uint greenHatAccessoryId = avatarContract.plaintextAccessoryTextToAccessoryId("hat", "green hat");
+        uint blueHatAccessoryId = avatarContract.plaintextAccessoryTextToAccessoryId("hat", "blue hat");
 
         uint[] memory accessoriesToMint = new uint[](3);
         accessoriesToMint[0] = redHatAccessoryId;
@@ -90,7 +89,7 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
 
         // equip all 3 in a batch, and make sure only the last one sticks
         vm.startPrank(address(testUtils.getTGA(miladysContract, 0)));
-        (uint128 hatType, ) = AccessoryUtils.idToTypeAndVariantHashes(redHatAccessoryId);
+        (uint128 hatType, ) = avatarContract.accessoryIdToTypeAndVariantIds(redHatAccessoryId);
 
         avatarContract.updateEquipSlotsByAccessoryIds(0, accessoriesToMint);
         require(avatarContract.equipSlots(0, hatType) == blueHatAccessoryId);
@@ -106,7 +105,7 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
         liquidAccessoriesContract.getBurnRewardForReturnedAccessories(0, 1);
         require(liquidAccessoriesContract.getMintCostForNewAccessories(0, 1) == 0.0011 ether);
 
-        uint blueHatAccessoryId = AccessoryUtils.plaintextAccessoryTextToId("hat", "blue hat");
+        uint blueHatAccessoryId = avatarContract.plaintextAccessoryTextToAccessoryId("hat", "blue hat");
 
         uint[] memory listOfBlueHatAccessoryId = new uint[](1);
         listOfBlueHatAccessoryId[0] = blueHatAccessoryId;

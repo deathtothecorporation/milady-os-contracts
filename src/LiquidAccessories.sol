@@ -6,7 +6,6 @@ pragma solidity ^0.8.13;
 
 import "openzeppelin/token/ERC1155/ERC1155.sol";
 import "./TGA/TBARegistry.sol";
-import "./AccessoryUtils.sol";
 import "./MiladyAvatar.sol";
 import "./Rewards.sol";
 

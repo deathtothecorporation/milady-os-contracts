@@ -12,7 +12,12 @@ import "./LiquidAccessories.sol";
 import "./SoulboundAccessories.sol";
 import "./Rewards.sol";
 
-library Deployer {
+contract Deployer {
+    MiladyAvatar public avatarContract;
+    Rewards public rewardsContract;
+    LiquidAccessories public liquidAccessoriesContract;
+    SoulboundAccessories public soulboundAccessoriesContract;
+
     event Deployed(
         address avatarContractAddress,
         address liquidAccessoriesContractAddress,
@@ -20,7 +25,7 @@ library Deployer {
         address rewardsContractAddress
     );
 
-    function deploy(
+    constructor(
         TBARegistry tbaRegistry,
         TokenGatedAccount tbaAccountImpl,
         uint chainId,
@@ -31,13 +36,6 @@ library Deployer {
         string memory liquidAccessoriesURI,
         string memory soulboundAccessoriesURI
     )
-        public
-        returns (
-            MiladyAvatar avatarContract,
-            LiquidAccessories liquidAccessoriesContract,
-            SoulboundAccessories soulboundAccessoriesContract,
-            Rewards rewardsContract
-        )
     {
         avatarContract = new MiladyAvatar(
             miladysContract,

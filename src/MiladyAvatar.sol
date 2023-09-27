@@ -8,7 +8,6 @@ import "openzeppelin/token/ERC721/IERC721.sol";
 import "./TGA/TokenGatedAccount.sol";
 import "./TGA/TBARegistry.sol";
 import "./Rewards.sol";
-import "./AccessoryUtils.sol";
 import "./LiquidAccessories.sol";
 import "./SoulboundAccessories.sol";
 
@@ -68,7 +67,7 @@ contract MiladyAvatar is IERC721 {
         require(msg.sender == ownerOf(miladyId), "You don't own that Milady Avatar");
 
         for (uint i=0; i<accessoryIds.length; i++) {
-            (uint128 accType, uint128 accVariant) = AccessoryUtils.idToTypeAndVariantHashes(accessoryIds[i]);
+            (uint128 accType, uint128 accVariant) = accessoryIdToTypeAndVariantIds(accessoryIds[i]);
 
             _updateEquipSlotByTypeAndVariant(miladyId, accType, accVariant);
         }
@@ -81,7 +80,7 @@ contract MiladyAvatar is IERC721 {
             _unequipAccessoryByTypeIfEquipped(miladyId, accType);
         }
         else {
-            uint accessoryId = AccessoryUtils.typeAndVariantHashesToId(accType, accVariantOrNull);
+            uint accessoryId = typeAndVariantIdsToAccessoryId(accType, accVariantOrNull);
             _equipAccessoryIfOwned(miladyId, accessoryId);
         }
     }
@@ -101,7 +100,7 @@ contract MiladyAvatar is IERC721 {
             "That avatar does not own that accessory."
         );
 
-        (uint128 accType, uint accVariant) = AccessoryUtils.idToTypeAndVariantHashes(accessoryId);
+        (uint128 accType, uint accVariant) = accessoryIdToTypeAndVariantIds(accessoryId);
         assert(accVariant != 0); // take out for gas savings?
 
         _unequipAccessoryByTypeIfEquipped(miladyId, accType);
@@ -146,7 +145,7 @@ contract MiladyAvatar is IERC721 {
     {
         require(msg.sender == address(liquidAccessoriesContract), "msg.sender not liquidAccessories contract");
 
-        (uint128 accType, ) = AccessoryUtils.idToTypeAndVariantHashes(accessoryId);
+        (uint128 accType, ) = accessoryIdToTypeAndVariantIds(accessoryId);
 
         _unequipAccessoryByTypeIfEquipped(miladyId, accType);
     }
@@ -220,5 +219,64 @@ contract MiladyAvatar is IERC721 {
     }
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return interfaceId == type(IERC721).interfaceId;
+    }
+
+    // accessory utils
+
+    // The remaining functions describe the scheme whereby hashes (treated as IDs) of an accessory type and accessory variant
+    // are encoded into the same uint256 that is used for a global ID for a particular accessory.
+
+    // an ID's upper 128 bits are the truncated hash of the category text;
+    // the lower 128 bits are the truncated hash of the variant test
+
+    struct PlaintextAccessoryInfo {
+        string accType;
+        string accVariant;
+    }
+
+    function batchPlaintextAccessoryInfoToAccessoryIds(PlaintextAccessoryInfo[] memory accInfos)
+        public
+        pure
+        returns (uint[] memory accIds)
+    {
+        accIds = new uint[](accInfos.length);
+        for (uint i=0; i<accInfos.length; i++)
+        {
+            accIds[i] = plaintextAccessoryInfoToAccessoryId(accInfos[i]);
+        }
+    }
+
+    function plaintextAccessoryInfoToAccessoryId(PlaintextAccessoryInfo memory accInfo)
+        public
+        pure
+        returns (uint accessoryId)
+    {
+        uint128 accType = uint128(uint256(keccak256(abi.encodePacked(accInfo.accType))));
+        uint128 accVariant = uint128(uint256(keccak256(abi.encodePacked(accInfo.accVariant))));
+        accessoryId = typeAndVariantIdsToAccessoryId(accType, accVariant);
+    }
+
+    function plaintextAccessoryTextToAccessoryId(string memory accTypeString, string memory accVariantString)
+        public
+        pure
+        returns (uint accessoryId)
+    {
+        return plaintextAccessoryInfoToAccessoryId(PlaintextAccessoryInfo(accTypeString, accVariantString));
+    }
+
+    function accessoryIdToTypeAndVariantIds(uint id)
+        public
+        pure
+        returns (uint128 accType, uint128 accVariant)
+    {
+        return (uint128(id >> 128), uint128(id));
+    }
+
+    function typeAndVariantIdsToAccessoryId(uint128 accType, uint128 accVariant)
+        public
+        pure
+        returns (uint)
+    {
+        return (uint(accType) << 128) | uint(accVariant);
     }
 }

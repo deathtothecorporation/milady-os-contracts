@@ -8,7 +8,6 @@ import "openzeppelin/token/ERC1155/ERC1155.sol";
 import "./TGA/IERC6551Registry.sol";
 import "./TGA/IERC6551Account.sol";
 import "./TGA/TokenGatedAccount.sol";
-import "./AccessoryUtils.sol";
 import "./MiladyAvatar.sol";
 
 contract SoulboundAccessories is ERC1155 {
