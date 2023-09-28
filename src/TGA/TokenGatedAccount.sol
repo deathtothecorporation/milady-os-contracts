@@ -26,6 +26,8 @@ contract TokenGatedAccount is IERC165, IERC1271, IERC6551Account, IERC1155Receiv
         _;
     }
 
+    event NewBondedAddress(address indexed _newBondedAddress);
+
     // Note that we the bonded address can pass this bond on without authorization from owner()
     function bond(address _addressToBond) 
         external
@@ -33,6 +35,8 @@ contract TokenGatedAccount is IERC165, IERC1271, IERC6551Account, IERC1155Receiv
     {
         bondedAddress = _addressToBond;
         tokenOwnerAtLastBond = owner();
+
+        emit NewBondedAddress(_addressToBond);
     }
 
     uint _nonce;
@@ -43,14 +47,14 @@ contract TokenGatedAccount is IERC165, IERC1271, IERC6551Account, IERC1155Receiv
         external
         payable
         onlyAuthorizedMsgSender()
-        returns (bytes memory result)
+        returns (bytes memory _result)
     {
         bool success;
-        (success, result) = _to.call{value: _value}(_data);
+        (success, _result) = _to.call{value: _value}(_data);
 
         if (!success) {
             assembly {
-                revert(add(result, 32), mload(result))
+                revert(add(_result, 32), mload(_result))
             }
         }
         
