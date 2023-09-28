@@ -94,11 +94,7 @@ contract MiladyAvatar is IERC721 {
     {
         address avatarTBA = getAvatarTBA(_miladyId);
 
-        require(
-            liquidAccessoriesContract.balanceOf(address(avatarTBA), _accessoryId) > 0
-         || soulboundAccessoriesContract.balanceOf(address(avatarTBA), _accessoryId) > 0,
-            "Not accessory owner"
-        );
+        require(totalAccessoryBalanceOfAvatar(miladyId, accessoryId) > 0, "That avatar does not own that accessory.");
 
         (uint128 accType, uint accVariant) = accessoryIdToTypeAndVariantIds(accessoryId);
         assert(accVariant != 0); // take out for gas savings?
@@ -148,6 +144,17 @@ contract MiladyAvatar is IERC721 {
         (uint128 accType, ) = accessoryIdToTypeAndVariantIds(accessoryId);
 
         _unequipAccessoryByTypeIfEquipped(_miladyId, accType);
+    }
+
+
+    function totalAccessoryBalanceOfAvatar(uint miladyId, uint accessoryId)
+        public
+        view
+        returns(uint)
+    {
+        return
+            liquidAccessoriesContract.balanceOf(getAvatarTBA(miladyId), accessoryId)
+          + soulboundAccessoriesContract.balanceOf(getAvatarTBA(miladyId), accessoryId);
     }
 
     // Get the TokenGatedAccount for a particular Milady Avatar.
