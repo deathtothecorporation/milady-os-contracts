@@ -19,7 +19,7 @@ contract Rewards {
     mapping (uint => RewardInfoForAccessory) public rewardInfoForAccessory;
     struct RewardInfoForAccessory {
         uint totalRewardsAccrued;
-        uint totalHolders;
+        uint totalWearers;
         mapping (uint => MiladyRewardInfo) miladyRewardInfo;
     }
     struct MiladyRewardInfo {
@@ -34,7 +34,7 @@ contract Rewards {
         external
     {
         require(msg.value > 0, "No ether included");
-        require(rewardInfoForAccessory[_accessoryId].totalHolders > 0, "No eligible recipients");
+        require(rewardInfoForAccessory[_accessoryId].totalWearers > 0, "No eligible recipients");
 
         rewardInfoForAccessory[_accessoryId].totalRewardsAccrued += msg.value;
 
@@ -55,7 +55,7 @@ contract Rewards {
         // When a new Milady is registered, we pretend they've been here the whole time and have already claimed all they could.
         // This essentially starts out this Milady with 0 claimable rewards, which will go up as revenue increases.
         miladyRewardInfo.amountClaimedBeforeDivision = rewardInfoForAccessory[_accessoryId].totalRewardsAccrued;
-        rewardInfoForAccessory[_accessoryId].totalHolders ++;
+        rewardInfoForAccessory[_accessoryId].totalWearers ++;
 
         miladyRewardInfo.isRegistered = true;
 
@@ -73,7 +73,7 @@ contract Rewards {
 
         require(miladyRewardInfo.isRegistered, "Milady not registered");
 
-        rewardInfoForAccessory[_accessoryId].totalHolders --;
+        rewardInfoForAccessory[_accessoryId].totalWearers --;
 
         miladyRewardInfo.isRegistered = false;
 
@@ -128,7 +128,7 @@ contract Rewards {
         //todo: possible DRY cleanup with this and the beginning of claimRewardsForMiladyAndAccessory
         uint rewardOwedBeforeDivision = rewardInfo.totalRewardsAccrued - rewardInfo.miladyRewardInfo[_miladyId].amountClaimedBeforeDivision;
 
-        amountClaimable = rewardOwedBeforeDivision / rewardInfo.totalHolders;
+        amountClaimable = rewardOwedBeforeDivision / rewardInfo.totalWearers;
     }
 
     function getAmountClaimableForMiladyAndAccessories(uint _miladyId, uint[] memory _accessoryIds)
