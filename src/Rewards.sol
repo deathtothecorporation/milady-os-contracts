@@ -29,16 +29,16 @@ contract Rewards {
 
     event RewardsAccrued(uint indexed _accessoryId, uint _amount);
 
-    function addRewardsForAccessory(uint accessoryId)
+    function addRewardsForAccessory(uint _accessoryId)
         payable
         external
     {
         require(msg.value > 0, "No ether included");
-        require(rewardInfoForAccessory[accessoryId].totalHolders > 0, "No eligible recipients");
+        require(rewardInfoForAccessory[_accessoryId].totalHolders > 0, "No eligible recipients");
 
-        rewardInfoForAccessory[accessoryId].totalRewardsAccrued += msg.value;
+        rewardInfoForAccessory[_accessoryId].totalRewardsAccrued += msg.value;
 
-        emit RewardsAccrued(accessoryId, msg.value);
+        emit RewardsAccrued(_accessoryId, msg.value);
     }
 
     event MiladyRegisteredForRewards(uint indexed _miladyId, uint indexed _accessoryId);
