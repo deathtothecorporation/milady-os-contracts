@@ -195,8 +195,8 @@ contract LiquidAccessories is ERC1155 {
                 uint requestedAmountToTransfer = amounts[i];
                 uint miladyId = tbaTokenId;
 
-                // check if this transfer would result in a 0 balance
-                if (requestedAmountToTransfer == avatarContract.totalAccessoryBalanceOfAvatar(miladyId, accessoryId)) { // if requestedAmountToTransfer is > balance, OZ's 1155 logic will catch and revert
+                // check if this transfer would result in a 0 balance of that accessory
+                if (requestedAmountToTransfer == avatarContract.totalAccessoryBalanceOfAvatar(miladyId, accessoryId)) {
                     //unequip if it's equipped
                     avatarContract.preTransferUnequipById(miladyId, accessoryId);
                 }
