@@ -49,6 +49,8 @@ contract TokenGatedAccount is IERC165, IERC1271, IERC6551Account, IERC1155Receiv
         onlyAuthorizedMsgSender()
         returns (bytes memory _result)
     {
+        _nonce += 1;
+
         bool success;
         (success, _result) = _to.call{value: _value}(_data);
 
@@ -57,8 +59,6 @@ contract TokenGatedAccount is IERC165, IERC1271, IERC6551Account, IERC1155Receiv
                 revert(add(_result, 32), mload(_result))
             }
         }
-        
-        _nonce += 1;
     }
 
     function token()
