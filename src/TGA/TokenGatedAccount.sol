@@ -27,11 +27,11 @@ contract TokenGatedAccount is IERC165, IERC1271, IERC6551Account, IERC1155Receiv
     }
 
     // Note that we the bonded address can pass this bond on without authorization from owner()
-    function bond(address addressToBond) 
+    function bond(address _addressToBond) 
         external
         onlyAuthorizedMsgSender()
     {
-        bondedAddress = addressToBond;
+        bondedAddress = _addressToBond;
         tokenOwnerAtLastBond = owner();
     }
 
@@ -39,14 +39,14 @@ contract TokenGatedAccount is IERC165, IERC1271, IERC6551Account, IERC1155Receiv
 
     receive() external payable {}
 
-    function executeCall(address to, uint256 value, bytes calldata data)
+    function executeCall(address _to, uint256 _value, bytes calldata _data)
         external
         payable
         onlyAuthorizedMsgSender()
         returns (bytes memory result)
     {
         bool success;
-        (success, result) = to.call{value: value}(data);
+        (success, result) = _to.call{value: _value}(_data);
 
         if (!success) {
             assembly {
@@ -61,9 +61,9 @@ contract TokenGatedAccount is IERC165, IERC1271, IERC6551Account, IERC1155Receiv
         external
         view
         returns (
-            uint256 chainId,
-            address tokenContract,
-            uint256 tokenId
+            uint256 _chainId,
+            address _tokenContract,
+            uint256 _tokenId
         )
     {
         uint256 length = address(this).code.length;
@@ -81,20 +81,20 @@ contract TokenGatedAccount is IERC165, IERC1271, IERC6551Account, IERC1155Receiv
         return IERC721(tokenContract).ownerOf(tokenId);
     }
 
-    function supportsInterface(bytes4 interfaceId) public pure returns (bool) {
-        return (interfaceId == type(IERC165).interfaceId ||
-            interfaceId == type(IERC6551Account).interfaceId);
+    function supportsInterface(bytes4 _interfaceId) public pure returns (bool) {
+        return (_interfaceId == type(IERC165).interfaceId ||
+            _interfaceId == type(IERC6551Account).interfaceId);
     }
 
-    function isValidSignature(bytes32 hash, bytes memory signature)
+    function isValidSignature(bytes32 _hash, bytes memory _signature)
         external
         view
         returns (bytes4 magicValue)
     {
         bool isValid = SignatureChecker.isValidSignatureNow(
             owner(),
-            hash,
-            signature
+            _hash,
+            _signature
         );
 
         if (isValid) {
