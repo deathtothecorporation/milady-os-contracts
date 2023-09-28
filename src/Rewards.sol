@@ -29,12 +29,12 @@ contract Rewards {
 
     event RewardsAccrued(uint indexed accessoryId, uint amount);
 
-    function accrueRewardsForAccessory(uint accessoryId)
+    function addRewardsForAccessory(uint accessoryId)
         payable
         external
     {
-        require(msg.value > 0, "call must include some ether");
-        require(rewardInfoForAccessory[accessoryId].totalHolders > 0, "That accessory has no eligible recipients");
+        require(msg.value > 0, "No ether included");
+        require(rewardInfoForAccessory[accessoryId].totalHolders > 0, "No eligible recipients");
 
         rewardInfoForAccessory[accessoryId].totalRewardsAccrued += msg.value;
 
@@ -46,11 +46,11 @@ contract Rewards {
     function registerMiladyForRewardsForAccessory(uint miladyId, uint accessoryId)
         external
     {
-        require(msg.sender == avatarContractAddress, "msg.sender is not authorized to call this function.");
+        require(msg.sender == avatarContractAddress, "Not avatarContractAddress");
         
         MiladyRewardInfo storage miladyRewardInfo = rewardInfoForAccessory[accessoryId].miladyRewardInfo[miladyId];
 
-        require(! miladyRewardInfo.isRegistered, "Milady is already registered.");
+        require(! miladyRewardInfo.isRegistered, "Milady already registered");
 
         // When a new Milady is registered, we pretend they've been here the whole time and have already claimed all they could.
         // This essentially starts out this Milady with 0 claimable rewards, which will go up as revenue increases.
@@ -85,7 +85,7 @@ contract Rewards {
     function claimRewardsForMilady(uint miladyId, uint[] calldata accessoriesToClaimFor, address payable recipient)
         external
     {
-        require(msg.sender == miladysContract.ownerOf(miladyId), "Only callable by the owner of the Milady");
+        require(msg.sender == miladysContract.ownerOf(miladyId), "Not Milady owner");
 
         for (uint i=0; i<accessoriesToClaimFor.length; i++) {
             _claimRewardsForMiladyForAccessory(miladyId, accessoriesToClaimFor[i], recipient);
