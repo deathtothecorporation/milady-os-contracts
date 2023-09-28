@@ -66,8 +66,8 @@ contract MiladyAvatar is IERC721 {
     {
         require(msg.sender == ownerOf(_miladyId), "Not Milday TBA");
 
-        for (uint i=0; i<accessoryIds.length; i++) {
-            (uint128 accType, uint128 accVariant) = accessoryIdToTypeAndVariantIds(accessoryIds[i]);
+        for (uint i=0; i<_accessoryIds.length; i++) {
+            (uint128 accType, uint128 accVariant) = accessoryIdToTypeAndVariantIds(_accessoryIds[i]);
 
             _updateEquipSlotByTypeAndVariant(_miladyId, accType, accVariant);
         }
@@ -80,8 +80,8 @@ contract MiladyAvatar is IERC721 {
             _unequipAccessoryByTypeIfEquipped(_miladyId, _accType);
         }
         else {
-            uint accessoryId = typeAndVariantIdsToAccessoryId(accType, accVariantOrNull);
-            _equipAccessoryIfOwned(miladyId, accessoryId);
+            uint accessoryId = typeAndVariantIdsToAccessoryId(_accType, _accVariantOrNull);
+            _equipAccessoryIfOwned(_miladyId, accessoryId);
         }
     }
 
@@ -94,9 +94,9 @@ contract MiladyAvatar is IERC721 {
     {
         address avatarTBA = getAvatarTBA(_miladyId);
 
-        require(totalAccessoryBalanceOfAvatar(miladyId, accessoryId) > 0, "Not accessory owner");
+        require(totalAccessoryBalanceOfAvatar(_miladyId, _accessoryId) > 0, "Not accessory owner");
 
-        (uint128 accType, uint accVariant) = accessoryIdToTypeAndVariantIds(accessoryId);
+        (uint128 accType, uint accVariant) = accessoryIdToTypeAndVariantIds(_accessoryId);
         assert(accVariant != 0); // take out for gas savings?
 
         _unequipAccessoryByTypeIfEquipped(_miladyId, accType);
@@ -141,7 +141,7 @@ contract MiladyAvatar is IERC721 {
     {
         require(msg.sender == address(liquidAccessoriesContract), "Not liquidAccessoriesContract");
 
-        (uint128 accType, ) = accessoryIdToTypeAndVariantIds(accessoryId);
+        (uint128 accType, ) = accessoryIdToTypeAndVariantIds(_accessoryId);
 
         _unequipAccessoryByTypeIfEquipped(_miladyId, accType);
     }

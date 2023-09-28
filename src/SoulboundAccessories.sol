@@ -79,7 +79,7 @@ contract SoulboundAccessories is ERC1155 {
 
         avatarContract.equipSoulboundAccessories(_miladyId, _accessories);
 
-        emit SoulboundAccessoriesMinted(miladyId, accessories);
+        emit SoulboundAccessoriesMinted(_miladyId, _accessories);
     }
 
     // disable all token transfers, making these soulbound.
