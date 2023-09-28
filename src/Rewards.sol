@@ -99,11 +99,11 @@ contract Rewards {
     {
         RewardInfoForAccessory storage rewardInfo = rewardInfoForAccessory[_accessoryId];
 
-        uint rewardOwedBeforeDivision = rewardInfo.totalRewardsAccrued - rewardInfo.miladyRewardInfo[_miladyId].amountClaimedBeforeDivision;
-
         uint amountToSend = getAmountClaimableForMiladyAndAccessory(_miladyId, _accessoryId);
 
-        rewardInfo.miladyRewardInfo[_miladyId].amountClaimedBeforeDivision += rewardOwedBeforeDivision;
+        // Logan <| I correct me if I'm wrong but this is the same outcome as the previous version of the code, but without
+        //          the need for the additional calculation?
+        rewardInfo.miladyRewardInfo[_miladyId].amountClaimedBeforeDivision = rewardInfo.totalRewardsAccrued;
 
         // Schalk: Should we be doing something more elaborate/careful here?
         // Logan <| Yes, but the problem was where _claimRewardsForMiladyForAccessory was being called in MiladyDeregisteredForRewards. Fixed now.
@@ -112,6 +112,8 @@ contract Rewards {
         emit RewardsClaimed(_miladyId, _accessoryId, _recipient);
     }
 
+    // Logan <| Totally get why this is this way, would recommend a pure function under circumstances
+    //          like these as it removes the need to call the query in the right order elsewhere.
     function getAmountClaimableForMiladyAndAccessory(uint _miladyId, uint _accessoryId)
         public
         view
