@@ -94,7 +94,7 @@ contract MiladyAvatar is IERC721 {
     {
         address avatarTBA = getAvatarTBA(_miladyId);
 
-        require(totalAccessoryBalanceOfAvatar(miladyId, accessoryId) > 0, "That avatar does not own that accessory.");
+        require(totalAccessoryBalanceOfAvatar(miladyId, accessoryId) > 0, "Not accessory owner");
 
         (uint128 accType, uint accVariant) = accessoryIdToTypeAndVariantIds(accessoryId);
         assert(accVariant != 0); // take out for gas savings?
