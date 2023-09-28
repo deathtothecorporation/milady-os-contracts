@@ -73,11 +73,11 @@ contract Rewards {
 
         require(miladyRewardInfo.isRegistered, "Milady not registered");
 
-        _claimRewardsForMiladyForAccessory(_miladyId, _accessoryId, _recipient);
-
         rewardInfoForAccessory[_accessoryId].totalHolders --;
 
         miladyRewardInfo.isRegistered = false;
+
+        _claimRewardsForMiladyForAccessory(_miladyId, _accessoryId, _recipient);
 
         emit MiladyDeregisteredForRewards(_miladyId, _accessoryId);
     }
@@ -106,6 +106,7 @@ contract Rewards {
         rewardInfo.miladyRewardInfo[_miladyId].amountClaimedBeforeDivision += rewardOwedBeforeDivision;
 
         // Schalk: Should we be doing something more elaborate/careful here?
+        // Logan <| Yes, but the problem was where _claimRewardsForMiladyForAccessory was being called in MiladyDeregisteredForRewards. Fixed now.
         _recipient.transfer(amountToSend);
 
         emit RewardsClaimed(_miladyId, _accessoryId, _recipient);
