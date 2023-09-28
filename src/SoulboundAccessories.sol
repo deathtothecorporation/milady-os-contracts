@@ -8,7 +8,6 @@ import "openzeppelin/token/ERC1155/ERC1155.sol";
 import "./TGA/IERC6551Registry.sol";
 import "./TGA/IERC6551Account.sol";
 import "./TGA/TokenGatedAccount.sol";
-import "./AccessoryUtils.sol";
 import "./MiladyAvatar.sol";
 
 contract SoulboundAccessories is ERC1155 {
@@ -53,7 +52,7 @@ contract SoulboundAccessories is ERC1155 {
         avatarContract = _avatarContract;
     }
 
-    event MiladyOnboarded(uint indexed _miladyId, uint[] _accessories);
+    event SoulboundAccessoriesMinted(uint indexed miladyId, uint[] indexed accessories);
 
     function mintAndEquipSoulboundAccessories(uint _miladyId, uint[] calldata _accessories)
         external
@@ -80,7 +79,7 @@ contract SoulboundAccessories is ERC1155 {
 
         avatarContract.equipSoulboundAccessories(_miladyId, _accessories);
 
-        emit MiladyOnboarded(_miladyId, _accessories);
+        emit SoulboundAccessoriesMinted(miladyId, accessories);
     }
 
     // disable all token transfers, making these soulbound.

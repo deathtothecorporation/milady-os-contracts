@@ -6,15 +6,14 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
-import "../src/AccessoryUtils.sol";
 import "./MiladyOSTestBase.sol";
 
 contract LiquidAccessoriesTests is MiladyOSTestBase {
     function test_minting() public {
         uint[] memory accessoryIds = new uint[](3);
-        accessoryIds[0] = AccessoryUtils.plaintextAccessoryTextToId("hat", "blue hat");
-        accessoryIds[1] = AccessoryUtils.plaintextAccessoryTextToId("earring", "strawberry");
-        accessoryIds[2] = AccessoryUtils.plaintextAccessoryTextToId("necklace", "green");
+        accessoryIds[0] = avatarContract.plaintextAccessoryTextToAccessoryId("hat", "blue hat");
+        accessoryIds[1] = avatarContract.plaintextAccessoryTextToAccessoryId("earring", "strawberry");
+        accessoryIds[2] = avatarContract.plaintextAccessoryTextToAccessoryId("necklace", "green");
         
         vm.expectRevert("Not miladyAuthority");
         soulboundAccessoriesContract.mintAndEquipSoulboundAccessories(0, accessoryIds);
@@ -26,7 +25,7 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
 
         require(soulboundAccessoriesContract.balanceOf(address(avatar0TGA), accessoryIds[0]) == 1);
 
-        (uint128 hatAccessoryType,) = AccessoryUtils.idToTypeAndVariantHashes(accessoryIds[0]);
+        (uint128 hatAccessoryType,) = avatarContract.accessoryIdToTypeAndVariantIds(accessoryIds[0]);
         uint equippedAccessoryId = avatarContract.equipSlots(0, hatAccessoryType);
         require(equippedAccessoryId == accessoryIds[0]);
 

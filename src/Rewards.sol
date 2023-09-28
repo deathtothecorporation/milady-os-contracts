@@ -27,7 +27,7 @@ contract Rewards {
         uint amountClaimedBeforeDivision;
     }
 
-    event RewardsAccrued(uint accessoryId, uint amount);
+    event RewardsAccrued(uint indexed accessoryId, uint amount);
 
     function accrueRewardsForAccessory(uint accessoryId)
         payable
@@ -41,7 +41,7 @@ contract Rewards {
         emit RewardsAccrued(accessoryId, msg.value);
     }
 
-    event MiladyRegisteredForRewards(uint miladyId, uint accessoryId);
+    event MiladyRegisteredForRewards(uint indexed miladyId, uint indexed accessoryId);
 
     function registerMiladyForRewardsForAccessory(uint miladyId, uint accessoryId)
         external
@@ -62,7 +62,7 @@ contract Rewards {
         emit MiladyRegisteredForRewards(miladyId, accessoryId);
     }
 
-    event MiladyDeregisteredForRewards(uint miladyId, uint accessoryId);
+    event MiladyDeregisteredForRewards(uint indexed miladyId, uint indexed accessoryId);
 
     function deregisterMiladyForRewardsForAccessoryAndClaim(uint miladyId, uint accessoryId, address payable recipient)
         external
@@ -92,7 +92,7 @@ contract Rewards {
         }
     }
 
-    event RewardsClaimed(uint miladyId, uint accessoryId, address recipient);
+    event RewardsClaimed(uint indexed miladyId, uint indexed accessoryId, address indexed recipient);
 
     function _claimRewardsForMiladyForAccessory(uint miladyId, uint accessoryId, address payable recipient)
         internal

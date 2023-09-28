@@ -6,7 +6,6 @@ pragma solidity ^0.8.13;
 
 import "openzeppelin/token/ERC1155/ERC1155.sol";
 import "./TGA/TBARegistry.sol";
-import "./AccessoryUtils.sol";
 import "./MiladyAvatar.sol";
 import "./Rewards.sol";
 
@@ -52,7 +51,7 @@ contract LiquidAccessories is ERC1155 {
         for (uint i=0; i<accessoryIds.length; i++) {
             totalMintCost += getMintCostForNewAccessories(accessoryIds[i], amounts[i]);
         }
-        require(msg.value >= totalMintCost, "Not enough ether included to buy that accessory.");
+        require(msg.value >= totalMintCost, "Not enough ether included to buy those accessories.");
 
         for (uint i=0; i<accessoryIds.length; i++) {
             _mintAccessoryAndDisburseRevenue(accessoryIds[i], amounts[i], recipient);
@@ -90,6 +89,8 @@ contract LiquidAccessories is ERC1155 {
             // schalk: is this the appropriate tfer func to use?
             revenueRecipient.transfer(freeRevenue - halfFreeRevenue);
         }
+
+        // todo: minimum out to prevent sandwich attacks for both mint and burn
     }
 
     function _mintAccessory(uint accessoryId, uint amount, address recipient)
@@ -182,12 +183,12 @@ contract LiquidAccessories is ERC1155 {
         internal
         override
     {
-        for (uint i=0; i<ids.length; i++) {
-
-            // check if we're sending from a miladyAvatar TBA
-            (address tbaTokenContract, uint tbaTokenId) = tbaRegistry.registeredAccounts(from);
-            // tbaTokenContract == 0x0 if not a TBA
-            if (tbaTokenContract == address(avatarContract)) {
+        // check if we're sending from a miladyAvatar TBA
+        (address tbaTokenContract, uint tbaTokenId) = tbaRegistry.registeredAccounts(from);
+        
+        // tbaTokenContract == 0x0 if not a TBA
+        if (tbaTokenContract == address(avatarContract)) {
+            for (uint i=0; i<ids.length; i++) {
                 
                 // next 3 lines for clarity. possible todo: remove for gas savings
                 uint accessoryId = ids[i];
