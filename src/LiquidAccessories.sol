@@ -139,6 +139,7 @@ contract LiquidAccessories is ERC1155, Ownable {
         }
 
         require(totalBurnReward >= _minRewardOut, "Minimum specified reward not met");
+        _fundsRecipient.transfer(totalBurnReward);
     }
 
     function _burnAccessory(uint _accessoryId, uint _amount, address payable _fundsRecipient)
@@ -152,8 +153,6 @@ contract LiquidAccessories is ERC1155, Ownable {
         bondingCurves[_accessoryId].accessorySupply -= _amount;
 
         _burn(msg.sender, _accessoryId, _amount);
-
-        _fundsRecipient.transfer(burnReward);
     }
 
     function getMintCostForNewAccessories(uint _accessoryId, uint _amount)
