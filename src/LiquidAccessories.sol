@@ -36,8 +36,8 @@ contract LiquidAccessories is ERC1155, Ownable {
     function setAvatarContract(MiladyAvatar _avatarContract)
         external
     {
-        require(msg.sender == deployer, "Only callable by the initial deployer");
-        require(address(avatarContract) == address(0), "avatar contract already set");
+        require(msg.sender == deployer, "Not deployer");
+        require(address(avatarContract) == address(0), "avatarContract already set");
 
         avatarContract = _avatarContract;
     }
@@ -79,8 +79,6 @@ contract LiquidAccessories is ERC1155, Ownable {
         }
 
         if (msg.value > totalMintCost) {
-            // return extra in case of overpayment
-            // schalk: is this the appropriate tfer func to use?
             _overpayReturnAddress.transfer(msg.value - totalMintCost);
         }
     }
