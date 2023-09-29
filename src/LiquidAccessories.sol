@@ -131,7 +131,7 @@ contract LiquidAccessories is ERC1155, Ownable {
             address payable _fundsRecipient)
         external
     {
-        require(_accessoryIds.length == _amounts.length, "array arguments must have the same length");
+        require(_accessoryIds.length == _amounts.length, "Array lengths differ");
 
         uint totalBurnReward;
         for (uint i=0; i<_accessoryIds.length; i++) {
