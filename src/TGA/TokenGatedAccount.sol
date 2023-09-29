@@ -47,16 +47,16 @@ contract TokenGatedAccount is IERC165, IERC1271, IERC6551Account, IERC1155Receiv
         external
         payable
         onlyAuthorizedMsgSender()
-        returns (bytes memory _result)
+        returns (bytes memory result)
     {
         _nonce += 1;
 
         bool success;
-        (success, _result) = _to.call{value: _value}(_data);
+        (success, result) = _to.call{value: _value}(_data);
 
         if (!success) {
             assembly {
-                revert(add(_result, 32), mload(_result))
+                revert(add(result, 32), mload(result))
             }
         }
     }
