@@ -35,7 +35,7 @@ contract TokenGatedAccount is IERC165, IERC1271, IERC6551Account, IERC1155Receiv
         tokenOwnerAtLastBond = owner();
     }
 
-    uint _nonce;
+    uint public state;
 
     receive() external payable {}
 
@@ -54,7 +54,7 @@ contract TokenGatedAccount is IERC165, IERC1271, IERC6551Account, IERC1155Receiv
             }
         }
         
-        _nonce += 1;
+        state ++;
     }
 
     function token()
@@ -102,10 +102,6 @@ contract TokenGatedAccount is IERC165, IERC1271, IERC6551Account, IERC1155Receiv
         }
 
         return "";
-    }
-
-    function nonce() external view returns (uint) {
-        return _nonce;
     }
 
     function onERC1155Received(
