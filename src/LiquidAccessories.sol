@@ -98,7 +98,7 @@ contract LiquidAccessories is ERC1155, Ownable {
         else {
             uint halfFreeRevenue = freeRevenue / 2;
 
-            rewardsContract.accrueRewardsForAccessory{value:halfFreeRevenue}(accessoryId);
+            rewardsContract.addRewardsForAccessory{value:halfFreeRevenue}(accessoryId);
 
             // using `totalRevenue-halfFreeRevenue` instead of simply `halfFreeRevenue` to handle rounding errors from div by 2
             // schalk: is this the appropriate tfer func to use?

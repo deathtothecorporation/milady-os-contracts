@@ -60,5 +60,5 @@ interface IERC6551Account {
     /// @dev Returns a nonce value that is updated on every successful transaction
     ///
     /// @return The current account nonce
-    function nonce() external view returns (uint256);
+    function state() external view returns (uint256);
 }

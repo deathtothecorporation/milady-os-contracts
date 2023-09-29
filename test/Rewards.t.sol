@@ -27,14 +27,14 @@ contract RewardsTest is MiladyOSTestBase {
         soulboundAccessoriesContract.mintAndEquipSoulboundAccessories(0, milady0Accessories);
 
         // deposit rewards for some items the Milady has
-        rewardsContract.accrueRewardsForAccessory{value:100}(milady0Accessories[0]);
-        rewardsContract.accrueRewardsForAccessory{value:101}(milady0Accessories[1]);
+        rewardsContract.addRewardsForAccessory{value:100}(milady0Accessories[0]);
+        rewardsContract.addRewardsForAccessory{value:101}(milady0Accessories[1]);
 
         // depositing a reward for an item the Milady does not have should revert,
         // as no one will receive the rewards
         uint idForAccessoryNooneHas = avatarContract.plaintextAccessoryTextToAccessoryId("hat", "awful hat that no one has");
         vm.expectRevert("That accessory has no eligible recipients");
-        rewardsContract.accrueRewardsForAccessory{value:99}(idForAccessoryNooneHas);
+        rewardsContract.addRewardsForAccessory{value:99}(idForAccessoryNooneHas);
 
         require(rewardsContract.getAmountClaimableForMiladyAndAccessories(0, milady0Accessories) == 201);
 
@@ -58,11 +58,11 @@ contract RewardsTest is MiladyOSTestBase {
 
         // deposit a reward for:
         // * shared accessory
-        rewardsContract.accrueRewardsForAccessory{value:100}(milady0Accessories[0]);
+        rewardsContract.addRewardsForAccessory{value:100}(milady0Accessories[0]);
         // * accessory only held by milady 0
-        rewardsContract.accrueRewardsForAccessory{value:101}(milady0Accessories[1]);
+        rewardsContract.addRewardsForAccessory{value:101}(milady0Accessories[1]);
         // * accessory only held by milady 1
-        rewardsContract.accrueRewardsForAccessory{value:103}(milady1Accessories[1]);
+        rewardsContract.addRewardsForAccessory{value:103}(milady1Accessories[1]);
 
         uint expectedRewardsForMilady0 = 50 + 101; // half of first reward, all of second
         uint expectedRewardsForMilady1 = 50 + 103; // half of first reward, all of third

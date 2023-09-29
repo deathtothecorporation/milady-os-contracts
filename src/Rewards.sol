@@ -19,7 +19,7 @@ contract Rewards {
     mapping (uint => RewardInfoForAccessory) public rewardInfoForAccessory;
     struct RewardInfoForAccessory {
         uint totalRewardsAccrued;
-        uint totalHolders;
+        uint totalWearers;
         mapping (uint => MiladyRewardInfo) miladyRewardInfo;
     }
     struct MiladyRewardInfo {
@@ -27,114 +27,117 @@ contract Rewards {
         uint amountClaimedBeforeDivision;
     }
 
-    event RewardsAccrued(uint indexed accessoryId, uint amount);
+    event RewardsAccrued(uint indexed _accessoryId, uint _amount);
 
-    function accrueRewardsForAccessory(uint accessoryId)
+    function addRewardsForAccessory(uint _accessoryId)
         payable
         external
     {
-        require(msg.value > 0, "call must include some ether");
-        require(rewardInfoForAccessory[accessoryId].totalHolders > 0, "That accessory has no eligible recipients");
+        require(msg.value > 0, "No ether included");
+        require(rewardInfoForAccessory[_accessoryId].totalWearers > 0, "No eligible recipients");
 
-        rewardInfoForAccessory[accessoryId].totalRewardsAccrued += msg.value;
+        rewardInfoForAccessory[_accessoryId].totalRewardsAccrued += msg.value;
 
-        emit RewardsAccrued(accessoryId, msg.value);
+        emit RewardsAccrued(_accessoryId, msg.value);
     }
 
-    event MiladyRegisteredForRewards(uint indexed miladyId, uint indexed accessoryId);
+    event MiladyRegisteredForRewards(uint indexed _miladyId, uint indexed _accessoryId);
 
-    function registerMiladyForRewardsForAccessory(uint miladyId, uint accessoryId)
+    function registerMiladyForRewardsForAccessory(uint _miladyId, uint _accessoryId)
         external
     {
-        require(msg.sender == avatarContractAddress, "msg.sender is not authorized to call this function.");
+        require(msg.sender == avatarContractAddress, "Not avatarContractAddress");
         
-        MiladyRewardInfo storage miladyRewardInfo = rewardInfoForAccessory[accessoryId].miladyRewardInfo[miladyId];
+        MiladyRewardInfo storage miladyRewardInfo = rewardInfoForAccessory[_accessoryId].miladyRewardInfo[_miladyId];
 
-        require(! miladyRewardInfo.isRegistered, "Milady is already registered.");
+        require(! miladyRewardInfo.isRegistered, "Milady already registered");
 
         // When a new Milady is registered, we pretend they've been here the whole time and have already claimed all they could.
         // This essentially starts out this Milady with 0 claimable rewards, which will go up as revenue increases.
-        miladyRewardInfo.amountClaimedBeforeDivision = rewardInfoForAccessory[accessoryId].totalRewardsAccrued;
-        rewardInfoForAccessory[accessoryId].totalHolders ++;
+        miladyRewardInfo.amountClaimedBeforeDivision = rewardInfoForAccessory[_accessoryId].totalRewardsAccrued;
+        rewardInfoForAccessory[_accessoryId].totalWearers ++;
 
         miladyRewardInfo.isRegistered = true;
 
-        emit MiladyRegisteredForRewards(miladyId, accessoryId);
+        emit MiladyRegisteredForRewards(_miladyId, _accessoryId);
     }
 
-    event MiladyDeregisteredForRewards(uint indexed miladyId, uint indexed accessoryId);
+    event MiladyDeregisteredForRewards(uint indexed _miladyId, uint indexed _accessoryId);
 
-    function deregisterMiladyForRewardsForAccessoryAndClaim(uint miladyId, uint accessoryId, address payable recipient)
+    function deregisterMiladyForRewardsForAccessoryAndClaim(uint _miladyId, uint _accessoryId, address payable _recipient)
         external
     {
-        require(msg.sender == avatarContractAddress, "msg.sender is not authorized to call this function.");
+        require(msg.sender == avatarContractAddress, "Not avatarContractAddress");
 
-        MiladyRewardInfo storage miladyRewardInfo = rewardInfoForAccessory[accessoryId].miladyRewardInfo[miladyId];
+        MiladyRewardInfo storage miladyRewardInfo = rewardInfoForAccessory[_accessoryId].miladyRewardInfo[_miladyId];
 
-        require(miladyRewardInfo.isRegistered, "Milady is not registered.");
+        require(miladyRewardInfo.isRegistered, "Milady not registered");
 
-        _claimRewardsForMiladyForAccessory(miladyId, accessoryId, recipient);
-
-        rewardInfoForAccessory[accessoryId].totalHolders --;
+        rewardInfoForAccessory[_accessoryId].totalWearers --;
 
         miladyRewardInfo.isRegistered = false;
 
-        emit MiladyDeregisteredForRewards(miladyId, accessoryId);
+        _claimRewardsForMiladyForAccessory(_miladyId, _accessoryId, _recipient);
+
+        emit MiladyDeregisteredForRewards(_miladyId, _accessoryId);
     }
 
-    function claimRewardsForMilady(uint miladyId, uint[] calldata accessoriesToClaimFor, address payable recipient)
+    function claimRewardsForMilady(uint _miladyId, uint[] calldata _accessoriesToClaimFor, address payable _recipient)
         external
     {
-        require(msg.sender == miladysContract.ownerOf(miladyId), "Only callable by the owner of the Milady");
+        require(msg.sender == miladysContract.ownerOf(_miladyId), "Not Milady owner");
 
-        for (uint i=0; i<accessoriesToClaimFor.length; i++) {
-            _claimRewardsForMiladyForAccessory(miladyId, accessoriesToClaimFor[i], recipient);
+        for (uint i=0; i<_accessoriesToClaimFor.length; i++) {
+            _claimRewardsForMiladyForAccessory(_miladyId, _accessoriesToClaimFor[i], _recipient);
         }
     }
 
-    event RewardsClaimed(uint indexed miladyId, uint indexed accessoryId, address indexed recipient);
+    event RewardsClaimed(uint indexed _miladyId, uint indexed _accessoryId, address indexed _recipient);
 
-    function _claimRewardsForMiladyForAccessory(uint miladyId, uint accessoryId, address payable recipient)
+    function _claimRewardsForMiladyForAccessory(uint _miladyId, uint _accessoryId, address payable _recipient)
         internal
     {
-        RewardInfoForAccessory storage rewardInfo = rewardInfoForAccessory[accessoryId];
+        RewardInfoForAccessory storage rewardInfo = rewardInfoForAccessory[_accessoryId];
 
-        uint rewardOwedBeforeDivision = rewardInfo.totalRewardsAccrued - rewardInfo.miladyRewardInfo[miladyId].amountClaimedBeforeDivision;
+        uint amountToSend = getAmountClaimableForMiladyAndAccessory(_miladyId, _accessoryId);
 
-        uint amountToSend = getAmountClaimableForMiladyAndAccessory(miladyId, accessoryId);
-
-        rewardInfo.miladyRewardInfo[miladyId].amountClaimedBeforeDivision += rewardOwedBeforeDivision;
+        // Logan <| I correct me if I'm wrong but this is the same outcome as the previous version of the code, but without
+        //          the need for the additional calculation?
+        rewardInfo.miladyRewardInfo[_miladyId].amountClaimedBeforeDivision = rewardInfo.totalRewardsAccrued;
 
         // Schalk: Should we be doing something more elaborate/careful here?
-        recipient.transfer(amountToSend);
+        // Logan <| Yes, but the problem was where _claimRewardsForMiladyForAccessory was being called in MiladyDeregisteredForRewards. Fixed now.
+        _recipient.transfer(amountToSend);
 
-        emit RewardsClaimed(miladyId, accessoryId, recipient);
+        emit RewardsClaimed(_miladyId, _accessoryId, _recipient);
     }
 
-    function getAmountClaimableForMiladyAndAccessory(uint miladyId, uint accessoryId)
+    // Logan <| Totally get why this is this way, would recommend a pure function under circumstances
+    //          like these as it removes the need to call the query in the right order elsewhere.
+    function getAmountClaimableForMiladyAndAccessory(uint _miladyId, uint _accessoryId)
         public
         view
         returns (uint amountClaimable)
     {
-        if (! rewardInfoForAccessory[accessoryId].miladyRewardInfo[miladyId].isRegistered) {
+        if (! rewardInfoForAccessory[_accessoryId].miladyRewardInfo[_miladyId].isRegistered) {
             return 0;
         }
         
-        RewardInfoForAccessory storage rewardInfo = rewardInfoForAccessory[accessoryId];
+        RewardInfoForAccessory storage rewardInfo = rewardInfoForAccessory[_accessoryId];
         
         //todo: possible DRY cleanup with this and the beginning of claimRewardsForMiladyAndAccessory
-        uint rewardOwedBeforeDivision = rewardInfo.totalRewardsAccrued - rewardInfo.miladyRewardInfo[miladyId].amountClaimedBeforeDivision;
+        uint rewardOwedBeforeDivision = rewardInfo.totalRewardsAccrued - rewardInfo.miladyRewardInfo[_miladyId].amountClaimedBeforeDivision;
 
-        amountClaimable = rewardOwedBeforeDivision / rewardInfo.totalHolders;
+        amountClaimable = rewardOwedBeforeDivision / rewardInfo.totalWearers;
     }
 
-    function getAmountClaimableForMiladyAndAccessories(uint miladyId, uint[] memory accessoryIds)
+    function getAmountClaimableForMiladyAndAccessories(uint _miladyId, uint[] memory _accessoryIds)
         public
         view
         returns (uint amountClaimable)
     {
-        for (uint i=0; i<accessoryIds.length; i++) {
-            amountClaimable += getAmountClaimableForMiladyAndAccessory(miladyId, accessoryIds[i]);
+        for (uint i=0; i<_accessoryIds.length; i++) {
+            amountClaimable += getAmountClaimableForMiladyAndAccessory(_miladyId, _accessoryIds[i]);
         }
     }
 }

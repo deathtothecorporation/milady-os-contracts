@@ -54,42 +54,49 @@ contract SoulboundAccessories is ERC1155 {
 
     event SoulboundAccessoriesMinted(uint indexed miladyId, uint[] indexed accessories);
 
-    function mintAndEquipSoulboundAccessories(uint miladyId, uint[] calldata accessories)
+    function mintAndEquipSoulboundAccessories(uint _miladyId, uint[] calldata _accessories)
         external
     {
         require(msg.sender == miladyAuthority, "Not miladyAuthority");
 
-        require(!avatarActivated[miladyId], "Avatar already activated");
-        avatarActivated[miladyId] = true;
+        require(!avatarActivated[_miladyId], "Avatar already activated");
+        avatarActivated[_miladyId] = true;
 
         address avatarTbaAddress = tbaRegistry.account(
             address(tbaAccountImpl),
             chainId,
             address(avatarContract),
-            miladyId,
+            _miladyId,
             0
         );
 
-        uint[] memory listOf1s = new uint[](accessories.length);
+        uint[] memory listOf1s = new uint[](_accessories.length);
         for (uint i=0; i<listOf1s.length; i++) {
             listOf1s[i] = 1;
         }
 
-        _mintBatch(avatarTbaAddress, accessories, listOf1s, "");
+        _mintBatch(avatarTbaAddress, _accessories, listOf1s, "");
 
-        avatarContract.equipSoulboundAccessories(miladyId, accessories);
+        avatarContract.equipSoulboundAccessories(_miladyId, _accessories);
 
-        emit SoulboundAccessoriesMinted(miladyId, accessories);
+        emit SoulboundAccessoriesMinted(_miladyId, _accessories);
     }
 
     // disable all token transfers, making these soulbound.
-    function _beforeTokenTransfer(address, address from, address, uint256[] memory, uint256[] memory, bytes memory)
+    function _beforeTokenTransfer(address, address _from, address, uint256[] memory, uint256[] memory, bytes memory)
         internal
         override
     {
-        if (from == address(0x0)) {
+        if (_from == address(0x0)) {
             return; // allow transfers from 0x0, i.e. mints
         }
         revert("Cannot transfer soulbound tokens");
+    }
+
+    // prevents spurious approvals
+    function _setApprovalForAll(address, address, bool) 
+        internal 
+        override {
+            revert("Cannot approve soulbound tokens");
     }
 }

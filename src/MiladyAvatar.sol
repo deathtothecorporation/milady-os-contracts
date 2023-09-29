@@ -18,37 +18,37 @@ contract MiladyAvatar is IERC721 {
     Rewards public rewardsContract;
     
     // state needed for TBA determination
-    TBARegistry tbaRegistry;
-    IERC6551Account tbaAccountImpl;
-    uint chainId;
+    TBARegistry public tbaRegistry;
+    IERC6551Account public tbaAccountImpl;
+    uint public chainId;
 
-    string baseURI;
+    string public baseURI;
 
     // only used for initial deploy
     address deployer;
 
     constructor(
-        IERC721 _miladysContract,
-        TBARegistry _tbaRegistry,
-        TokenGatedAccount _tbaAccountImpl,
-        uint _chainId,
-        string memory _baseURI
+            IERC721 _miladysContract,
+            TBARegistry _tbaRegistry,
+            TokenGatedAccount _tbaAccountImpl,
+            uint _chainId,
+            string memory _baseURI
     ) {
         deployer = msg.sender;
-
         miladysContract = _miladysContract;
-        
         tbaRegistry = _tbaRegistry;
         tbaAccountImpl = _tbaAccountImpl;
         chainId = _chainId;
-
         baseURI = _baseURI;
     }
 
-    function setOtherContracts(LiquidAccessories _liquidAccessoriesContract, SoulboundAccessories _soulboundAccessoriesContract, Rewards _rewardsContract)
+    function setOtherContracts(
+            LiquidAccessories _liquidAccessoriesContract, 
+            SoulboundAccessories _soulboundAccessoriesContract, 
+            Rewards _rewardsContract)
         external
     {
-        require(msg.sender == deployer, "Only callable by the initial deployer");
+        require(msg.sender == deployer, "Caller not initial deployer");
         require(address(liquidAccessoriesContract) == address(0), "Contracts already set");
         
         liquidAccessoriesContract = _liquidAccessoriesContract;
@@ -61,89 +61,89 @@ contract MiladyAvatar is IERC721 {
     
     // main entry point for a user to change their Avatar's appearance / equip status
     // If an accessoryId's unpacked accVariant == 0, we interpret this as an unequip action
-    function updateEquipSlotsByAccessoryIds(uint miladyId, uint[] memory accessoryIds)
+    function updateEquipSlotsByAccessoryIds(uint _miladyId, uint[] memory _accessoryIds)
         public
     {
-        require(msg.sender == ownerOf(miladyId), "You don't own that Milady Avatar");
+        require(msg.sender == ownerOf(_miladyId), "Not Milday TBA");
 
-        for (uint i=0; i<accessoryIds.length; i++) {
-            (uint128 accType, uint128 accVariant) = accessoryIdToTypeAndVariantIds(accessoryIds[i]);
+        for (uint i=0; i<_accessoryIds.length; i++) {
+            (uint128 accType, uint128 accVariant) = accessoryIdToTypeAndVariantIds(_accessoryIds[i]);
 
-            _updateEquipSlotByTypeAndVariant(miladyId, accType, accVariant);
+            _updateEquipSlotByTypeAndVariant(_miladyId, accType, accVariant);
         }
     }
 
-    function _updateEquipSlotByTypeAndVariant(uint miladyId, uint128 accType, uint128 accVariantOrNull)
+    function _updateEquipSlotByTypeAndVariant(uint _miladyId, uint128 _accType, uint128 _accVariantOrNull)
         internal
     {
-        if (accVariantOrNull == 0) {
-            _unequipAccessoryByTypeIfEquipped(miladyId, accType);
+        if (_accVariantOrNull == 0) {
+            _unequipAccessoryByTypeIfEquipped(_miladyId, _accType);
         }
         else {
-            uint accessoryId = typeAndVariantIdsToAccessoryId(accType, accVariantOrNull);
-            _equipAccessoryIfOwned(miladyId, accessoryId);
+            uint accessoryId = typeAndVariantIdsToAccessoryId(_accType, _accVariantOrNull);
+            _equipAccessoryIfOwned(_miladyId, accessoryId);
         }
     }
 
-    event AccessoryEquipped(uint indexed miladyId, uint indexed accessoryId);
+    event AccessoryEquipped(uint indexed _miladyId, uint indexed _accessoryId);
 
     // core function for equip logic.
     // Unequips items if equip would overwrite for that accessory type
-    function _equipAccessoryIfOwned(uint miladyId, uint accessoryId)
+    function _equipAccessoryIfOwned(uint _miladyId, uint _accessoryId)
         internal
     {
-        address avatarTBA = getAvatarTBA(miladyId);
+        address avatarTBA = getAvatarTBA(_miladyId);
 
-        require(totalAccessoryBalanceOfAvatar(miladyId, accessoryId) > 0, "That avatar does not own that accessory.");
+        require(totalAccessoryBalanceOfAvatar(_miladyId, _accessoryId) > 0, "Not accessory owner");
 
-        (uint128 accType, uint accVariant) = accessoryIdToTypeAndVariantIds(accessoryId);
+        (uint128 accType, uint accVariant) = accessoryIdToTypeAndVariantIds(_accessoryId);
         assert(accVariant != 0); // take out for gas savings?
 
-        _unequipAccessoryByTypeIfEquipped(miladyId, accType);
-        rewardsContract.registerMiladyForRewardsForAccessory(miladyId, accessoryId);
+        _unequipAccessoryByTypeIfEquipped(_miladyId, accType);
+        rewardsContract.registerMiladyForRewardsForAccessory(_miladyId, _accessoryId);
 
-        equipSlots[miladyId][accType] = accessoryId;
+        equipSlots[_miladyId][accType] = _accessoryId;
 
-        emit AccessoryEquipped(miladyId, accessoryId);
+        emit AccessoryEquipped(_miladyId, _accessoryId);
     }
 
-    event AccessoryUnequipped(uint indexed miladyId, uint indexed accessoryId);
+    event AccessoryUnequipped(uint indexed _miladyId, uint indexed _accessoryId);
 
     // core function for unequip logic
-    function _unequipAccessoryByTypeIfEquipped(uint miladyId, uint128 accType)
+    function _unequipAccessoryByTypeIfEquipped(uint _miladyId, uint128 _accType)
         internal
     {
-        if (equipSlots[miladyId][accType] != 0) {
-            rewardsContract.deregisterMiladyForRewardsForAccessoryAndClaim(miladyId, equipSlots[miladyId][accType], getPayableAvatarTBA(miladyId));
+        if (equipSlots[_miladyId][_accType] != 0) { // if "something" is equiped
+            rewardsContract.deregisterMiladyForRewardsForAccessoryAndClaim(_miladyId, equipSlots[_miladyId][_accType], getPayableAvatarTBA(_miladyId));
 
-            emit AccessoryUnequipped(miladyId, equipSlots[miladyId][accType]);
+            emit AccessoryUnequipped(_miladyId, equipSlots[_miladyId][_accType]);
 
-            equipSlots[miladyId][accType] = 0;
+            equipSlots[_miladyId][_accType] = 0;
         }
     }
 
     // Allows soulbound accessories to "auto equip" themselves upon mint
     // See `SoulboundAccessories.mintSoulboundAccessories`.
-    function equipSoulboundAccessories(uint miladyId, uint[] calldata accessoryIds)
+    function equipSoulboundAccessories(uint _miladyId, uint[] calldata _accessoryIds)
         external
     {
-        require(msg.sender == address(soulboundAccessoriesContract), "not called by SoulboundAccessories");
+        require(msg.sender == address(soulboundAccessoriesContract), "Not soulboundAccessories");
 
-        for (uint i=0; i<accessoryIds.length; i++) {
-            _equipAccessoryIfOwned(miladyId, accessoryIds[i]);
+        for (uint i=0; i<_accessoryIds.length; i++) {
+            _equipAccessoryIfOwned(_miladyId, _accessoryIds[i]);
         }
     }
 
     // Allows liquid accessoires to "auto unequip" themselves upon transfer away
     // See `LiquidAccessories._beforeTokenTransfer`.
-    function preTransferUnequipById(uint miladyId, uint accessoryId)
+    function preTransferUnequipById(uint _miladyId, uint _accessoryId)
         external
     {
-        require(msg.sender == address(liquidAccessoriesContract), "msg.sender not liquidAccessories contract");
+        require(msg.sender == address(liquidAccessoriesContract), "Not liquidAccessoriesContract");
 
-        (uint128 accType, ) = accessoryIdToTypeAndVariantIds(accessoryId);
+        (uint128 accType, ) = accessoryIdToTypeAndVariantIds(_accessoryId);
 
-        _unequipAccessoryByTypeIfEquipped(miladyId, accType);
+        _unequipAccessoryByTypeIfEquipped(_miladyId, accType);
     }
 
 
@@ -158,20 +158,20 @@ contract MiladyAvatar is IERC721 {
     }
 
     // Get the TokenGatedAccount for a particular Milady Avatar.
-    function getAvatarTBA(uint miladyId)
+    function getAvatarTBA(uint _miladyId)
         public
         view
         returns (address)
     {
-        return tbaRegistry.account(address(tbaAccountImpl), block.chainid, address(this), miladyId, 0);
+        return tbaRegistry.account(address(tbaAccountImpl), block.chainid, address(this), _miladyId, 0);
     }
 
-    function getPayableAvatarTBA(uint miladyId)
+    function getPayableAvatarTBA(uint _miladyId)
         public
         view
         returns (address payable)
     {
-        return payable(getAvatarTBA(miladyId));
+        return payable(getAvatarTBA(_miladyId));
     }
 
     function name() external pure returns (string memory) {
@@ -182,48 +182,71 @@ contract MiladyAvatar is IERC721 {
         return "MILA";
     }
 
-    function tokenURI(uint256 tokenId) external view returns (string memory) {
-        require(tokenId <= 9999, "Invalid Milady/Avatar id");
+    function tokenURI(uint256 _tokenId) 
+        external 
+        view 
+        returns (string memory) 
+    {
+        require(_tokenId <= 9998, "Invalid Milady/Avatar id");
 
-        return string(abi.encodePacked(baseURI, Strings.toString(tokenId)));
+        return string(abi.encodePacked(baseURI, Strings.toString(_tokenId)));
     }
 
-    function balanceOf(address who) external view returns (uint256 balance) {
-        (address tbaContractAddress,) = tbaRegistry.registeredAccounts(who);
+    function balanceOf(address _who) 
+        external 
+        view 
+        returns 
+        (uint256 balance) 
+    {
+        (address tbaContractAddress,) = tbaRegistry.registeredAccounts(_who);
         if (tbaContractAddress == address(miladysContract)) {
             return 1;
         }
         else return 0;
     }
-    function ownerOf(uint256 tokenId) public view returns (address owner) {
-        require(tokenId <= 9999, "Invalid Milady/Avatar id");
 
-        return tbaRegistry.account(address(tbaAccountImpl), chainId, address(miladysContract), tokenId, 0);
+    function ownerOf(uint256 _tokenId) 
+        public 
+        view 
+        returns (address owner) 
+    {
+        require(_tokenId <= 9999, "Invalid Milady/Avatar id");
+
+        return tbaRegistry.account(address(tbaAccountImpl), chainId, address(miladysContract), _tokenId, 0);
     }
+
     function safeTransferFrom(address, address, uint256, bytes calldata) external {
         revertWithSoulboundMessage();
     }
+    
     function safeTransferFrom(address, address, uint256) external {
         revertWithSoulboundMessage();
     }
+
     function transferFrom(address, address, uint256) external {
         revertWithSoulboundMessage();
     }
+
     function approve(address, uint256) external {
         revertWithSoulboundMessage();
     }
+
     function setApprovalForAll(address, bool) external {
         revertWithSoulboundMessage();
     }
-    function getApproved(uint256) external view returns (address operator) {
+
+    function getApproved(uint256) external view returns (address) {
         revertWithSoulboundMessage();
     }
+
     function isApprovedForAll(address, address) external view returns (bool) {
         return false;
     }
+
     function revertWithSoulboundMessage() pure internal {
         revert("Cannot transfer soulbound tokens");
     }
+
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return interfaceId == type(IERC721).interfaceId;
     }
