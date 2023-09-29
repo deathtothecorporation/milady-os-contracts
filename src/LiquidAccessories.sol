@@ -5,11 +5,12 @@
 pragma solidity ^0.8.13;
 
 import "openzeppelin/token/ERC1155/ERC1155.sol";
+import "openzeppelin/access/Ownable.sol";
 import "./TGA/TBARegistry.sol";
 import "./MiladyAvatar.sol";
 import "./Rewards.sol";
 
-contract LiquidAccessories is ERC1155 {
+contract LiquidAccessories is ERC1155, Ownable {
     TBARegistry public tbaRegistry;
     MiladyAvatar public avatarContract;
 
@@ -39,7 +40,21 @@ contract LiquidAccessories is ERC1155 {
         avatarContract = _avatarContract;
     }
     
-    mapping(uint => uint) public liquidAccessorySupply;
+    mapping(uint => BondingCurveInfo) public bondingCurves;
+    struct BondingCurveInfo {
+        uint accessorySupply;
+        uint curveParameter;
+    }
+
+    function defineBondingCurveParameter(uint accessoryId, uint parameter)
+        external
+        onlyOwner()
+    {
+        require(parameter != 0, "Cannot set parameter to 0");
+        require(bondingCurves[accessoryId].curveParameter == 0, "This parameter has already been set");
+
+        bondingCurves[accessoryId].curveParameter = parameter;
+    }
 
     function mintAccessories(uint[] calldata accessoryIds, uint[] calldata amounts, address recipient, address payable overpayReturnAddress)
         external
@@ -99,7 +114,7 @@ contract LiquidAccessories is ERC1155 {
     {
         cost = getMintCostForNewAccessories(accessoryId, amount);
 
-        liquidAccessorySupply[accessoryId] += amount;
+        bondingCurves[accessoryId].accessorySupply += amount;
 
         _mint(recipient, accessoryId, amount, "");
     }
@@ -111,7 +126,7 @@ contract LiquidAccessories is ERC1155 {
 
         uint burnReward = getBurnRewardForReturnedAccessories(accessoryId, amount);
         
-        liquidAccessorySupply[accessoryId] -= amount;
+        bondingCurves[accessoryId].accessorySupply -= amount;
 
         _burn(msg.sender, accessoryId, amount);
 
@@ -135,11 +150,13 @@ contract LiquidAccessories is ERC1155 {
         view
         returns (uint)
     {
-        uint currentSupplyOfAccessory = liquidAccessorySupply[accessoryId];
+        uint currentSupplyOfAccessory = bondingCurves[accessoryId].accessorySupply;
+        uint curveParameter = bondingCurves[accessoryId].curveParameter;
+        require(curveParameter != 0, "Item has no bonding curve");
 
         uint totalCost;
         for (uint i=0; i<amount; i++) {
-            totalCost += getMintCostForItemNumber(currentSupplyOfAccessory + i);
+            totalCost += getMintCostForItemNumber(currentSupplyOfAccessory + i, curveParameter);
         }
         return totalCost;
     }
@@ -149,33 +166,35 @@ contract LiquidAccessories is ERC1155 {
         view
         returns (uint)
     {
-        uint currentSupplyOfAccessory = liquidAccessorySupply[accessoryId];
+        uint currentSupplyOfAccessory = bondingCurves[accessoryId].accessorySupply;
         require(amount <= currentSupplyOfAccessory, "Not enough supply of that accessory");
+        uint curveParameter = bondingCurves[accessoryId].curveParameter;
+        require(curveParameter != 0, "Item has no bonding curve");
 
         uint totalReward;
         for (uint i=0; i<amount; i++) {
-            totalReward += getBurnRewardForItemNumber((currentSupplyOfAccessory - 1) - i);
+            totalReward += getBurnRewardForItemNumber((currentSupplyOfAccessory - 1) - i, curveParameter);
         }
         return totalReward;
     }
 
-    function getMintCostForItemNumber(uint itemNumber)
+    function getMintCostForItemNumber(uint itemNumber, uint curveParameter)
         public
         pure
         returns (uint)
     {
         return
-            ((getBurnRewardForItemNumber(itemNumber) * 1100))
+            ((getBurnRewardForItemNumber(itemNumber, curveParameter) * 1100))
             / 1000
         ;
     }
 
-    function getBurnRewardForItemNumber(uint itemNumber)
+    function getBurnRewardForItemNumber(uint itemNumber, uint curveParameter)
         public
         pure
         returns (uint)
     {
-        return 0.001 ether * (itemNumber + 1);
+        return 0.005 ether + curveParameter * itemNumber * itemNumber;
     }
 
     // We need to make sure the equip status is updated if we send away an accessory that is currently equipped.
