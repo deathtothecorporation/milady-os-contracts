@@ -232,6 +232,7 @@ contract LiquidAccessories is ERC1155, Ownable {
                 uint miladyId = tbaTokenId;
 
                 // check if this transfer would result in a 0 balance of that accessory
+                // Logan <| Please explain this to me
                 if (requestedAmountToTransfer == avatarContract.totalAccessoryBalanceOfAvatar(miladyId, accessoryId)) {
                     //unequip if it's equipped
                     avatarContract.preTransferUnequipById(miladyId, accessoryId);
