@@ -138,7 +138,7 @@ contract LiquidAccessories is ERC1155, Ownable {
             totalBurnReward += _burnAccessory(_accessoryIds[i], _amounts[i], _fundsRecipient);
         }
 
-        require(totalBurnReward >= _minRewardOut, "Minimum specified reward not met");
+        require(totalBurnReward >= _minRewardOut, "Specified reward not met");
         _fundsRecipient.transfer(totalBurnReward);
     }
 
@@ -146,7 +146,7 @@ contract LiquidAccessories is ERC1155, Ownable {
         internal
         returns (uint burnReward)
     {
-        require(balanceOf(msg.sender, _accessoryId) >= _amount, "You don't own that many of that accessory.");
+        require(balanceOf(msg.sender, _accessoryId) >= _amount, "Incorrect accessory balance");
 
         burnReward = getBurnRewardForReturnedAccessories(_accessoryId, _amount);
         
