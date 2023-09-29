@@ -89,6 +89,7 @@ contract MiladyAvatar is IERC721 {
 
     // core function for equip logic.
     // Unequips items if equip would overwrite for that accessory type
+    // Assumes the accessory's accVariant != 0
     function _equipAccessoryIfOwned(uint _miladyId, uint _accessoryId)
         internal
     {
