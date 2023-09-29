@@ -60,6 +60,9 @@ contract LiquidAccessories is ERC1155, Ownable {
         external
         payable
     {
+        // note that msg.value functions as an implicit "minimumIn" (analagous to burnAccessories's "minRewardOut"),
+        // implicitly protecting this purchase from sandwich attacks
+
         require(accessoryIds.length == amounts.length, "array arguments must have the same length");
         
         uint totalMintCost;
@@ -74,7 +77,6 @@ contract LiquidAccessories is ERC1155, Ownable {
 
         if (msg.value > totalMintCost) {
             // return extra in case of overpayment
-            // schalk: is this the appropriate tfer func to use?
             overpayReturnAddress.transfer(msg.value - totalMintCost);
         }
     }
@@ -104,8 +106,6 @@ contract LiquidAccessories is ERC1155, Ownable {
             // schalk: is this the appropriate tfer func to use?
             revenueRecipient.transfer(freeRevenue - halfFreeRevenue);
         }
-
-        // todo: minimum out to prevent sandwich attacks for both mint and burn
     }
 
     function _mintAccessory(uint accessoryId, uint amount, address recipient)
@@ -119,30 +119,32 @@ contract LiquidAccessories is ERC1155, Ownable {
         _mint(recipient, accessoryId, amount, "");
     }
 
-    function burnAccessory(uint accessoryId, uint amount, address payable fundsRecipient)
-        public
+    function burnAccessories(uint[] calldata accessoryIds, uint[] calldata amounts, uint minRewardOut, address payable fundsRecipient)
+        external
+    {
+        require(accessoryIds.length == amounts.length, "array arguments must have the same length");
+
+        uint totalBurnReward;
+        for (uint i=0; i<accessoryIds.length; i++) {
+            totalBurnReward += _burnAccessory(accessoryIds[i], amounts[i], fundsRecipient);
+        }
+
+        require(totalBurnReward >= minRewardOut, "Minimum specified reward not met");
+    }
+
+    function _burnAccessory(uint accessoryId, uint amount, address payable fundsRecipient)
+        internal
+        returns (uint burnReward)
     {
         require(balanceOf(msg.sender, accessoryId) >= amount, "You don't own that many of that accessory.");
 
-        uint burnReward = getBurnRewardForReturnedAccessories(accessoryId, amount);
+        burnReward = getBurnRewardForReturnedAccessories(accessoryId, amount);
         
         bondingCurves[accessoryId].accessorySupply -= amount;
 
         _burn(msg.sender, accessoryId, amount);
 
         fundsRecipient.transfer(burnReward);
-    }
-
-    // batch call of the previous function
-    function burnAccessories(uint[] calldata accessoryIds, uint[] calldata amounts, address payable fundsRecipient)
-        external
-        payable
-    {
-        require(accessoryIds.length == amounts.length, "array arguments must have the same length");
-
-        for (uint i=0; i<accessoryIds.length; i++) {
-            burnAccessory(accessoryIds[i], amounts[i], fundsRecipient);
-        }
     }
 
     function getMintCostForNewAccessories(uint accessoryId, uint amount)
