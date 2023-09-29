@@ -8,13 +8,12 @@ import "openzeppelin/utils/introspection/IERC165.sol";
 import "openzeppelin/token/ERC721/IERC721.sol";
 import "openzeppelin/interfaces/IERC1271.sol";
 import "openzeppelin/token/ERC1155/IERC1155Receiver.sol";
+import "openzeppelin/token/ERC721/IERC721Receiver.sol";
 import "openzeppelin/utils/cryptography/SignatureChecker.sol";
 import "sstore2/utils/Bytecode.sol";
 import "./IERC6551Account.sol";
 
-// todo: should this also be a 721 receiver?
-
-contract TokenGatedAccount is IERC165, IERC1271, IERC6551Account, IERC1155Receiver {
+contract TokenGatedAccount is IERC165, IERC1271, IERC6551Account, IERC1155Receiver, IERC721Receiver {
     address public bondedAddress;
     address public tokenOwnerAtLastBond;
 
@@ -127,5 +126,15 @@ contract TokenGatedAccount is IERC165, IERC1271, IERC6551Account, IERC1155Receiv
     ) external returns (bytes4)
     {
         return IERC1155Receiver.onERC1155BatchReceived.selector;
+    }
+
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) external returns (bytes4)
+    {
+        return IERC721Receiver.onERC721Received.selector;
     }
 }
