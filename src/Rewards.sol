@@ -101,12 +101,8 @@ contract Rewards {
 
         uint amountToSend = getAmountClaimableForMiladyAndAccessory(_miladyId, _accessoryId);
 
-        // Logan <| I correct me if I'm wrong but this is the same outcome as the previous version of the code, but without
-        //          the need for the additional calculation?
         rewardInfo.miladyRewardInfo[_miladyId].amountClaimedBeforeDivision = rewardInfo.totalRewardsAccrued;
 
-        // Schalk: Should we be doing something more elaborate/careful here?
-        // Logan <| Yes, but the problem was where _claimRewardsForMiladyForAccessory was being called in MiladyDeregisteredForRewards. Fixed now.
         _recipient.transfer(amountToSend);
 
         emit RewardsClaimed(_miladyId, _accessoryId, _recipient);
@@ -125,7 +121,6 @@ contract Rewards {
         
         RewardInfoForAccessory storage rewardInfo = rewardInfoForAccessory[_accessoryId];
         
-        //todo: possible DRY cleanup with this and the beginning of claimRewardsForMiladyAndAccessory
         uint rewardOwedBeforeDivision = rewardInfo.totalRewardsAccrued - rewardInfo.miladyRewardInfo[_miladyId].amountClaimedBeforeDivision;
 
         amountClaimable = rewardOwedBeforeDivision / rewardInfo.totalWearers;

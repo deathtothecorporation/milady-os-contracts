@@ -54,6 +54,7 @@ contract SoulboundAccessories is ERC1155 {
 
     event SoulboundAccessoriesMinted(uint indexed miladyId, uint[] indexed accessories);
 
+    // We assume here that miladyAuthority will never specify an accessory whose decoded accVariant == 0
     function mintAndEquipSoulboundAccessories(uint _miladyId, uint[] calldata _accessories)
         external
     {
