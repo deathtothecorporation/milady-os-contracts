@@ -124,7 +124,11 @@ contract LiquidAccessories is ERC1155, Ownable {
         _mint(_recipient, _accessoryId, _amount, "");
     }
 
-    function burnAccessories(uint[] calldata _accessoryIds, uint[] calldata _amounts, uint _minRewardOut, address payable _fundsRecipient)
+    function burnAccessories(
+            uint[] calldata _accessoryIds, 
+            uint[] calldata _amounts, 
+            uint _minRewardOut, 
+            address payable _fundsRecipient)
         external
     {
         require(_accessoryIds.length == _amounts.length, "array arguments must have the same length");
