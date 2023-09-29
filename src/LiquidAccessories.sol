@@ -19,7 +19,11 @@ contract LiquidAccessories is ERC1155, Ownable {
 
     address deployer; // only used for initial deploy
 
-    constructor(TBARegistry _tbaRegistry, Rewards _rewardsContract, address payable _revenueRecipient, string memory uri_)
+    constructor(
+            TBARegistry _tbaRegistry, 
+            Rewards _rewardsContract, 
+            address payable _revenueRecipient, 
+            string memory uri_)
         ERC1155(uri_)
     {
         deployer = msg.sender;
