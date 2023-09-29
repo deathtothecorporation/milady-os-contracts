@@ -116,6 +116,7 @@ contract LiquidAccessories is ERC1155, Ownable {
         internal
         returns (uint cost)
     {
+        // Logan <| Does this need to be in here? It isn't used here
         cost = getMintCostForNewAccessories(_accessoryId, _amount);
 
         bondingCurves[_accessoryId].accessorySupply += _amount;
