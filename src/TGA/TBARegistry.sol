@@ -15,26 +15,26 @@ contract TBARegistry is IERC6551Registry {
     mapping (address => TBA) public registeredAccounts;
 
     function createAccount(
-        address implementation,
-        uint256 chainId,
-        address tokenContract,
-        uint256 tokenId,
-        uint256 salt,
+        address _implementation,
+        uint256 _chainId,
+        address _tokenContract,
+        uint256 _tokenId,
+        uint256 _salt,
         bytes calldata initData
     ) external returns (address) {
-        bytes memory code = _creationCode(implementation, chainId, tokenContract, tokenId, salt);
+        bytes memory code = _creationCode(_implementation, _chainId, _tokenContract, _tokenId, _salt);
 
         address _account = Create2.computeAddress(
-            bytes32(salt),
+            bytes32(_salt),
             keccak256(code)
         );
 
         if (_account.code.length != 0) return _account;
 
-        _account = Create2.deploy(0, bytes32(salt), code);
+        _account = Create2.deploy(0, bytes32(_salt), code);
 
-        registeredAccounts[_account].tokenContract = tokenContract;
-        registeredAccounts[_account].tokenId = tokenId;
+        registeredAccounts[_account].tokenContract = _tokenContract;
+        registeredAccounts[_account].tokenId = _tokenId;
 
         if (initData.length != 0) {
             (bool success, ) = _account.call(initData);
@@ -43,43 +43,43 @@ contract TBARegistry is IERC6551Registry {
 
         emit AccountCreated(
             _account,
-            implementation,
-            chainId,
-            tokenContract,
-            tokenId,
-            salt
+            _implementation,
+            _chainId,
+            _tokenContract,
+            _tokenId,
+            _salt
         );
 
         return _account;
     }
 
     function account(
-        address implementation,
-        uint256 chainId,
-        address tokenContract,
-        uint256 tokenId,
-        uint256 salt
+        address _implementation,
+        uint256 _chainId,
+        address _tokenContract,
+        uint256 _tokenId,
+        uint256 _salt
     ) external view returns (address) {
         bytes32 bytecodeHash = keccak256(
-            _creationCode(implementation, chainId, tokenContract, tokenId, salt)
+            _creationCode(_implementation, _chainId, _tokenContract, _tokenId, _salt)
         );
 
-        return Create2.computeAddress(bytes32(salt), bytecodeHash);
+        return Create2.computeAddress(bytes32(_salt), bytecodeHash);
     }
 
     function _creationCode(
-        address implementation_,
-        uint256 chainId_,
-        address tokenContract_,
-        uint256 tokenId_,
-        uint256 salt_
+        address _implementation,
+        uint256 _chainId,
+        address _tokenContract,
+        uint256 _tokenId,
+        uint256 _salt
     ) internal pure returns (bytes memory) {
         return
             abi.encodePacked(
                 hex"3d60ad80600a3d3981f3363d3d373d3d3d363d73",
-                implementation_,
+                _implementation,
                 hex"5af43d82803e903d91602b57fd5bf3",
-                abi.encode(salt_, chainId_, tokenContract_, tokenId_)
+                abi.encode(_salt, _chainId, _tokenContract, _tokenId)
             );
     }
 }
