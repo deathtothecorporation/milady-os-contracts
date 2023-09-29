@@ -31,8 +31,6 @@ contract LiquidAccessories is ERC1155, Ownable {
         tbaRegistry = _tbaRegistry;
         rewardsContract = _rewardsContract;
         revenueRecipient = _revenueRecipient;
-
-        require(address(tbaRegistry) != address(0), "tbaRegistry cannot be the 0x0 address");
     }
 
     function setAvatarContract(MiladyAvatar _avatarContract)
