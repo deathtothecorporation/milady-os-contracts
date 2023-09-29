@@ -109,6 +109,7 @@ contract LiquidAccessories is ERC1155, Ownable {
         }
 
         // todo: minimum out to prevent sandwich attacks for both mint and burn
+        // Logan <| Since an amount is specified to supply for the mint, I don't think a sandwich attack is possible here.
     }
 
     function _mintAccessory(uint _accessoryId, uint _amount, address _recipient)
