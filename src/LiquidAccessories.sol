@@ -105,7 +105,6 @@ contract LiquidAccessories is ERC1155, Ownable {
             rewardsContract.addRewardsForAccessory{value:halfFreeRevenue}(_accessoryId);
 
             // using `totalRevenue-halfFreeRevenue` instead of simply `halfFreeRevenue` to handle rounding errors from div by 2
-            // schalk: is this the appropriate tfer func to use?
             revenueRecipient.transfer(freeRevenue - halfFreeRevenue);
         }
 
