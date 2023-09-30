@@ -2,44 +2,28 @@
 
 pragma solidity ^0.8.13;
 
-/// @dev the ERC-165 identifier for this interface is `0x400a0398`
+/// @dev the ERC-165 identifier for this interface is `0x6faff5f1`
 interface IERC6551Account {
-    /// @dev Token bound accounts MUST implement a `receive` function.
-    ///
-    /// Token bound accounts MAY perform arbitrary logic to restrict conditions
-    /// under which Ether can be received.
+    /**
+     * @dev Allows the account to receive Ether
+     *
+     * Accounts MUST implement a `receive` function.
+     *
+     * Accounts MAY perform arbitrary logic to restrict conditions
+     * under which Ether can be received.
+     */
     receive() external payable;
 
-    /// @dev Executes `call` on address `to`, with value `value` and calldata
-    /// `data`.
-    ///
-    /// MUST revert and bubble up errors if call fails.
-    ///
-    /// By default, token bound accounts MUST allow the owner of the ERC-721 token
-    /// which owns the account to execute arbitrary calls using `executeCall`.
-    ///
-    /// Token bound accounts MAY implement additional authorization mechanisms
-    /// which limit the ability of the ERC-721 token holder to execute calls.
-    ///
-    /// Token bound accounts MAY implement additional execution functions which
-    /// grant execution permissions to other non-owner accounts.
-    ///
-    /// @return The result of the call
-    function executeCall(
-        address to,
-        uint256 value,
-        bytes calldata data
-    ) external payable returns (bytes memory);
-
-    /// @dev Returns identifier of the ERC-721 token which owns the
-    /// account
-    ///
-    /// The return value of this function MUST be constant - it MUST NOT change
-    /// over time.
-    ///
-    /// @return chainId The EIP-155 ID of the chain the ERC-721 token exists on
-    /// @return tokenContract The contract address of the ERC-721 token
-    /// @return tokenId The ID of the ERC-721 token
+    /**
+     * @dev Returns the identifier of the non-fungible token which owns the account
+     *
+     * The return value of this function MUST be constant - it MUST NOT change
+     * over time
+     *
+     * @return chainId       The EIP-155 ID of the chain the token exists on
+     * @return tokenContract The contract address of the token
+     * @return tokenId       The ID of the token
+     */
     function token()
         external
         view
@@ -49,16 +33,30 @@ interface IERC6551Account {
             uint256 tokenId
         );
 
-    /// @dev Returns the owner of the ERC-721 token which controls the account
-    /// if the token exists.
-    ///
-    /// This is value is obtained by calling `ownerOf` on the ERC-721 contract.
-    ///
-    /// @return Address of the owner of the ERC-721 token which owns the account
-    function owner() external view returns (address);
-
-    /// @dev Returns a nonce value that is updated on every successful transaction
-    ///
-    /// @return The current account nonce
+    /**
+     * @dev Returns a value that SHOULD be modified each time the account changes state
+     *
+     * @return The current account state
+     */
     function state() external view returns (uint256);
+
+    /**
+     * @dev Returns a magic value indicating whether a given signer is authorized to act on behalf of the account
+     *
+     * MUST return the bytes4 magic value 0x523e3260 if the given signer is valid
+     *
+     * By default, the holder of the non-fungible token the account is bound to MUST be considered a valid
+     * signer
+     *
+     * Accounts MAY implement additional authorization logic which invalidates the holder as a
+     * signer or grants signing permissions to other non-holder accounts
+     *
+     * @param  signer     The address to check signing authorization for
+     * @param  context    Additional data used to determine whether the signer is valid
+     * @return magicValue Magic value indicating whether the signer is valid
+     */
+    function isValidSigner(address signer, bytes calldata context)
+        external
+        view
+        returns (bytes4 magicValue);
 }
