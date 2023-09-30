@@ -6,6 +6,7 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
+import "forge-std/console.sol";
 import "./TestSetup.sol";
 import "./TestUtils.sol";
 import "./TestConstants.sol";
@@ -33,6 +34,10 @@ contract MiladyOSTestBase is Test {
         )
          =
         TestSetup.deploy(NUM_MILADYS_MINTED, MILADY_AUTHORITY_ADDRESS);
+
+        vm.createFork(vm.envString("RPC_MAINNET"), 18200000);
+        miladysContract = Miladys(0x5Af0D9827E0c53E4799BB226655A1de152A425a5);
+        console.log(vm.envString("RPC_MAINNET"));
     }
 
     // define functions to allow receiving ether and NFTs
