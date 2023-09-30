@@ -30,6 +30,7 @@ contract TGATests is MiladyOSTestBase {
         tga.execute{value: 1}(address(this), 1, "", 0);
 
         vm.startPrank(firstNFTHolder);
+        console.log("tgaOwner",tga.owner());
         tga.execute{value: 1}(someOtherAddress, 1, "", 0);
         vm.stopPrank();
 

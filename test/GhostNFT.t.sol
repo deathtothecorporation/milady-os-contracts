@@ -13,8 +13,11 @@ import "../src/TGA/TBARegistry.sol";
 contract GhostNFT is MiladyOSTestBase {
 
     function test_ownershipTracks() public {
+        console.log("Owner of Milady 0", avatarContract.ownerOf(0));
+        console.log("Owner of Milady 0", testUtils.getTgaAddress(miladysContract, 0));
         assert(avatarContract.ownerOf(0) == testUtils.getTgaAddress(miladysContract, 0));
 
+        vm.prank(miladysContract.ownerOf(0));
         miladysContract.transferFrom(address(this), address(0x2), 0);
 
         assert(avatarContract.ownerOf(0) == testUtils.getTgaAddress(miladysContract, 0));

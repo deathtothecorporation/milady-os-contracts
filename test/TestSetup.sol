@@ -16,67 +16,6 @@ import "./TestConstants.sol";
 import "./TestUtils.sol";
 import "./Miladys.sol";
 
-library TestSetup {
-    function deploy(uint numMiladysToMint, address miladyAuthorityAddress)
-        public
-        returns
-    (
-        TBARegistry tbaRegistry,
-        TokenGatedAccount tbaAccountImpl,
-        Miladys miladyContract,
-        MiladyAvatar avatarContract,
-        LiquidAccessories liquidAccessoriesContract,
-        SoulboundAccessories soulboundAccessoriesContract,
-        Rewards rewardsContract,
-        TestUtils testUtils
-    )
-    {
-        tbaRegistry = new TBARegistry();
-        tbaAccountImpl = new TokenGatedAccount();
+contract TestSetup is Test {
 
-        testUtils = new TestUtils(tbaRegistry, tbaAccountImpl);
-
-        miladyContract = new Miladys();
-        miladyContract.flipSaleState();
-
-        // mint miladys to msg.sender for testing
-        miladyContract.mintMiladys{value:60000000000000000*numMiladysToMint}(numMiladysToMint);
-        
-        Deployer d = new Deployer(
-            tbaRegistry,
-            tbaAccountImpl,
-            31337, // chain id of Forge's test chain
-            miladyContract,
-            miladyAuthorityAddress,
-            PROJECT_REVENUE_RECIPIENT,
-            "",
-            "",
-            ""
-        );
-
-        avatarContract = d.avatarContract();
-        liquidAccessoriesContract = d.liquidAccessoriesContract();
-        soulboundAccessoriesContract = d.soulboundAccessoriesContract();
-        rewardsContract = d.rewardsContract();
-
-        for (uint i=0; i<numMiladysToMint; i++) {
-            tbaRegistry.createAccount(
-                address(tbaAccountImpl),
-                31337, // chain id of Forge's test chain
-                address(miladyContract),
-                i,
-                0,
-                ""
-            );
-
-            tbaRegistry.createAccount(
-                address(tbaAccountImpl),
-                31337, // chain id of Forge's test chain
-                address(avatarContract),
-                i,
-                0,
-                ""
-            );
-        }
-    }
 }

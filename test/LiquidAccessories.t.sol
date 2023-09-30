@@ -9,6 +9,8 @@ import "../src/MiladyAvatar.sol";
 import "./MiladyOSTestBase.sol";
 
 contract LiquidAccessoriesTests is MiladyOSTestBase {
+    address payable overpayAddress = payable(address(uint160(10101101102111)));
+
     function test_autoUnequip() public {
         uint redHatAccessoryId = avatarContract.plaintextAccessoryTextToAccessoryId("hat", "red hat");
         uint greenHatAccessoryId = avatarContract.plaintextAccessoryTextToAccessoryId("hat", "green hat");
@@ -30,9 +32,8 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
         amounts[2] = 1;
 
         // should cost (0.005 + 0)*1.2 = 0.006 ETH per first item for each set, so 0.018 ETH
-        address payable overpayAddress = payable(address(uint160(10)));
         liquidAccessoriesContract.mintAccessories{value:0.018 ether}(accessoriesToMint, amounts, address(this), overpayAddress);
-        require(overpayAddress.balance == 0);
+        require(overpayAddress.balance == 0, "Overpay address should have 0 balance");
 
         require(liquidAccessoriesContract.balanceOf(address(this), redHatAccessoryId) == 1);
         require(liquidAccessoriesContract.balanceOf(address(this), greenHatAccessoryId) == 1);
@@ -83,7 +84,6 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
         amounts[2] = 1;
 
         // should cost (0.005 + 0)*1.2 = 0.006 ETH per first item for each set, so 0.0165 ETH
-        address payable overpayAddress = payable(address(uint160(10)));
         liquidAccessoriesContract.mintAccessories{value:0.018 ether}(accessoriesToMint, amounts, address(this), overpayAddress);
         require(overpayAddress.balance == 0);
 
@@ -132,13 +132,13 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
         amounts[0] = 1;
 
         // Mint the first accessory
-        address payable overpayAddress = payable(address(uint160(10)));
         liquidAccessoriesContract.mintAccessories{value:0.006 ether}(listOfBlueHatAccessoryId, amounts, address(this), overpayAddress);
-        require(overpayAddress.balance == 0);
+        require(overpayAddress.balance == 0, "Overpay address should have 0 balance");
 
         // because no one has equipped this yet, all of the revenue should have gone to PROJECT_REVENUE_RECIPIENT
         uint expectedRevenue = 0.001 ether;
-        require(PROJECT_REVENUE_RECIPIENT.balance == expectedRevenue);
+        console.log("PROJECT_REVENUE_RECIPIENT.balance", PROJECT_REVENUE_RECIPIENT.balance);
+        require(PROJECT_REVENUE_RECIPIENT.balance == expectedRevenue, "PROJECT_REVENUE_RECIPIENT.balance incorrect");
 
         TokenGatedAccount milady0TGA = testUtils.getTGA(miladysContract, 0);
         TokenGatedAccount avatar0TGA = testUtils.getTGA(avatarContract, 0);
@@ -165,7 +165,11 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
         (,uint totalHolders) = rewardsContract.rewardInfoForAccessory(blueHatAccessoryId);
         require(totalHolders == 1);
 
-        bytes memory transferCall = abi.encodeCall(liquidAccessoriesContract.safeTransferFrom, (address(avatar0TGA), address(0x1), blueHatAccessoryId, 1, ""));
+        // mo entropy no problems!
+        address payable ox1 = payable(address(1111111101111111));
+        address payable ox2 = payable(address(2222222202222222));
+
+        bytes memory transferCall = abi.encodeCall(liquidAccessoriesContract.safeTransferFrom, (address(avatar0TGA), ox1, blueHatAccessoryId, 1, ""));
         bytes memory avatarExecuteCall = abi.encodeCall(avatar0TGA.execute, (address(liquidAccessoriesContract), 0, transferCall, 0));
         milady0TGA.execute(address(avatar0TGA), 0, avatarExecuteCall, 0);
 
@@ -181,15 +185,15 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
         require(payable(address(avatar0TGA)).balance == 0.0006 ether);
 
         // test solvency by burning the two accessories we minted
-        // we should have one in the 0x1 address and one in address(this)
+        // we should have one in the ox1 address and one in address(this)
         uint[] memory singletonListOf1 = new uint[](1);
         singletonListOf1[0] = 1;
-        liquidAccessoriesContract.burnAccessories(listOfBlueHatAccessoryId, singletonListOf1, 0, payable(address(0x3)));
-        vm.prank(address(0x1));
-        liquidAccessoriesContract.burnAccessories(listOfBlueHatAccessoryId, singletonListOf1, 0, payable(address(0x3)));
+        liquidAccessoriesContract.burnAccessories(listOfBlueHatAccessoryId, singletonListOf1, 0, ox2);
+        vm.prank(ox1);
+        liquidAccessoriesContract.burnAccessories(listOfBlueHatAccessoryId, singletonListOf1, 0, ox2);
 
-        // the funds recipient (0x3) should have gotten the burnReward, 0.005 + 0.006 ETH
-        require(payable(address(0x3)).balance == 0.011 ether);
+        // the funds recipient ox2 should have gotten the burnReward, 0.005 + 0.006 ETH
+        require(ox2.balance == 0.011 ether);
 
         // there should be 0 remaining ether in the liquidAccessories contract
         require(payable(address(liquidAccessoriesContract)).balance == 0);

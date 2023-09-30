@@ -11,7 +11,7 @@ import "./TestConstants.sol";
 
 contract MiladyOSTestBase is Test {
     TBARegistry tbaRegistry;
-    // TokenGatedAccount tbaAccountImpl;
+    TokenGatedAccount tbaAccountImpl;
     Miladys miladysContract;
     MiladyAvatar avatarContract;
     LiquidAccessories liquidAccessoriesContract;
@@ -20,22 +20,24 @@ contract MiladyOSTestBase is Test {
     TestUtils testUtils;
     
     function setUp() public {
-        (
-            tbaRegistry,
-            ,// tbaAccountImpl,
-            miladysContract,
-            avatarContract,
-            liquidAccessoriesContract,
-            soulboundAccessoriesContract,
-            rewardsContract,
-            testUtils
-        )
-         =
-        TestSetup.deploy(NUM_MILADYS_MINTED, MILADY_AUTHORITY_ADDRESS);
+        uint forkId = vm.createFork(vm.envString("RPC_MAINNET")); //, 18240000);
+        vm.selectFork(forkId);
 
-        vm.createFork(vm.envString("RPC_MAINNET"), 18200000);
-        miladysContract = Miladys(0x5Af0D9827E0c53E4799BB226655A1de152A425a5);
-        console.log(vm.envString("RPC_MAINNET"));
+        // (
+        //     tbaRegistry,
+        //     ,// tbaAccountImpl,
+        //     miladysContract,
+        //     avatarContract,
+        //     liquidAccessoriesContract,
+        //     soulboundAccessoriesContract,
+        //     rewardsContract,
+        //     testUtils
+        // )
+        //  =
+        deploy(NUM_MILADYS_MINTED, MILADY_AUTHORITY_ADDRESS);
+
+        
+        //miladysContract = Miladys(0x5Af0D9827E0c53E4799BB226655A1de152A425a5);
     }
 
     // define functions to allow receiving ether and NFTs
@@ -59,5 +61,66 @@ contract MiladyOSTestBase is Test {
         bytes calldata
     ) external returns (bytes4) {
         return IERC1155Receiver.onERC1155Received.selector;
+    }
+
+    function stealFor(uint id, address purse) public {
+        address owner = miladysContract.ownerOf(id);
+        vm.prank(owner);
+        miladysContract.transferFrom(owner, purse, id);
+    }
+
+    function deploy(uint numMiladysToMint, address miladyAuthorityAddress)
+        public
+    {
+        vm.deal(address(this), 1e18 * 1000); // send 1000 eth to this contract
+        tbaRegistry = new TBARegistry();
+        tbaAccountImpl = new TokenGatedAccount();
+        testUtils = new TestUtils(tbaRegistry, tbaAccountImpl);
+
+        miladysContract = Miladys(0x5Af0D9827E0c53E4799BB226655A1de152A425a5);
+        vm.prank(miladysContract.owner());
+        miladysContract.flipSaleState();
+
+        // steals miladys for msg.sender to test with
+        for (uint i=0; i<numMiladysToMint; i++) {
+            stealFor(i, address(this));
+        }
+        
+        Deployer d = new Deployer(
+            tbaRegistry,
+            tbaAccountImpl,
+            1, // chain id of mainnet
+            miladysContract,
+            miladyAuthorityAddress,
+            PROJECT_REVENUE_RECIPIENT,
+            "",
+            "",
+            ""
+        );
+
+        avatarContract = d.avatarContract();
+        liquidAccessoriesContract = d.liquidAccessoriesContract();
+        soulboundAccessoriesContract = d.soulboundAccessoriesContract();
+        rewardsContract = d.rewardsContract();
+
+        for (uint i=0; i<numMiladysToMint; i++) {
+            tbaRegistry.createAccount(
+                address(tbaAccountImpl),
+                1, 
+                address(miladysContract),
+                i,
+                0,
+                ""
+            );
+
+            tbaRegistry.createAccount(
+                address(tbaAccountImpl),
+                1, 
+                address(avatarContract),
+                i,
+                0,
+                ""
+            );
+        }
     }
 }
