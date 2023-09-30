@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: UNLICENSED
-
 /* solhint-disable private-vars-leading-underscore */
 /* solhint-disable func-name-mixedcase */
 
@@ -33,7 +31,7 @@ contract RewardsTest is MiladyOSTestBase {
         // depositing a reward for an item the Milady does not have should revert,
         // as no one will receive the rewards
         uint idForAccessoryNooneHas = avatarContract.plaintextAccessoryTextToAccessoryId("hat", "awful hat that no one has");
-        vm.expectRevert("That accessory has no eligible recipients");
+        vm.expectRevert("No eligible recipients");
         rewardsContract.addRewardsForAccessory{value:99}(idForAccessoryNooneHas);
 
         require(rewardsContract.getAmountClaimableForMiladyAndAccessories(0, milady0Accessories) == 201);

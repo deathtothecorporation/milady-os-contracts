@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: UNLICENSED
-
 /* solhint-disable private-vars-leading-underscore */
 /* solhint-disable func-name-mixedcase */
 
@@ -29,11 +27,10 @@ contract TGATests is MiladyOSTestBase {
         address payable someOtherAddress = payable(address(uint160(11)));
 
         vm.expectRevert("Unauthorized caller");
-        tga.executeCall{value: 1}(address(this), 1, "");
+        tga.execute{value: 1}(address(this), 1, "", 0);
 
         vm.startPrank(firstNFTHolder);
-        console.log(tga.owner(), address(this));
-        tga.executeCall{value: 1}(someOtherAddress, 1, "");
+        tga.execute{value: 1}(someOtherAddress, 1, "", 0);
         vm.stopPrank();
 
         // test that bonded account can act
@@ -43,14 +40,14 @@ contract TGATests is MiladyOSTestBase {
         vm.prank(firstNFTHolder);
         tga.bond(bondedAccount);
         vm.prank(bondedAccount);
-        tga.executeCall{value:1}(someOtherAddress, 1, "");
+        tga.execute{value:1}(someOtherAddress, 1, "", 0);
 
         // test that this stops working once the base NFT is send somewhere else
         vm.prank(firstNFTHolder);
         miladysContract.transferFrom(firstNFTHolder, someOtherAddress, 0);
         vm.prank(bondedAccount);
         vm.expectRevert("Unauthorized caller");
-        tga.executeCall{value:1}(someOtherAddress, 1, "");
+        tga.execute{value:1}(someOtherAddress, 1, "", 0);
 
         // now let's rebond the account and test that it can change the bonded account itself
         vm.prank(someOtherAddress);

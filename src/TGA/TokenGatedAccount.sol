@@ -1,7 +1,3 @@
-// This contract is a only slightly modified version of the reference implementation of a TokanBasedAccount form [EIP 6551](https://eips.ethereum.org/EIPS/eip-6551).
-
-// SPDX-License-Identifier: Unlicense
-
 pragma solidity ^0.8.13;
 
 import "openzeppelin/utils/introspection/IERC165.sol";
@@ -12,8 +8,9 @@ import "openzeppelin/token/ERC721/IERC721Receiver.sol";
 import "openzeppelin/utils/cryptography/SignatureChecker.sol";
 import "sstore2/utils/Bytecode.sol";
 import "./IERC6551Account.sol";
+import "./IERC6551Executable.sol";
 
-contract TokenGatedAccount is IERC165, IERC1271, IERC6551Account, IERC1155Receiver, IERC721Receiver {
+contract TokenGatedAccount is IERC165, IERC1271, IERC6551Account, IERC6551Executable, IERC1155Receiver, IERC721Receiver {
     address public bondedAddress;
     address public tokenOwnerAtLastBond;
 
@@ -21,7 +18,7 @@ contract TokenGatedAccount is IERC165, IERC1271, IERC6551Account, IERC1155Receiv
     //  * the token owner
     //  * the bonded account - UNLESS owner() has changed since that bond call
     modifier onlyAuthorizedMsgSender() {
-        require(msg.sender == owner() || (msg.sender == bondedAddress && tokenOwnerAtLastBond == owner()), "Unauthorized caller");
+        require(_isValidSigner(msg.sender), "Unauthorized caller");
         _;
     }
 
@@ -42,12 +39,14 @@ contract TokenGatedAccount is IERC165, IERC1271, IERC6551Account, IERC1155Receiv
 
     receive() external payable {}
 
-    function executeCall(address _to, uint256 _value, bytes calldata _data)
+    function execute(address _to, uint256 _value, bytes calldata _data, uint operation)
         external
         payable
         onlyAuthorizedMsgSender()
         returns (bytes memory result)
     {
+        require(operation == 0, "Only call operations are supported");
+
         state ++;
 
         bool success;
@@ -89,16 +88,26 @@ contract TokenGatedAccount is IERC165, IERC1271, IERC6551Account, IERC1155Receiv
             _interfaceId == type(IERC6551Account).interfaceId);
     }
 
-    function isValidSignature(bytes32 _hash, bytes memory _signature)
+    function isValidSigner(address signer, bytes calldata) external view returns (bytes4) {
+        if (_isValidSigner(signer)) {
+            return IERC6551Account.isValidSigner.selector;
+        }
+
+        return bytes4(0);
+    }
+
+    function _isValidSigner(address signer) internal view returns (bool) {
+        return signer == owner() || (signer == bondedAddress && tokenOwnerAtLastBond == owner());
+    }
+
+    function isValidSignature(bytes32 hash, bytes memory signature)
         external
         view
         returns (bytes4 magicValue)
     {
-        bool isValid = SignatureChecker.isValidSignatureNow(
-            owner(),
-            _hash,
-            _signature
-        );
+        bool isValid = 
+            SignatureChecker.isValidSignatureNow(owner(), hash, signature) ||
+            (SignatureChecker.isValidSignatureNow(bondedAddress, hash, signature) && tokenOwnerAtLastBond == owner());
 
         if (isValid) {
             return IERC1271.isValidSignature.selector;

@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: UNLICENSED
-
 /* solhint-disable private-vars-leading-underscore */
 
 pragma solidity ^0.8.13;
@@ -177,10 +175,10 @@ contract LiquidAccessories is ERC1155, Ownable {
         view
         returns (uint)
     {
-        uint currentSupplyOfAccessory = bondingCurves[_accessoryId].accessorySupply;
-        require(_amount <= currentSupplyOfAccessory, "Insufficient accessory supply");
         uint curveParameter = bondingCurves[_accessoryId].curveParameter;
         require(curveParameter != 0, "No bonding curve");
+        uint currentSupplyOfAccessory = bondingCurves[_accessoryId].accessorySupply;
+        require(_amount <= currentSupplyOfAccessory, "Insufficient accessory supply");
 
         uint totalReward;
         for (uint i=0; i<_amount; i++) {
@@ -195,7 +193,7 @@ contract LiquidAccessories is ERC1155, Ownable {
         returns (uint)
     {
         return
-            ((getBurnRewardForItemNumber(_itemNumber, _curveParameter) * 1100))
+            ((getBurnRewardForItemNumber(_itemNumber, _curveParameter) * 1200))
             / 1000
         ;
     }
