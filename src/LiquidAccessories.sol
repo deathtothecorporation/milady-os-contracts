@@ -195,7 +195,7 @@ contract LiquidAccessories is ERC1155, Ownable {
         returns (uint)
     {
         return
-            ((getBurnRewardForItemNumber(_itemNumber, _curveParameter) * 1100))
+            ((getBurnRewardForItemNumber(_itemNumber, _curveParameter) * 1200))
             / 1000
         ;
     }
