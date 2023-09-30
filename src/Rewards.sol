@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: UNLICENSED
-
 /* solhint-disable private-vars-leading-underscore */
 
 pragma solidity ^0.8.13;

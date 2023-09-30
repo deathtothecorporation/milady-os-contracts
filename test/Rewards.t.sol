@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: UNLICENSED
-
 /* solhint-disable private-vars-leading-underscore */
 /* solhint-disable func-name-mixedcase */
 

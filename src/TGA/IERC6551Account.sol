@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: Unlicense
-
 pragma solidity ^0.8.13;
 
 /// @dev the ERC-165 identifier for this interface is `0x6faff5f1`
