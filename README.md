@@ -58,3 +58,7 @@ Will try to keep these updated! These are all on Goerli and verified.
 * [Rewards](https://goerli.etherscan.io/address/0xAd6e965DB39DcD028B6B9088482794Dbeecb57Bd#code)
 
 `revenueRecipient` and `miladyAuthority` are both currently Logan's address: 0xBB5eb03535FA2bCFe9FE3BBb0F9cC48385818d92. Contact him if you need to test out the soulboundAccessories stuff, as this involves a permissioned call to SoulboundAccessoires from `miladyAuthority`.
+
+# Running 'forge test'
+* To run 'forge test' successfully, you will need to enter a node RPC endpoint.
+  * You need to do this by following the instructions in .env.template
