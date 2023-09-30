@@ -73,11 +73,10 @@ contract Rewards {
 
         require(miladyRewardInfo.isRegistered, "Milady not registered");
 
-        rewardInfoForAccessory[_accessoryId].totalWearers --;
-
-        miladyRewardInfo.isRegistered = false;
-
         _claimRewardsForMiladyForAccessory(_miladyId, _accessoryId, _recipient);
+
+        rewardInfoForAccessory[_accessoryId].totalWearers --;
+        miladyRewardInfo.isRegistered = false;
 
         emit MiladyDeregisteredForRewards(_miladyId, _accessoryId);
     }
