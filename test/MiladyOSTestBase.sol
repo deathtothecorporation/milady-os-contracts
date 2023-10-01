@@ -110,4 +110,9 @@ contract MiladyOSTestBase is Test {
             );
         }
     }
+
+    function random(bytes memory seed) internal pure returns(uint)
+    {
+        return uint256(keccak256(seed));
+    }
 }

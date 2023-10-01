@@ -27,9 +27,9 @@ contract MiladyAvatarTests is MiladyOSTestBase {
         uint[] memory mintAmounts = new uint[](_numberOfAccessories);
         vm.startPrank(liquidAccessoriesContract.owner());
         for (uint i = 0; i < _numberOfAccessories; i++) {
-            liquidAccessoryIds[i] = uint256(keccak256(abi.encodePacked(_seed, i)));
+            liquidAccessoryIds[i] = random(abi.encodePacked(_seed, i));
             liquidAccessoriesContract.defineBondingCurveParameter(liquidAccessoryIds[i], 0.001 ether);
-            soulboundAccessoryIds[i] = uint256(keccak256(abi.encodePacked(_seed, i+1))); 
+            soulboundAccessoryIds[i] = random(abi.encodePacked(_seed, i+1)); 
             mintAmounts[i] = 1;
         }
         vm.stopPrank();
@@ -56,8 +56,8 @@ contract MiladyAvatarTests is MiladyOSTestBase {
             mintAmounts,
             "");
 
-        uint accessoryIdToNOTHave = uint256(keccak256(abi.encodePacked(_numberOfAccessories, _miladyId))) % _numberOfAccessories;
-        soulboundAccessoryIds[accessoryIdToNOTHave] = uint256(keccak256(abi.encodePacked(accessoryIdToNOTHave)));
+        uint accessoryIdToNOTHave = random(abi.encodePacked(_seed, _numberOfAccessories, _miladyId));
+        soulboundAccessoryIds[accessoryIdToNOTHave % _numberOfAccessories] = random(abi.encodePacked(accessoryIdToNOTHave));
 
         // act
         vm.prank(address(soulboundAccessoriesContract));
