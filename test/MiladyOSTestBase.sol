@@ -15,7 +15,7 @@ contract MiladyOSTestBase is Test {
     TBARegistry tbaRegistry;
     TokenGatedAccount tbaAccountImpl;
     Miladys miladysContract;
-    MiladyAvatar avatarContract;
+    MiladyAvatarHarness avatarContract;
     LiquidAccessories liquidAccessoriesContract;
     SoulboundAccessoriesHarness soulboundAccessoriesContract;
     Rewards rewardsContract;
@@ -109,6 +109,34 @@ contract MiladyOSTestBase is Test {
                 ""
             );
         }
+    }
+
+
+
+    function buyAccessory(uint _miladyId, uint _accessoryId) 
+        internal 
+    {
+        uint[] memory liquidAccessoryIds = new uint[](1);
+        liquidAccessoryIds[0] = _accessoryId;
+        uint[] memory mintAmounts = new uint[](1);
+        mintAmounts[0] = 1;
+
+        vm.deal(address(this), 1e18 * 1000); // send 1000 eth to this contract
+        address payable overpayRecipient = payable(address(0xb055e5b055e5b055e5));
+        liquidAccessoriesContract.mintAccessories
+            {value : 1 ether}
+            (liquidAccessoryIds, 
+            mintAmounts, 
+            avatarContract.getAvatarTBA(_miladyId), 
+            overpayRecipient);
+    }
+
+    function createAndBuyAccessory(uint _miladyId, uint _accessoryId, uint _bondingCurveParameter)
+        internal
+    {
+        vm.prank(liquidAccessoriesContract.owner());
+        liquidAccessoriesContract.defineBondingCurveParameter(_accessoryId, _bondingCurveParameter);
+        buyAccessory(_miladyId, _accessoryId);
     }
 
     function random(bytes memory seed) internal pure returns(uint)

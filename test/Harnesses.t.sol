@@ -33,8 +33,27 @@ contract SoulboundAccessoriesHarness is SoulboundAccessories
     }
 }
 
+contract MiladyAvatarHarness is MiladyAvatar {
+    constructor(
+            IERC721 _miladysContract,
+            TBARegistry _tbaRegistry,
+            TokenGatedAccount _tbaAccountImpl,
+            uint _chainId,
+            string memory _baseURI
+    ) MiladyAvatar(
+        _miladysContract,
+        _tbaRegistry,
+        _tbaAccountImpl,
+        _chainId,
+        _baseURI) {}
+
+    function updateEquipSlotByTypeAndVariant(uint _miladyId, uint128 _accType, uint128 _accVariantOrNull) public {
+        _updateEquipSlotByTypeAndVariant(_miladyId, _accType, _accVariantOrNull);
+    }
+}
+
 contract HarnessDeployer {
-    MiladyAvatar public avatarContract;
+    MiladyAvatarHarness public avatarContract;
     Rewards public rewardsContract;
     LiquidAccessories public liquidAccessoriesContract;
     SoulboundAccessoriesHarness public soulboundAccessoriesContract;  // Changed the contract type here
@@ -58,7 +77,7 @@ contract HarnessDeployer {
         string memory soulboundAccessoriesHarnessURI  // Changed the parameter name here
     )
     {
-        avatarContract = new MiladyAvatar(
+        avatarContract = new MiladyAvatarHarness(
             miladysContract,
             tbaRegistry,
             tbaAccountImpl,

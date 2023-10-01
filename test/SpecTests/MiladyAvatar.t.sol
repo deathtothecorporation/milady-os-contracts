@@ -10,6 +10,9 @@ import "../MiladyOSTestBase.sol";
 import "../Harnesses.t.sol";
 
 contract MiladyAvatarTests is MiladyOSTestBase {
+    event AccessoryUnequipped(uint indexed _miladyId, uint indexed _accessoryId);
+    event AccessoryEquipped(uint indexed _miladyId, uint indexed _accessoryId);
+
     function test_MA_ESA_3(uint _miladyId, uint _numberOfAccessories, uint _seed) public
     {
         // conditions:
@@ -88,9 +91,9 @@ contract MiladyAvatarTests is MiladyOSTestBase {
         uint[] memory mintAmounts = new uint[](_numberOfAccessories);
         vm.startPrank(liquidAccessoriesContract.owner());
         for (uint i = 0; i < _numberOfAccessories; i++) {
-            liquidAccessoryIds[i] = uint256(keccak256(abi.encodePacked(_seed, i)));
+            liquidAccessoryIds[i] = random(abi.encodePacked(_seed, i));
             liquidAccessoriesContract.defineBondingCurveParameter(liquidAccessoryIds[i], 0.001 ether);
-            soulboundAccessoryIds[i] = uint256(keccak256(abi.encodePacked(_seed, i+1))); 
+            soulboundAccessoryIds[i] = random(abi.encodePacked(_seed, i+1)); 
             mintAmounts[i] = 1;
         }
         vm.stopPrank();
@@ -125,5 +128,73 @@ contract MiladyAvatarTests is MiladyOSTestBase {
             (uint128 accType,) = avatarContract.accessoryIdToTypeAndVariantIds(soulboundAccessoryIds[i]);
             require(avatarContract.equipSlots(_miladyId, accType) == soulboundAccessoryIds[i], "Soulbound Accessory not equiped!");
         }
+    }
+
+    function test_MA_UABSTAV_4(uint _miladyId, uint _seed) public
+    {
+        // conditions:
+        // * something valid is being equiped
+        // * the milady does not own the thing being equiped
+
+        // logic:
+        // * pick one of the stolen miladies
+        // * pick one of the accessories that is not owned by the milady
+        // * expect a revert and try to equip it
+
+        // arrange
+        vm.assume(_miladyId <= NUM_MILADYS_MINTED);
+        uint accessoryId = random(abi.encodePacked(_seed));
+        (uint128 accType, uint128 accVariant) = avatarContract.accessoryIdToTypeAndVariantIds(accessoryId);
+
+        // act
+        vm.expectRevert("Not accessory owner");
+        avatarContract.updateEquipSlotByTypeAndVariant(_miladyId, accType, accVariant);
+
+        // assert
+        // revert above is the expected assert        
+    }
+
+    function test_MA_UABSTAV_7(uint _miladyId, uint _seed) public
+    {
+        // conditions
+        // * something is being equiped
+        // * something is already equiped
+        // * the milady owns the thing being equiped
+        // * the something alread equiped was properly minted, and disburses rewards when unequiped
+        // * the something being equiped was properly minted and is registered for rewards when equiped
+
+        // logic:
+        // * pick one of the stolen miladies
+        // * buy an accessory for the milady
+        // * equip the accessory
+        // * buy another accessory for the milady
+        // * equip the new something
+        
+        // checks:
+        // * the first something is no longer equiped
+        // * the second something is equiped
+        // * AccessoryUnequipped event is emitted
+        // * AccessoryEquipped event is emitted
+
+        // arrange
+        vm.assume(_miladyId <= NUM_MILADYS_MINTED);
+        uint accessoryId = random(abi.encodePacked(_seed));
+        createAndBuyAccessory(_miladyId, accessoryId, 0.001 ether);
+
+        (uint128 accType, uint128 accVariant) = avatarContract.accessoryIdToTypeAndVariantIds(accessoryId);
+        avatarContract.updateEquipSlotByTypeAndVariant(_miladyId, accType, accVariant);
+
+        (, uint128 accVariant2) = avatarContract.accessoryIdToTypeAndVariantIds(random(abi.encodePacked(_seed, accessoryId)));
+        uint accessoryId2 = avatarContract.typeAndVariantIdsToAccessoryId(accType, accVariant2);
+        createAndBuyAccessory(_miladyId, accessoryId2, 0.001 ether);
+
+        // act
+        vm.expectEmit(address(avatarContract));
+        emit AccessoryUnequipped(_miladyId, accessoryId);
+        vm.expectEmit(address(avatarContract));
+        emit AccessoryEquipped(_miladyId, accessoryId2);
+        
+        avatarContract.updateEquipSlotByTypeAndVariant(_miladyId, accType, accVariant2);
+        require(avatarContract.equipSlots(_miladyId, accType) == accessoryId2, "equipSlot not updated");
     }
 }
