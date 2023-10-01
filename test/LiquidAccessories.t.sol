@@ -40,7 +40,7 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
         require(liquidAccessoriesContract.balanceOf(address(this), blueHatAccessoryId) == 1);
 
         // transfer the accessories to the avatarTGA
-        TokenGatedAccount avatar0TGA = testUtils.getTGA(avatarContract, 0);
+        TokenGatedAccount avatar0TGA = testUtils.getTGA(miladysContract, 0);
         liquidAccessoriesContract.safeTransferFrom(address(this), address(avatar0TGA), redHatAccessoryId, 1, "");
         liquidAccessoriesContract.safeTransferFrom(address(this), address(avatar0TGA), greenHatAccessoryId, 1, "");
         liquidAccessoriesContract.safeTransferFrom(address(this), address(avatar0TGA), blueHatAccessoryId, 1, "");
@@ -92,7 +92,7 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
         require(liquidAccessoriesContract.balanceOf(address(this), blueHatAccessoryId) == 1);
 
         // transfer the accessories to the avatarTGA
-        TokenGatedAccount avatar0TGA = testUtils.getTGA(avatarContract, 0);
+        TokenGatedAccount avatar0TGA = testUtils.getTGA(miladysContract, 0);
         liquidAccessoriesContract.safeTransferFrom(address(this), address(avatar0TGA), redHatAccessoryId, 1, "");
         liquidAccessoriesContract.safeTransferFrom(address(this), address(avatar0TGA), greenHatAccessoryId, 1, "");
         liquidAccessoriesContract.safeTransferFrom(address(this), address(avatar0TGA), blueHatAccessoryId, 1, "");
@@ -141,7 +141,7 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
         require(PROJECT_REVENUE_RECIPIENT.balance == expectedRevenue, "PROJECT_REVENUE_RECIPIENT.balance incorrect");
 
         TokenGatedAccount milady0TGA = testUtils.getTGA(miladysContract, 0);
-        TokenGatedAccount avatar0TGA = testUtils.getTGA(avatarContract, 0);
+        TokenGatedAccount avatar0TGA = testUtils.getTGA(miladysContract, 0);
 
         // let's now equip it on an Avatar and try again
         liquidAccessoriesContract.safeTransferFrom(address(this), address(avatar0TGA), blueHatAccessoryId, 1, "");

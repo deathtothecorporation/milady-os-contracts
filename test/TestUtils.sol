@@ -33,6 +33,7 @@ contract TestUtils {
 
     function getTGA(IERC721 tokenContract, uint tokenId)
         public
+        view
         returns (TokenGatedAccount)
     {
         return TokenGatedAccount(getTgaAddress(tokenContract, tokenId));
@@ -40,6 +41,7 @@ contract TestUtils {
 
     function getTgaAddress(IERC721 tokenContract, uint tokenId)
         public
+        view
         returns(address payable)
     {
         return payable(tbaRegistry.account(
@@ -53,6 +55,7 @@ contract TestUtils {
 
     function tgaReverseLookup(address addr)
         public
+        view
         returns (address tokenAddress, uint tokenId)
     {
         return tbaRegistry.registeredAccounts(addr);

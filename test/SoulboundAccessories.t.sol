@@ -16,7 +16,7 @@ contract SoulboundAccessoriesTests is MiladyOSTestBase {
         vm.expectRevert("Not miladyAuthority");
         soulboundAccessoriesContract.mintAndEquipSoulboundAccessories(0, accessoryIds);
 
-        TokenGatedAccount avatar0TGA = testUtils.getTGA(avatarContract, 0);
+        TokenGatedAccount avatar0TGA = testUtils.getTGA(miladysContract, 0);
 
         vm.startPrank(MILADY_AUTHORITY_ADDRESS);
         soulboundAccessoriesContract.mintAndEquipSoulboundAccessories(0, accessoryIds);

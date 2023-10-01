@@ -91,8 +91,6 @@ contract MiladyAvatar is IERC721 {
     function _equipAccessoryIfOwned(uint _miladyId, uint _accessoryId)
         internal
     {
-        address avatarTBA = getAvatarTBA(_miladyId);
-
         require(totalAccessoryBalanceOfAvatar(_miladyId, _accessoryId) > 0, "Not accessory owner");
 
         (uint128 accType, uint accVariant) = accessoryIdToTypeAndVariantIds(_accessoryId);
@@ -152,17 +150,8 @@ contract MiladyAvatar is IERC721 {
         returns(uint)
     {
         return
-            liquidAccessoriesContract.balanceOf(getAvatarTBA(miladyId), accessoryId)
-          + soulboundAccessoriesContract.balanceOf(getAvatarTBA(miladyId), accessoryId);
-    }
-
-    // Get the TokenGatedAccount for a particular Milady Avatar.
-    function getAvatarTBA(uint _miladyId)
-        public
-        view
-        returns (address)
-    {
-        return tbaRegistry.account(address(tbaAccountImpl), block.chainid, address(this), _miladyId, 0);
+            liquidAccessoriesContract.balanceOf(ownerOf(miladyId), accessoryId)
+          + soulboundAccessoriesContract.balanceOf(ownerOf(miladyId), accessoryId);
     }
 
     function getPayableAvatarTBA(uint _miladyId)
@@ -170,7 +159,7 @@ contract MiladyAvatar is IERC721 {
         view
         returns (address payable)
     {
-        return payable(getAvatarTBA(_miladyId));
+        return payable(ownerOf(_miladyId));
     }
 
     function name() external pure returns (string memory) {
