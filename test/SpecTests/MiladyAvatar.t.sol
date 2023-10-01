@@ -30,8 +30,6 @@ contract MiladyAvatarTests is MiladyOSTestBase {
         vm.assume(_miladyId <= NUM_MILADYS_MINTED);
         vm.assume(_numberOfAccessories <= 10);
 
-        require(avatarContract.ownerOf(_miladyId) == avatarContract.getAvatarTBA(_miladyId), "Milday ownerships don't match");
-
         // fuzz some accessories
         uint[] memory liquidAccessoryIds = new uint[](_numberOfAccessories);
         uint[] memory soulboundAccessoryIds = new uint[](_numberOfAccessories);
@@ -56,7 +54,7 @@ contract MiladyAvatarTests is MiladyOSTestBase {
             mintAmounts, 
             avatarContract.getAvatarTBA(_miladyId), 
             overpayRecipient);
-        vm.prank(avatarContract.getAvatarTBA(_miladyId));
+        vm.prank(avatarContract.ownerOf(_miladyId));
         avatarContract.updateEquipSlotsByAccessoryIds(_miladyId, liquidAccessoryIds);
 
 

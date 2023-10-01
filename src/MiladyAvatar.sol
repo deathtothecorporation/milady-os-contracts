@@ -91,8 +91,6 @@ contract MiladyAvatar is IERC721 {
     function _equipAccessoryIfOwned(uint _miladyId, uint _accessoryId)
         internal
     {
-        address avatarTBA = getAvatarTBA(_miladyId);
-
         require(totalAccessoryBalanceOfAvatar(_miladyId, _accessoryId) > 0, "Not accessory owner");
 
         (uint128 accType, uint accVariant) = accessoryIdToTypeAndVariantIds(_accessoryId);
