@@ -171,10 +171,9 @@ contract MiladyAvatarTests is MiladyOSTestBase {
         // * equip the new something
         
         // checks:
-        // * the first something is no longer equiped
-        // * the second something is equiped
         // * AccessoryUnequipped event is emitted
         // * AccessoryEquipped event is emitted
+        // * the second something is equiped in the place of the first something
 
         // arrange
         vm.assume(_miladyId <= NUM_MILADYS_MINTED);
@@ -196,5 +195,30 @@ contract MiladyAvatarTests is MiladyOSTestBase {
         
         avatarContract.updateEquipSlotByTypeAndVariant(_miladyId, accType, accVariant2);
         require(avatarContract.equipSlots(_miladyId, accType) == accessoryId2, "equipSlot not updated");
+    }
+
+    function test_MA_UABSTAV_9(uint _miladyId, uint _seed) public
+    {
+        // conditions
+        // * something is being equiped
+        // * nothing is already equiped
+        // * the milady owns the thing being equiped
+        // * the something being equiped was properly minted and is registered for rewards when equiped
+
+        // arrange
+        vm.assume(_miladyId <= NUM_MILADYS_MINTED);
+        uint accessoryId = random(abi.encodePacked(_seed));
+        createAndBuyAccessory(_miladyId, accessoryId, 0.001 ether);
+
+        (uint128 accType, uint128 accVariant) = avatarContract.accessoryIdToTypeAndVariantIds(accessoryId);
+        avatarContract.updateEquipSlotByTypeAndVariant(_miladyId, accType, accVariant);
+
+        // act
+        vm.expectEmit(address(avatarContract));
+        emit AccessoryEquipped(_miladyId, accessoryId);
+        
+        avatarContract.updateEquipSlotByTypeAndVariant(_miladyId, accType, accVariant);
+        require(avatarContract.equipSlots(_miladyId, accType) == accessoryId, "equipSlot not updated");
+        require(avatarContract.equipSlots(_miladyId, accType) != 0, "equipSlot should not be 0");
     }
 }
