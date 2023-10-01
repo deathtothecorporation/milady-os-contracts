@@ -8,6 +8,8 @@ import "forge-std/console.sol";
 import "./TestSetup.sol";
 import "./TestUtils.sol";
 import "./TestConstants.sol";
+import "./Harnesses.t.sol";
+
 
 contract MiladyOSTestBase is Test {
     TBARegistry tbaRegistry;
@@ -15,29 +17,14 @@ contract MiladyOSTestBase is Test {
     Miladys miladysContract;
     MiladyAvatar avatarContract;
     LiquidAccessories liquidAccessoriesContract;
-    SoulboundAccessories soulboundAccessoriesContract;
+    SoulboundAccessoriesHarness soulboundAccessoriesContract;
     Rewards rewardsContract;
     TestUtils testUtils;
     
     function setUp() public {
-        uint forkId = vm.createFork(vm.envString("RPC_MAINNET")); //, 18240000);
+        uint forkId = vm.createFork(vm.envString("RPC_MAINNET"), 18240000);
         vm.selectFork(forkId);
-
-        // (
-        //     tbaRegistry,
-        //     ,// tbaAccountImpl,
-        //     miladysContract,
-        //     avatarContract,
-        //     liquidAccessoriesContract,
-        //     soulboundAccessoriesContract,
-        //     rewardsContract,
-        //     testUtils
-        // )
-        //  =
         deploy(NUM_MILADYS_MINTED, MILADY_AUTHORITY_ADDRESS);
-
-        
-        //miladysContract = Miladys(0x5Af0D9827E0c53E4799BB226655A1de152A425a5);
     }
 
     // define functions to allow receiving ether and NFTs
@@ -63,7 +50,7 @@ contract MiladyOSTestBase is Test {
         return IERC1155Receiver.onERC1155Received.selector;
     }
 
-    function stealFor(uint id, address purse) public {
+    function stealMilady(uint id, address purse) public {
         address owner = miladysContract.ownerOf(id);
         vm.prank(owner);
         miladysContract.transferFrom(owner, purse, id);
@@ -83,10 +70,10 @@ contract MiladyOSTestBase is Test {
 
         // steals miladys for msg.sender to test with
         for (uint i=0; i<numMiladysToMint; i++) {
-            stealFor(i, address(this));
+            stealMilady(i, address(this));
         }
         
-        Deployer d = new Deployer(
+        HarnessDeployer d = new HarnessDeployer(
             tbaRegistry,
             tbaAccountImpl,
             1, // chain id of mainnet

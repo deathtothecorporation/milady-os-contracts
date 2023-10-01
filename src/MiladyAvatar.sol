@@ -112,7 +112,7 @@ contract MiladyAvatar is IERC721 {
     function _unequipAccessoryByTypeIfEquipped(uint _miladyId, uint128 _accType)
         internal
     {
-        if (equipSlots[_miladyId][_accType] != 0) { // if "something" is equiped
+        if (equipSlots[_miladyId][_accType] != 0) { // if "something" is equiped in this slot
             rewardsContract.deregisterMiladyForRewardsForAccessoryAndClaim(_miladyId, equipSlots[_miladyId][_accType], getPayableAvatarTBA(_miladyId));
 
             emit AccessoryUnequipped(_miladyId, equipSlots[_miladyId][_accType]);
@@ -211,7 +211,7 @@ contract MiladyAvatar is IERC721 {
     {
         require(_tokenId <= 9999, "Invalid Milady/Avatar id");
 
-        return tbaRegistry.account(address(tbaAccountImpl), chainId, address(miladysContract), _tokenId, 0);
+        return tbaRegistry.account(address(tbaAccountImpl), block.chainid, address(miladysContract), _tokenId, 0);
     }
 
     function safeTransferFrom(address, address, uint256, bytes calldata) external {

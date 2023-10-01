@@ -6,7 +6,7 @@ pragma solidity ^0.8.13;
 import "forge-std/Test.sol";
 import "./MiladyOSTestBase.sol";
 
-contract LiquidAccessoriesTests is MiladyOSTestBase {
+contract SoulboundAccessoriesTests is MiladyOSTestBase {
     function test_minting() public {
         uint[] memory accessoryIds = new uint[](3);
         accessoryIds[0] = avatarContract.plaintextAccessoryTextToAccessoryId("hat", "blue hat");
