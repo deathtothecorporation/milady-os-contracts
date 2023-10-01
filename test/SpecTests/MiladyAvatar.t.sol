@@ -221,4 +221,42 @@ contract MiladyAvatarTests is MiladyOSTestBase {
         require(avatarContract.equipSlots(_miladyId, accType) == accessoryId, "equipSlot not updated");
         require(avatarContract.equipSlots(_miladyId, accType) != 0, "equipSlot should not be 0");
     }
+
+    function test_MA_PTUBI_1(uint _miladyId, uint _seed) public
+    {
+        // conditions:
+        // * preTransferUnequipById is not being called by the liquidAccessoriesContract
+
+        // arrange
+        uint accessoryId = random(abi.encodePacked(_seed));
+        vm.expectRevert("Not liquidAccessoriesContract");
+        avatarContract.preTransferUnequipById(_miladyId, accessoryId);
+    }
+
+    function test_MA_PTUBI_4(uint _miladyId, uint _seed) public
+    {
+        // conditions:
+        // * preTransferUnequipById is being called by the liquidAccessoriesContract
+        // * something was correctly bought and equiped in this slot
+        // * something is equiped in the slot being unequiped
+
+        // checks:
+        // * AccessoryUnequipped event is emitted
+        // * nothing is equiped in the slot being unequiped
+
+        // arrange
+        vm.assume(_miladyId <= NUM_MILADYS_MINTED);
+        uint accessoryId = random(abi.encodePacked(_seed));
+        createAndBuyAccessory(_miladyId, accessoryId, 0.001 ether);
+
+        (uint128 accType, uint128 accVariant) = avatarContract.accessoryIdToTypeAndVariantIds(accessoryId);
+        avatarContract.updateEquipSlotByTypeAndVariant(_miladyId, accType, accVariant);
+
+        // act
+        vm.expectEmit(address(avatarContract));
+        emit AccessoryUnequipped(_miladyId, accessoryId);
+        vm.prank(address(liquidAccessoriesContract));
+        avatarContract.preTransferUnequipById(_miladyId, accessoryId);
+        require(avatarContract.equipSlots(_miladyId, accType) == 0, "equipSlot not updated");
+    }
 }
