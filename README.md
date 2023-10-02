@@ -39,6 +39,7 @@ During or before onboarding of a particular MiladyMaker holder, a server holding
 
 # Notes
 
+* Each registered Milady has a token bound account (TBA), but for clearity each MiladyAvatar also has a TBA. This is to make things like correct equipping and unequipping of accessories more elegant in code. 
 * If a user wants to claim all claimable rewards for their Milady across all equipped items, the interface/app is expected to track/enumerate this set of equipped items off-chain. This set is then passed into `Rewards.claimRewardsForMilady` as a list.
 * This system of contracts has no conception of which types of accessories are canonical versus non-canonical, for both item categories and item variants. Thus, an agent could in theory mint any item they want (a blue mood ring, a halo, etc.) without regard for whether it was ever seen in the original Milady Maker set - and even equip it and earn rewards from other users minting that item.
   * Rather than attempt to constrain this behavior in Solidity/Ethereum, the Milady OS app and interfaces will simply ignore items it does not recognize as canonical, both for purposes of rendering and gating comms and chat. This leaves the door open in the future for adding to the set of supported items, without having to update the contracts.
