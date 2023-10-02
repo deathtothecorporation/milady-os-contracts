@@ -11,14 +11,12 @@ contract SoulboundAccessoriesHarness is SoulboundAccessories
     constructor(
         IERC6551Registry _tbaRegistry,
         IERC6551Account _tbaAccountImpl,
-        uint _chainId,
         address _miladyAuthority,
         string memory uri_
     )
         SoulboundAccessories( 
         _tbaRegistry,
          _tbaAccountImpl,
-         _chainId,
          _miladyAuthority,
         uri_) {}
 
@@ -38,13 +36,11 @@ contract MiladyAvatarHarness is MiladyAvatar {
             IERC721 _miladysContract,
             TBARegistry _tbaRegistry,
             TokenGatedAccount _tbaAccountImpl,
-            uint _chainId,
             string memory _baseURI
     ) MiladyAvatar(
         _miladysContract,
         _tbaRegistry,
         _tbaAccountImpl,
-        _chainId,
         _baseURI) {}
 
     function updateEquipSlotByTypeAndVariant(uint _miladyId, uint128 _accType, uint128 _accVariantOrNull) public {
@@ -68,7 +64,6 @@ contract HarnessDeployer {
     constructor(
         TBARegistry tbaRegistry,
         TokenGatedAccount tbaAccountImpl,
-        uint chainId,
         IERC721 miladysContract,
         address miladyAuthorityAddress,
         address payable revenueRecipient,
@@ -81,7 +76,6 @@ contract HarnessDeployer {
             miladysContract,
             tbaRegistry,
             tbaAccountImpl,
-            chainId,
             avatarBaseURI
         );
 
@@ -97,7 +91,6 @@ contract HarnessDeployer {
         soulboundAccessoriesContract = new SoulboundAccessoriesHarness(  // Changed the contract type here
             tbaRegistry,
             tbaAccountImpl,
-            chainId,
             miladyAuthorityAddress,
             soulboundAccessoriesHarnessURI  // Changed the parameter name here
         );

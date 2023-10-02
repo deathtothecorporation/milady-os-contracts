@@ -76,7 +76,6 @@ contract MiladyOSTestBase is Test {
         HarnessDeployer d = new HarnessDeployer(
             tbaRegistry,
             tbaAccountImpl,
-            1, // chain id of mainnet
             miladysContract,
             miladyAuthorityAddress,
             PROJECT_REVENUE_RECIPIENT,

@@ -14,7 +14,6 @@ contract SoulboundAccessories is ERC1155 {
     // state needed for TBA address calculation
     IERC6551Registry public tbaRegistry;
     IERC6551Account public tbaAccountImpl;
-    uint public chainId;
 
     address public miladyAuthority;
 
@@ -25,7 +24,6 @@ contract SoulboundAccessories is ERC1155 {
     constructor(
         IERC6551Registry _tbaRegistry,
         IERC6551Account _tbaAccountImpl,
-        uint _chainId,
         address _miladyAuthority,
         string memory uri_
     )
@@ -35,7 +33,6 @@ contract SoulboundAccessories is ERC1155 {
 
         tbaRegistry = _tbaRegistry;
         tbaAccountImpl = _tbaAccountImpl;
-        chainId = _chainId;
 
         miladyAuthority = _miladyAuthority;
     }
@@ -62,7 +59,7 @@ contract SoulboundAccessories is ERC1155 {
 
         address avatarTbaAddress = tbaRegistry.account(
             address(tbaAccountImpl),
-            chainId,
+            block.chainid,
             address(avatarContract),
             _miladyId,
             0

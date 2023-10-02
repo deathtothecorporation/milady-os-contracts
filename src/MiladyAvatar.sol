@@ -18,7 +18,6 @@ contract MiladyAvatar is IERC721 {
     // state needed for TBA address calculation
     TBARegistry public tbaRegistry;
     IERC6551Account public tbaAccountImpl;
-    uint public chainId;
 
     string public baseURI;
 
@@ -28,14 +27,12 @@ contract MiladyAvatar is IERC721 {
             IERC721 _miladysContract,
             TBARegistry _tbaRegistry,
             TokenGatedAccount _tbaAccountImpl,
-            uint _chainId,
             string memory _baseURI
     ) {
         initiaDeployer = msg.sender;
         miladysContract = _miladysContract;
         tbaRegistry = _tbaRegistry;
         tbaAccountImpl = _tbaAccountImpl;
-        chainId = _chainId;
         baseURI = _baseURI;
     }
 

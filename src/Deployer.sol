@@ -26,7 +26,6 @@ contract Deployer {
     constructor(
         TBARegistry tbaRegistry,
         TokenGatedAccount tbaAccountImpl,
-        uint chainId,
         IERC721 miladysContract,
         address miladyAuthorityAddress,
         address payable revenueRecipient,
@@ -39,7 +38,6 @@ contract Deployer {
             miladysContract,
             tbaRegistry,
             tbaAccountImpl,
-            chainId,
             avatarBaseURI
         );
 
@@ -55,7 +53,6 @@ contract Deployer {
         soulboundAccessoriesContract = new SoulboundAccessories(
             tbaRegistry,
             tbaAccountImpl,
-            chainId,
             miladyAuthorityAddress,
             soulboundAccessoriesURI
         );

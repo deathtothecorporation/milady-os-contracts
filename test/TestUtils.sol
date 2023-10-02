@@ -23,7 +23,7 @@ contract TestUtils {
     {
         return payable(tbaRegistry.createAccount(
             address(tbaAccountImpl),
-            1, // chain id of mainnet fork
+            block.chainid, 
             address(tokenContract),
             tokenId,
             0,
@@ -44,7 +44,7 @@ contract TestUtils {
     {
         return payable(tbaRegistry.account(
             address(tbaAccountImpl),
-            1, // chain id of Forge's test chain
+            block.chainid, 
             address(tokenContract),
             tokenId,
             0
