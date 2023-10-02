@@ -97,9 +97,10 @@ contract MiladyAvatar is IERC721 {
         assert(accVariant != 0); // take out for gas savings?
 
         _unequipAccessoryByTypeIfEquipped(_miladyId, accType);
-        rewardsContract.registerMiladyForRewardsForAccessory(_miladyId, _accessoryId);
 
         equipSlots[_miladyId][accType] = _accessoryId;
+        
+        rewardsContract.registerMiladyForRewardsForAccessory(_miladyId, _accessoryId);
 
         emit AccessoryEquipped(_miladyId, _accessoryId);
     }
