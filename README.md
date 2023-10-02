@@ -8,57 +8,59 @@ This repo is focused only on the smart contracts underlying such a system, which
 
 * **MiladyMaker** - The original NFT set of 9998 "Miladys" (or one item in the set, depending on context), of which this project is a derivative of. [Contract](https://etherscan.io/address/0x5af0d9827e0c53e4799bb226655a1de152a425a5).
 * **Metadata** - the set of attributes defined as canonically "part of" the original MiladyMaker NFT. This maps to `Accessories`, defined below.
+* **Avatar** - A "reflective NFT" that is defined as soulbound to the MiladyMaker with the same ID, defined in more detail below.
+
+# TBA Structure
+
+As described in more detail below, there are two levels of TBAs at work here:
+
+* Each MiladyMaker has a TBA which holds (by definition) its own Avatar.
+* Each Avatar has a TBA which holds some number of Accessories.
+* Some number of these Accessories may be considered "equipped" by its owning Avatar.
 
 ## Avatars
 
-An `Avatar`, defined in `MiladyAvatar.sol`, is an NFT set that is soulbound to the TBAs of the MiladyMaker NFTs. This NFT set is defined "by fiat", and involves no minting. Instead, some of the IERC721 functions can be deduced without additional state - for example, the `ownerOf` an Avatar is always the TBA of the MiladyMaker with the same token ID, and the `balanceOf` for the Avatar NFT contract is simply 1 if the target address is a MiladyMaker TBA, and 0 otherwise. The rest of the IERC721 functions, having to do with transfers, simply revert, making it soulbound to the MiladyMaker TBA.
+An `Avatar` (`MiladyAvatar.sol`), is an NFT set defined as soulbound to the TBAs of the MiladyMaker NFTs. This NFT can be thought of as a "reflective NFT", and is a way of creating new state that follows the original MiladyMaker NFT around.
 
-This contract is also where the main equip/unequip functionality is defined. For a given accessory type, only one accessory can be equipped at once; any existing equipped item will be unequipped if another one is equipped in its place. Equipping and unequipping items registers and deregisters the Milady from participating in revenue sharing for when a `LiquidAccessory` is minted, as discussed below.
+See the `ownerOf` and `balanceOf` functions to see how this works. The former is defined as always the TBA of the Milady with the same id; the latter is simply 1 if the address being queried is a Milady TBA, and 0 otherwise. All other NFT functionality reverts, resulting in its being soulbound to the Milady TBA.
 
 ## Accessories
 
-An `Accessory` is an ERC1155 NFT that represents some particular clothing or accessory item which could be found in the metadata for a given Milady (see the "attributes" from [this example](https://www.miladymaker.net/milady/json/2751)).
+An `Accessory` is an ERC1155 NFT that represents some particular clothing or accessory item which could be found in the metadata for a given Milady (see the "attributes" from [this example](https://www.miladymaker.net/milady/json/2751)). Each such accessory can be deconstructed into its `type` and `variant`. As an example, we might have a red hat as an accessory, which then has a `type` of "hat" and variant of "red hat"; another item that shares the type (like a blue hat) can thus not be equipped at the same time as the first item.
 
-An accessory's NFT ID is deterministic with regard to its type and variant IDs. These type/variant IDs, in turn, can be determined by hashing the strings for the "trait_type" and "value" fields in the metadata. `AccessoryUtils.sol` defines the relevant transformations of these data types, and can be treated as a reference implementation for off-chain transformation between these data types.
+An accessory's ERC1155 ID is deterministic with regard to its type and variant IDs. These type/variant IDs, in turn, can be determined by hashing strings for the type and variant; in the [metadata](https://www.miladymaker.net/milady/json/2751) these are labeled "trait_type" and "value" respectively. `AccessoryUtils.sol` defines the relevant transformations of these data types, and can be treated as a reference implementation for off-chain transformation between these data types.
 
-Accessories are either soulbound or liquid, but share this ID scheme, as well as the "equip space" of an Avatar.
+The interface is expected to hold a mapping from type/variant identifiers (which are hashes) back to the input string, so as to read the former from the contract state and turn this into a user-meaningful string.
+
+Accessories are either soulbound or liquid (see below), but share this ID scheme, as well as the "equip space" of an Avatar.
+
+## Equipping
+
+`Avatar.sol` is also where the main equip/unequip functionality is defined.
+
+* For an accessory to be equippable, it must be currently held in the Avatar's TBA, and sending away all instances of a given accessory automatically unequips it during transfer (see `LiquidAccessories._beforeTokenTransfer`). Thus, an Avatar should never have an item equipped that it does not own.
+* For a given accessory type, only one accessory can be equipped at once; any existing equipped item will be unequipped if another one is equipped in its place. See the mapping `Avatar.equipSlots`.
+* Equipping/unequipping items registers/deregisters the Milady from participating in revenue sharing for when a `LiquidAccessory` is minted, as discussed below; this can be seen in `Rewards.registerMiladyForRewardsForAccessory` and `Rewards.deregisterMiladyForRewardsForAccessoryAndClaim`, which is only called during the Avatar's equip/unequip functions.
 
 ### Soulbound Accessories
 
-`Soulbound Accessories` (`SoulboundAccessories.sol`) represent the initial set of accessories that "came with" a given Milady - in other words, the accessories listed at the above endpoint for a given Milady, and displayed as part of the canonical MiladyMaker image. These accessories cannot be sent away from the Avatar's TBA.
+`Soulbound Accessories` (`SoulboundAccessories.sol`) represent the initial set of accessories that "came with" a given Milady - in other words, the accessories listed in that Milady's metadata and displayed as part of the canonical MiladyMaker image. These accessories cannot be sent away from the Avatar's TBA.
 
-During or before onboarding of a particular MiladyMaker holder, a server holding a key authorized as `ROLE_MILADY_AUTHORITY` is expected to call `onboardMilady` with a set of `uint256` IDs. This uploads the "missing metadata" onto the EVM as a set of `uint256`s, encoded as described in `AccessoryUtils.sol`.
+During or before onboarding of a particular MiladyMaker holder, a server holding a key authorized as `ROLE_MILADY_AUTHORITY` is expected to call `onboardMilady` with a set of `uint256` IDs. This uploads the "missing metadata" onto the EVM as a set of `uint256`s, encoded as described in `AccessoryUtils.sol` and described in the previous section. The result of this action is to mint a set of 1155s into the Avatar's TBA and equip them, so that after onboarding the user's Milady is dressed up as its canonical, original MiladyMaker visual appearance.
 
 ### Liquid Accessories
 
-`Liquid Accessories` (`LiquidAccessories.sol`) can be freely minted by anyone from an accessory-specific bonding curve, with a 10% spread between buy and sell prices for a given existing supply of that particular item. Revenue is taken from this action and split between an external fee capture address, and a `Rewards` contract, leaving enough in the contract to at any time buy back the entire supply of all items.
+`Liquid Accessories` (`LiquidAccessories.sol`) can be freely minted by anyone from an accessory-specific bonding curve.
+
+We define the buy-back bonding curve first, as buy-back price = P * supply^2 + 0.005 ETH, where supply is the given liquid supply of that particular accessory, and P is a parameter set for each item by the owner of the LiquidAccessories contract (if the parameter is unset, minting cannot occur). Having defined the buy-back price thusly, the actual mint price is defined as 20% above that.
+
+Upon minting, revenue is taken from this 20% spread and split between an external fee capture address, and a `Rewards` contract. The `LiquidAccessories` contract always retains enough of a balance to buy back all outstanding tokens at the buy-back price.
 
 ## Rewards
 
-`Rewards.sol` takes revenue from the minting of new Liquid Accessories and accrues them to Avatars that have that particular item equipped. Given X ETH accrued in this way, and N Avatars with that item equipped, X/N is earmarked for future claims by that Avatar. These rewards can be claimed manually, and are also automatically disbursed upon unequipping of an accessory.
+`Rewards.sol` takes revenue from the minting of new Liquid Accessories and accrues them to Avatars that have that particular item equipped. Given X ETH accrued in this way since a given Avatar had equipped that item, and N Avatars with that item currently equipped, the Avatar holder can claim X/N at any time via the `Rewards` claim functions. Claiming also happens automatically upon unequipping of an accessory.
 
-# Notes
-
-* Each registered Milady has a token bound account (TBA), but for clearity each MiladyAvatar also has a TBA. This is to make things like correct equipping and unequipping of accessories more elegant in code. 
-* If a user wants to claim all claimable rewards for their Milady across all equipped items, the interface/app is expected to track/enumerate this set of equipped items off-chain. This set is then passed into `Rewards.claimRewardsForMilady` as a list.
-* This system of contracts has no conception of which types of accessories are canonical versus non-canonical, for both item categories and item variants. Thus, an agent could in theory mint any item they want (a blue mood ring, a halo, etc.) without regard for whether it was ever seen in the original Milady Maker set - and even equip it and earn rewards from other users minting that item.
-  * Rather than attempt to constrain this behavior in Solidity/Ethereum, the Milady OS app and interfaces will simply ignore items it does not recognize as canonical, both for purposes of rendering and gating comms and chat. This leaves the door open in the future for adding to the set of supported items, without having to update the contracts.
-
-# Goerli Addresses (for internal testing)
-
-Will try to keep these updated! These are all on Goerli and verified.
-
-* [fakeMiladys](https://goerli.etherscan.io/address/0xd0d0ec651a9FF604E9E44Ed02C5799d641024D6F#code)
-  * This is nothing more than an ERC721 contract that allows anyone to freely mint, which the rest of the system considers Miladys. To get one of these, call the "gimme" function on etherscan, and a fresh fake Milady will be sent to the wallet that initiates the transaction.
-* [TBARegistry](https://goerli.etherscan.io/address/0x4584DbF0510E86Dcc2F36038C6473b1a0FC5Aef3#code)
-* [TokenGatedAccount](https://goerli.etherscan.io/address/0x67d12C4dB022c543cb7a678F882eDc935B898940#code)
-* [Rewards](https://goerli.etherscan.io/address/0xAd6e965DB39DcD028B6B9088482794Dbeecb57Bd#code)
-* [MiladyAvatar](https://goerli.etherscan.io/address/0xa75d842b3Dd775C7310AD6D4E6154b5723B222CF#code)
-* [LiquidAccessories](https://goerli.etherscan.io/address/0xd960e80251f965204028382c52046D9b1988f177#code)
-* [SoulboundAccessories](https://goerli.etherscan.io/address/0xE417BB57a2dAf3f5c24F507EFF81345506D1B85e#code)
-* [Rewards](https://goerli.etherscan.io/address/0xAd6e965DB39DcD028B6B9088482794Dbeecb57Bd#code)
-
-`revenueRecipient` and `miladyAuthority` are both currently Logan's address: 0xBB5eb03535FA2bCFe9FE3BBb0F9cC48385818d92. Contact him if you need to test out the soulboundAccessories stuff, as this involves a permissioned call to SoulboundAccessoires from `miladyAuthority`.
+If a user wants to claim all claimable rewards for their Milady across all equipped items, the interface is expected to track/enumerate this set of equipped items off-chain. This set is then passed into `Rewards.claimRewardsForMilady` as a list.
 
 # Running 'forge test'
 * To run 'forge test' successfully, you will need to enter a node RPC endpoint.
