@@ -11,7 +11,7 @@ import "./MiladyAvatar.sol";
 contract SoulboundAccessories is ERC1155 {
     MiladyAvatar public avatarContract;
 
-    // state needed for TBA determination
+    // state needed for TBA address calculation
     IERC6551Registry public tbaRegistry;
     IERC6551Account public tbaAccountImpl;
     uint public chainId;
@@ -20,7 +20,6 @@ contract SoulboundAccessories is ERC1155 {
 
     mapping(uint => bool) public avatarActivated;
 
-    // only used for initial deploy
     address deployer;
 
     constructor(
@@ -52,7 +51,7 @@ contract SoulboundAccessories is ERC1155 {
 
     event SoulboundAccessoriesMinted(uint indexed miladyId, uint[] indexed accessories);
 
-    // We assume here that miladyAuthority will never specify an accessory whose decoded accVariant == 0
+    // we assume here that miladyAuthority will never specify an accessory whose decoded accVariant == 0
     function mintAndEquipSoulboundAccessories(uint _miladyId, uint[] calldata _accessories)
         external
     {

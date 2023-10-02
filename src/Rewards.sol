@@ -50,8 +50,8 @@ contract Rewards {
 
         require(! miladyRewardInfo.isRegistered, "Milady already registered");
 
-        // When a new Milady is registered, we pretend they've been here the whole time and have already claimed all they could.
-        // This essentially starts out this Milady with 0 claimable rewards, which will go up as revenue increases.
+        // when a new Milady is registered, we pretend they've been here the whole time and have already claimed all they could
+        // this essentially starts out this Milady with 0 claimable rewards, which will go up as revenue increases
         miladyRewardInfo.amountClaimedBeforeDivision = rewardInfoForAccessory[_accessoryId].totalRewardsAccrued;
         rewardInfoForAccessory[_accessoryId].totalWearers ++;
 
@@ -105,8 +105,6 @@ contract Rewards {
         emit RewardsClaimed(_miladyId, _accessoryId, _recipient);
     }
 
-    // Logan <| Totally get why this is this way, would recommend a pure function under circumstances
-    //          like these as it removes the need to call the query in the right order elsewhere.
     function getAmountClaimableForMiladyAndAccessory(uint _miladyId, uint _accessoryId)
         public
         view

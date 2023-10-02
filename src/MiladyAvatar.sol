@@ -15,15 +15,14 @@ contract MiladyAvatar is IERC721 {
     SoulboundAccessories public soulboundAccessoriesContract;
     Rewards public rewardsContract;
     
-    // state needed for TBA determination
+    // state needed for TBA address calculation
     TBARegistry public tbaRegistry;
     IERC6551Account public tbaAccountImpl;
     uint public chainId;
 
     string public baseURI;
 
-    // only used for initial deploy
-    address deployer;
+    address initiaDeployer;
 
     constructor(
             IERC721 _miladysContract,
@@ -32,7 +31,7 @@ contract MiladyAvatar is IERC721 {
             uint _chainId,
             string memory _baseURI
     ) {
-        deployer = msg.sender;
+        initiaDeployer = msg.sender;
         miladysContract = _miladysContract;
         tbaRegistry = _tbaRegistry;
         tbaAccountImpl = _tbaAccountImpl;
@@ -46,7 +45,7 @@ contract MiladyAvatar is IERC721 {
             Rewards _rewardsContract)
         external
     {
-        require(msg.sender == deployer, "Caller not initial deployer");
+        require(msg.sender == initiaDeployer, "Caller not initial deployer");
         require(address(liquidAccessoriesContract) == address(0), "Contracts already set");
         
         liquidAccessoriesContract = _liquidAccessoriesContract;
@@ -58,7 +57,7 @@ contract MiladyAvatar is IERC721 {
     mapping (uint => mapping (uint128 => uint)) public equipSlots;
     
     // main entry point for a user to change their Avatar's appearance / equip status
-    // If an accessoryId's unpacked accVariant == 0, we interpret this as an unequip action
+    // if an accessoryId's unpacked accVariant == 0, we interpret this as an unequip action
     function updateEquipSlotsByAccessoryIds(uint _miladyId, uint[] memory _accessoryIds)
         public
     {
@@ -86,8 +85,8 @@ contract MiladyAvatar is IERC721 {
     event AccessoryEquipped(uint indexed _miladyId, uint indexed _accessoryId);
 
     // core function for equip logic.
-    // Unequips items if equip would overwrite for that accessory type
-    // Assumes the accessory's accVariant != 0
+    // unequips items if equip would overwrite for that accessory type
+    // assumes the accessory's accVariant != 0
     function _equipAccessoryIfOwned(uint _miladyId, uint _accessoryId)
         internal
     {
@@ -111,7 +110,8 @@ contract MiladyAvatar is IERC721 {
     function _unequipAccessoryByTypeIfEquipped(uint _miladyId, uint128 _accType)
         internal
     {
-        if (equipSlots[_miladyId][_accType] != 0) { // if "something" is equiped in this slot
+        // if "something" is equiped in this slot
+        if (equipSlots[_miladyId][_accType] != 0) { 
             rewardsContract.deregisterMiladyForRewardsForAccessoryAndClaim(_miladyId, equipSlots[_miladyId][_accType], getPayableAvatarTBA(_miladyId));
 
             emit AccessoryUnequipped(_miladyId, equipSlots[_miladyId][_accType]);
@@ -120,8 +120,8 @@ contract MiladyAvatar is IERC721 {
         }
     }
 
-    // Allows soulbound accessories to "auto equip" themselves upon mint
-    // See `SoulboundAccessories.mintSoulboundAccessories`.
+    // allows soulbound accessories to "auto equip" themselves upon mint
+    // see `SoulboundAccessories.mintSoulboundAccessories`
     function equipSoulboundAccessories(uint _miladyId, uint[] calldata _accessoryIds)
         external
     {
@@ -132,8 +132,8 @@ contract MiladyAvatar is IERC721 {
         }
     }
 
-    // Allows liquid accessoires to "auto unequip" themselves upon transfer away
-    // See `LiquidAccessories._beforeTokenTransfer`.
+    // allows liquid accessoires to "auto unequip" themselves upon transfer away
+    // see `LiquidAccessories._beforeTokenTransfer`
     function preTransferUnequipById(uint _miladyId, uint _accessoryId)
         external
     {
@@ -155,7 +155,7 @@ contract MiladyAvatar is IERC721 {
           + soulboundAccessoriesContract.balanceOf(getAvatarTBA(miladyId), accessoryId);
     }
 
-    // Get the TokenGatedAccount for a particular Milady Avatar.
+    // get the TokenGatedAccount for a particular Milady Avatar.
     function getAvatarTBA(uint _miladyId)
         public
         view
@@ -251,8 +251,8 @@ contract MiladyAvatar is IERC721 {
 
     // accessory utils
 
-    // The remaining functions describe the scheme whereby hashes (treated as IDs) of an accessory type and accessory variant
-    // are encoded into the same uint256 that is used for a global ID for a particular accessory.
+    // the remaining functions describe the scheme whereby hashes (treated as IDs) of an accessory type and accessory variant
+    // are encoded into the same uint256 that is used for a global ID for a particular accessory
 
     // an ID's upper 128 bits are the truncated hash of the category text;
     // the lower 128 bits are the truncated hash of the variant test

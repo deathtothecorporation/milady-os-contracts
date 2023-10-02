@@ -15,7 +15,7 @@ contract LiquidAccessories is ERC1155, Ownable {
     Rewards rewardsContract;
     address payable revenueRecipient;
 
-    address deployer; // only used for initial deploy
+    address initialDeployer; 
 
     constructor(
             TBARegistry _tbaRegistry, 
@@ -24,7 +24,7 @@ contract LiquidAccessories is ERC1155, Ownable {
             string memory uri_)
         ERC1155(uri_)
     {
-        deployer = msg.sender;
+        initialDeployer = msg.sender;
 
         tbaRegistry = _tbaRegistry;
         rewardsContract = _rewardsContract;
@@ -34,7 +34,7 @@ contract LiquidAccessories is ERC1155, Ownable {
     function setAvatarContract(MiladyAvatar _avatarContract)
         external
     {
-        require(msg.sender == deployer, "Not deployer");
+        require(msg.sender == initialDeployer, "Not deployer");
         require(address(avatarContract) == address(0), "avatarContract already set");
 
         avatarContract = _avatarContract;
@@ -87,9 +87,9 @@ contract LiquidAccessories is ERC1155, Ownable {
     function _mintAccessoryAndDisburseRevenue(uint _accessoryId, uint _amount, address _recipient)
         internal
     {
-        uint mintCost = _mintAccessory(_accessoryId, _amount, _recipient);
+        uint mintCost = getMintCostForNewAccessories(_accessoryId, _amount);
+        _mintAccessory(_accessoryId, _amount, _recipient);
 
-        // let's now take revenue.
         uint burnReward = getBurnRewardForReturnedAccessories(_accessoryId, _amount);
         uint freeRevenue = mintCost - burnReward;
 
@@ -97,7 +97,6 @@ contract LiquidAccessories is ERC1155, Ownable {
         // We test for this and just send everything to revenueRecipient if that's the case.
         (, uint numEligibleRewardRecipients) = rewardsContract.rewardInfoForAccessory(_accessoryId);
         if (numEligibleRewardRecipients == 0) {
-            // syntax / which transfer func?
             revenueRecipient.transfer(freeRevenue);
         }
         else {
@@ -112,13 +111,8 @@ contract LiquidAccessories is ERC1155, Ownable {
 
     function _mintAccessory(uint _accessoryId, uint _amount, address _recipient)
         internal
-        returns (uint cost)
     {
-        // Schalk <| pull up and out as proposed
-        cost = getMintCostForNewAccessories(_accessoryId, _amount);
-
         bondingCurves[_accessoryId].accessorySupply += _amount;
-
         _mint(_recipient, _accessoryId, _amount, "");
     }
 
@@ -133,7 +127,8 @@ contract LiquidAccessories is ERC1155, Ownable {
 
         uint totalBurnReward;
         for (uint i=0; i<_accessoryIds.length; i++) {
-            totalBurnReward += _burnAccessory(_accessoryIds[i], _amounts[i], _fundsRecipient);
+            totalBurnReward += getBurnRewardForReturnedAccessories(_accessoryIds[i], _amounts[i]);
+            _burnAccessory(_accessoryIds[i], _amounts[i], _fundsRecipient);
         }
 
         require(totalBurnReward >= _minRewardOut, "Specified reward not met");
@@ -142,15 +137,9 @@ contract LiquidAccessories is ERC1155, Ownable {
 
     function _burnAccessory(uint _accessoryId, uint _amount, address payable _fundsRecipient)
         internal
-        returns (uint burnReward)
     {
         require(balanceOf(msg.sender, _accessoryId) >= _amount, "Incorrect accessory balance");
-
-        // Logan <| Does this need to be in here? It isn't used here
-        burnReward = getBurnRewardForReturnedAccessories(_accessoryId, _amount);
-        
         bondingCurves[_accessoryId].accessorySupply -= _amount;
-
         _burn(msg.sender, _accessoryId, _amount);
     }
 
