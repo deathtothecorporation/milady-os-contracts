@@ -100,7 +100,9 @@ contract RewardsTest is MiladyOSTestBase {
         rewardsContract.deregisterMiladyForRewardsForAccessoryAndClaim(0, milady0Accessories[0], payable(address(this)));
         vm.stopPrank();
     }
-    function test_reward_poc() external {
+    function test_auditRewardIssuePoc() external {
+        // minimally modified code from audit POC of VAP-1
+        
         // prepare milady with its soulbound accessories
         MiladyAvatar.PlaintextAccessoryInfo[] memory milady0AccessoriesPlaintext = new MiladyAvatar.PlaintextAccessoryInfo[](3);
         milady0AccessoriesPlaintext[0] = MiladyAvatar.PlaintextAccessoryInfo("hat", "red hat");
