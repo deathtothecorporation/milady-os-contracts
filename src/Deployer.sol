@@ -28,6 +28,7 @@ contract Deployer {
         TokenGatedAccount tbaAccountImpl,
         IERC721 miladysContract,
         address miladyAuthorityAddress,
+        address liquidAccessoriesOwner,
         address payable revenueRecipient,
         string memory avatarBaseURI,
         string memory liquidAccessoriesURI,
@@ -49,6 +50,8 @@ contract Deployer {
             revenueRecipient,
             liquidAccessoriesURI
         );
+        
+        liquidAccessoriesContract.transferOwnership(liquidAccessoriesOwner);
 
         soulboundAccessoriesContract = new SoulboundAccessories(
             tbaRegistry,
