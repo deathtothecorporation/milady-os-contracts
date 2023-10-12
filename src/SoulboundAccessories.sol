@@ -54,6 +54,9 @@ contract SoulboundAccessories is ERC1155 {
     {
         require(msg.sender == miladyAuthority, "Not miladyAuthority");
 
+        // perhaps not strictly necessary, but might prevent the miladyAuthority server doing something stupid
+        require(_accessories.length > 0, "empty accessories array");
+
         require(!avatarActivated[_miladyId], "Avatar already activated");
         avatarActivated[_miladyId] = true;
 
