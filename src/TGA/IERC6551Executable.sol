@@ -1,4 +1,4 @@
-pragma solidity ^0.8.13;
+pragma solidity 0.8.18;
 
 /// @dev the ERC-165 identifier for this interface is `0x74420f4c`
 interface IERC6551Executable {

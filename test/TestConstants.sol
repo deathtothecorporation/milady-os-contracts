@@ -1,4 +1,4 @@
-pragma solidity ^0.8.13;
+pragma solidity 0.8.18;
 
 uint constant NUM_MILADYS_MINTED = 3; // 30 takes quite a while when forking from mainnet
 
