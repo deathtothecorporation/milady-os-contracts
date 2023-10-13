@@ -1,6 +1,6 @@
 pragma solidity ^0.8.13;
 
-import "./Deployer.sol";
+import "../src/Deployer.sol";
 
 contract HardcodedGoerliDeployer {
     constructor() {
