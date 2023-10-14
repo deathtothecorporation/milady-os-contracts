@@ -10,6 +10,7 @@ contract HardcodedGoerliDeployer {
             IERC721(0xd0d0ec651a9FF604E9E44Ed02C5799d641024D6F),
             0xBB5eb03535FA2bCFe9FE3BBb0F9cC48385818d92,
             0xBB5eb03535FA2bCFe9FE3BBb0F9cC48385818d92,
+            0xBB5eb03535FA2bCFe9FE3BBb0F9cC48385818d92,
             payable(0xBB5eb03535FA2bCFe9FE3BBb0F9cC48385818d92),
             "fakeAvatarURI",
             "fakeLAUR",

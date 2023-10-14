@@ -118,8 +118,20 @@ contract MiladyAvatar is IERC721 {
     }
 
     // allows soulbound accessories to "auto equip" themselves upon mint
-    // see `SoulboundAccessories.mintSoulboundAccessories`
+    // see `SoulboundAccessories.mintAndEquipSoulboundAccessories`
     function equipSoulboundAccessories(uint _miladyId, uint[] calldata _accessoryIds)
+        external
+    {
+        require(msg.sender == address(soulboundAccessoriesContract), "Not soulboundAccessories");
+
+        for (uint i=0; i<_accessoryIds.length; i++) {
+            _equipAccessoryIfOwned(_miladyId, _accessoryIds[i]);
+        }
+    }
+
+    // allows soulbound accessories to unequip the item upon unmint
+    // see `SoulboundAccessories.unmintAndUnequipSoulboundAccessories`
+    function unequipSoulboundAccessories(uint _miladyId, uint[] calldata _accessoryIds)
         external
     {
         require(msg.sender == address(soulboundAccessoriesContract), "Not soulboundAccessories");

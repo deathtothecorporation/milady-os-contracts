@@ -3,12 +3,13 @@
 pragma solidity 0.8.18;
 
 import "openzeppelin/token/ERC1155/ERC1155.sol";
+import "openzeppelin/access/Ownable.sol";
 import "./TGA/IERC6551Registry.sol";
 import "./TGA/IERC6551Account.sol";
 import "./TGA/TokenGatedAccount.sol";
 import "./MiladyAvatar.sol";
 
-contract SoulboundAccessories is ERC1155 {
+contract SoulboundAccessories is ERC1155, Ownable {
     MiladyAvatar public avatarContract;
 
     // state needed for TBA address calculation
@@ -46,6 +47,13 @@ contract SoulboundAccessories is ERC1155 {
         avatarContract = _avatarContract;
     }
 
+    function changeMiladyAuthority(address _newMiladyAuthority)
+        external
+        onlyOwner()
+    {
+        miladyAuthority = _newMiladyAuthority;
+    }
+
     event SoulboundAccessoriesMinted(uint indexed miladyId, uint[] indexed accessories);
 
     // we assume here that miladyAuthority will never specify an accessory whose decoded accVariant == 0
@@ -78,6 +86,33 @@ contract SoulboundAccessories is ERC1155 {
         avatarContract.equipSoulboundAccessories(_miladyId, _accessories);
 
         emit SoulboundAccessoriesMinted(_miladyId, _accessories);
+    }
+
+    // This function is included as a last-resort option to leverage, in case the miladyAuthority key has been compromised.
+    // It allows the owner to reverse any damage done by the key, by unminting and unequipping any erroneous soulboundAccessories.
+    function unmintAndUnequipSoulboundAccessories(uint _miladyId, uint[] calldata _accessories)
+        external
+        onlyOwner()
+    {
+        require(avatarActivated[_miladyId], "Avatar not activated");
+        avatarActivated[_miladyId] = false;
+
+        address avatarTbaAddress = tbaRegistry.account(
+            address(tbaAccountImpl),
+            block.chainid,
+            address(avatarContract),
+            _miladyId,
+            0
+        );
+
+        uint[] memory listOf1s = new uint[](_accessories.length);
+        for (uint i=0; i<listOf1s.length; i++) {
+            listOf1s[i] = 1;
+        }
+
+        _burnBatch(avatarTbaAddress, _accessories, listOf1s);
+
+        avatarContract.unequipSoulboundAccessories(_miladyId, _accessories);
     }
 
     // disable all token transfers, making these soulbound.

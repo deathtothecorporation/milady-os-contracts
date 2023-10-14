@@ -29,6 +29,7 @@ contract Deployer {
         IERC721 miladysContract,
         address miladyAuthorityAddress,
         address liquidAccessoriesOwner,
+        address soulboundAccessoriesOwner,
         address payable revenueRecipient,
         string memory avatarBaseURI,
         string memory liquidAccessoriesURI,
@@ -50,8 +51,6 @@ contract Deployer {
             revenueRecipient,
             liquidAccessoriesURI
         );
-        
-        liquidAccessoriesContract.transferOwnership(liquidAccessoriesOwner);
 
         soulboundAccessoriesContract = new SoulboundAccessories(
             tbaRegistry,
@@ -63,6 +62,9 @@ contract Deployer {
         avatarContract.setOtherContracts(liquidAccessoriesContract, soulboundAccessoriesContract, rewardsContract);
         liquidAccessoriesContract.setAvatarContract(avatarContract);
         soulboundAccessoriesContract.setAvatarContract(avatarContract);
+
+        liquidAccessoriesContract.transferOwnership(liquidAccessoriesOwner);
+        soulboundAccessoriesContract.transferOwnership(soulboundAccessoriesOwner);
 
         emit Deployed(
             address(avatarContract),
