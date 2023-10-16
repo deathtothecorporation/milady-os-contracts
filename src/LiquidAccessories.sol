@@ -80,7 +80,8 @@ contract LiquidAccessories is ERC1155, Ownable {
 
         if (msg.value > totalMintCost) {
             // return extra in case of overpayment
-            _overpayReturnAddress.transfer(msg.value - totalMintCost);
+            (bool success,) = _overpayReturnAddress.call{ value: msg.value - totalMintCost }("");
+            require(success, "Transfer failed");
         }
     }
 
@@ -99,7 +100,8 @@ contract LiquidAccessories is ERC1155, Ownable {
         // We test for this and just send everything to revenueRecipient if that's the case.
         (, uint numEligibleRewardRecipients) = rewardsContract.rewardInfoForAccessory(_accessoryId);
         if (numEligibleRewardRecipients == 0) {
-            revenueRecipient.transfer(freeRevenue);
+            (bool success, ) = revenueRecipient.call{ value: freeRevenue }("");
+            require(success, "Transfer failed");
         }
         else {
             uint halfFreeRevenue = freeRevenue / 2;
@@ -107,7 +109,8 @@ contract LiquidAccessories is ERC1155, Ownable {
             rewardsContract.addRewardsForAccessory{value:halfFreeRevenue}(_accessoryId);
 
             // using `totalRevenue-halfFreeRevenue` instead of simply `halfFreeRevenue` to handle rounding errors from div by 2
-            revenueRecipient.transfer(freeRevenue - halfFreeRevenue);
+            (bool success,) = revenueRecipient.call{ value : freeRevenue - halfFreeRevenue }("");
+            require(success, "Transfer failed");
         }
     }
 
@@ -134,7 +137,8 @@ contract LiquidAccessories is ERC1155, Ownable {
         }
 
         require(totalBurnReward >= _minRewardOut, "Specified reward not met");
-        _fundsRecipient.transfer(totalBurnReward);
+        (bool success,) = _fundsRecipient.call{ value : totalBurnReward }("");
+        require(success, "Transfer failed");
     }
 
     function _burnAccessory(uint _accessoryId, uint _amount, address payable _fundsRecipient)

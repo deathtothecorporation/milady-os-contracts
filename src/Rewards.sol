@@ -100,7 +100,8 @@ contract Rewards {
 
         rewardInfo.miladyRewardInfo[_miladyId].amountClaimed = rewardInfo.rewardsPerWearerAccrued;
 
-        _recipient.transfer(amountToSend);
+        (bool success,) = _recipient.call{ value: amountToSend }("");
+        require(success, "Transfer failed");
 
         emit RewardsClaimed(_miladyId, _accessoryId, _recipient);
     }
