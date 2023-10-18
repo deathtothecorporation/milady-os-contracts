@@ -3,13 +3,16 @@
 pragma solidity 0.8.18;
 
 import "openzeppelin/token/ERC721/IERC721.sol";
+import "openzeppelin/security/ReentrancyGuard.sol";
 import "./TGA/TBARegistry.sol";
 
-contract Rewards {
+contract Rewards is ReentrancyGuard {
     IERC721 public miladysContract;
     address public avatarContractAddress;
 
-    constructor(address _avatarContractAddress, IERC721 _miladysContract) {
+    constructor(address _avatarContractAddress, IERC721 _miladysContract) 
+        ReentrancyGuard()
+    {
         avatarContractAddress = _avatarContractAddress;
         miladysContract = _miladysContract;
     }
@@ -64,6 +67,7 @@ contract Rewards {
 
     function deregisterMiladyForRewardsForAccessoryAndClaim(uint _miladyId, uint _accessoryId, address payable _recipient)
         external
+        nonReentrant
     {
         require(msg.sender == avatarContractAddress, "Not avatarContractAddress");
 
@@ -81,6 +85,7 @@ contract Rewards {
 
     function claimRewardsForMilady(uint _miladyId, uint[] calldata _accessoriesToClaimFor, address payable _recipient)
         external
+        nonReentrant
     {
         require(msg.sender == miladysContract.ownerOf(_miladyId), "Not Milady owner");
 
@@ -93,6 +98,8 @@ contract Rewards {
 
     function _claimRewardsForMiladyForAccessory(uint _miladyId, uint _accessoryId, address payable _recipient)
         internal
+        // all calls to this must be nonreentrant
+        // did not make this nonreentrant to prevent gas churn
     {
         RewardInfoForAccessory storage rewardInfo = rewardInfoForAccessory[_accessoryId];
 

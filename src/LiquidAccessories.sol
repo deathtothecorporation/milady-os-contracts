@@ -4,11 +4,12 @@ pragma solidity 0.8.18;
 
 import "openzeppelin/token/ERC1155/ERC1155.sol";
 import "openzeppelin/access/Ownable.sol";
+import "openzeppelin/security/ReentrancyGuard.sol";
 import "./TGA/TBARegistry.sol";
 import "./MiladyAvatar.sol";
 import "./Rewards.sol";
 
-contract LiquidAccessories is ERC1155, Ownable {
+contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
     TBARegistry public tbaRegistry;
     MiladyAvatar public avatarContract;
 
@@ -23,6 +24,7 @@ contract LiquidAccessories is ERC1155, Ownable {
             address payable _revenueRecipient, 
             string memory uri_)
         ERC1155(uri_)
+        ReentrancyGuard()
     {
         initialDeployer = msg.sender;
 
@@ -63,6 +65,7 @@ contract LiquidAccessories is ERC1155, Ownable {
             address payable _overpayReturnAddress)
         external
         payable
+        nonReentrant
     {
         // note that msg.value functions as an implicit "minimumIn" (analagous to burnAccessories's "minRewardOut"),
         // implicitly protecting this purchase from sandwich attacks
@@ -87,6 +90,7 @@ contract LiquidAccessories is ERC1155, Ownable {
 
     function _mintAccessoryAndDisburseRevenue(uint _accessoryId, uint _amount, address _recipient)
         internal
+        // only called from mintAccessories, therefore non-reentrant
     {
         require(_amount > 0, "amount cannot be 0");
 
@@ -127,6 +131,7 @@ contract LiquidAccessories is ERC1155, Ownable {
             uint _minRewardOut, 
             address payable _fundsRecipient)
         external
+        nonReentrant
     {
         require(_accessoryIds.length == _amounts.length, "Array lengths differ");
 
