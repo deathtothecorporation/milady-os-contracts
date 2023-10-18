@@ -8,7 +8,7 @@ import "forge-std/console.sol";
 import "./MiladyOSTestBase.sol";
 import "./Miladys.sol";
 import "../src/MiladyAvatar.sol";
-import "../src/TGA/TBARegistry.sol";
+import "TokenGatedAccount/TBARegistry.sol";
 
 contract GhostNFT is MiladyOSTestBase {
 

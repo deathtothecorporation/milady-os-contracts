@@ -3,9 +3,9 @@
 pragma solidity ^0.8.13;
 
 import "openzeppelin/token/ERC1155/ERC1155.sol";
-import "./TGA/IERC6551Registry.sol";
-import "./TGA/IERC6551Account.sol";
-import "./TGA/TokenGatedAccount.sol";
+import "TokenGatedAccount/IERC6551Registry.sol";
+import "TokenGatedAccount/IERC6551Account.sol";
+import "TokenGatedAccount/TokenGatedAccount.sol";
 import "./MiladyAvatar.sol";
 
 contract SoulboundAccessories is ERC1155 {
