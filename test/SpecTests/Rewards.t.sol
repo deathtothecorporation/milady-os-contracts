@@ -162,4 +162,60 @@ contract RewardsTests is MiladyOSTestBase {
         require(amountClaimedAfter == rewardsPerWearerAccruedBefore, "amountClaimedAfter != rewardsPerWearerAccruedBefore");
         require(recipientBalanceAfter == recipientBalanceBefore + rewardsPerWearerAccruedBefore, "recipientBalanceAfter != recipientBalanceBefore + rewardsPerWearerAccruedBefore");
     }
+
+    function test_R_CRFM_1(uint _miladyId, uint _accessoryId, address payable _attacker) public
+    {
+        // conditions:
+        // * msg.sender is not the owner of the milady
+
+        // setup:
+        // prank a random address
+        // attempt to claim rewards for the milady
+
+        // arrange
+        vm.assume(_miladyId <= NUM_MILADYS_MINTED);
+        uint[] memory accessoryIds = new uint[](1);
+        accessoryIds[0] = _accessoryId;
+
+        // act
+        vm.prank(_attacker);
+        vm.expectRevert("Not Milady owner");
+        rewardsContract.claimRewardsForMilady(_miladyId, accessoryIds, _attacker);
+    }
+
+    function test_R_CRFM_3(uint _miladyId, uint _numberOfAccessories, uint _seed, address payable _recipient) public {
+        // conditions:
+        // * msg.sender is the owner of the milady
+        // * the milady is registered for rewards for some / or no accessories
+
+        // setup:
+        // * for 1 to x accessories
+        //      * register the milady for rewards for the accessory (mint and equip it)
+        //      * add rewards for the accessory
+        // * claim rewards for the milady
+
+        // arrange
+        vm.assume(_miladyId <= NUM_MILADYS_MINTED);
+        vm.assume(_numberOfAccessories <= 10);
+        uint[] memory accessoryIds = new uint[](_numberOfAccessories);
+        for (uint i=0; i<_numberOfAccessories; i++) {
+            accessoryIds[i] = random(abi.encodePacked(i, _seed));
+            createBuyAndEquipAccessory(_miladyId, accessoryIds[i], 0.001 ether);
+            rewardsContract.addRewardsForAccessory{value : 0.1 ether}(accessoryIds[i]);
+        }
+
+        uint recipientBalanceBefore = _recipient.balance;
+
+        // act
+        vm.prank(miladysContract.ownerOf(_miladyId));
+        for (uint i=0; i<_numberOfAccessories; i++) { 
+            vm.expectEmit(address(rewardsContract));
+            emit RewardsClaimed(_miladyId, accessoryIds[i], _recipient);
+        }
+        rewardsContract.claimRewardsForMilady(_miladyId, accessoryIds, _recipient);
+
+        uint recipientBalanceAfter = _recipient.balance;
+
+        require(recipientBalanceAfter == recipientBalanceBefore + (_numberOfAccessories * 0.1 ether), "recipientBalanceAfter != recipientBalanceBefore + (_numberOfAccessories * 0.1 ether)");
+    }
 }
