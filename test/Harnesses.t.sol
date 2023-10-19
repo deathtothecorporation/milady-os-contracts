@@ -48,9 +48,30 @@ contract MiladyAvatarHarness is MiladyAvatar {
     }
 }
 
+contract RewardsHarness is Rewards {
+    constructor (
+        address _avatarContractAddress,
+        IERC721 _miladysContract
+    ) Rewards(
+        _avatarContractAddress,
+        _miladysContract
+    ) {}
+
+    function getMiladyRewardInfoForAccessory(uint _miladyId, uint _accessoryId)
+        external
+        view
+        returns (bool isRegistered, uint amountClaimed)
+    {
+        MiladyRewardInfo storage miladyRewardInfo = rewardInfoForAccessory[_accessoryId].miladyRewardInfo[_miladyId];
+
+        isRegistered = miladyRewardInfo.isRegistered;
+        amountClaimed = miladyRewardInfo.amountClaimed;
+    }
+}
+
 contract HarnessDeployer {
     MiladyAvatarHarness public avatarContract;
-    Rewards public rewardsContract;
+    RewardsHarness public rewardsContract;
     LiquidAccessories public liquidAccessoriesContract;
     SoulboundAccessoriesHarness public soulboundAccessoriesContract;  // Changed the contract type here
 
@@ -79,7 +100,7 @@ contract HarnessDeployer {
             avatarBaseURI
         );
 
-        rewardsContract = new Rewards(address(avatarContract), miladysContract);
+        rewardsContract = new RewardsHarness(address(avatarContract), miladysContract);
 
         liquidAccessoriesContract = new LiquidAccessories(
             tbaRegistry,

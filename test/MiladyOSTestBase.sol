@@ -18,7 +18,7 @@ contract MiladyOSTestBase is Test {
     MiladyAvatarHarness avatarContract;
     LiquidAccessories liquidAccessoriesContract;
     SoulboundAccessoriesHarness soulboundAccessoriesContract;
-    Rewards rewardsContract;
+    RewardsHarness rewardsContract;
     TestUtils testUtils;
     
     function setUp() public {
@@ -111,7 +111,6 @@ contract MiladyOSTestBase is Test {
     }
 
 
-
     function buyAccessory(uint _miladyId, uint _accessoryId) 
         internal 
     {
@@ -138,8 +137,23 @@ contract MiladyOSTestBase is Test {
         buyAccessory(_miladyId, _accessoryId);
     }
 
+    function createBuyAndEquipAccessory(uint _miladyId, uint _accessoryId, uint _bondingCurveParameter)
+        internal
+    {
+        createAndBuyAccessory(_miladyId, _accessoryId, _bondingCurveParameter);
+        uint[] memory accessoryIds = new uint[](1);
+        accessoryIds[0] = _accessoryId;
+        vm.prank(avatarContract.ownerOf(_miladyId));
+        avatarContract.updateEquipSlotsByAccessoryIds(_miladyId, accessoryIds);
+    }
+
     function random(bytes memory seed) internal pure returns(uint)
     {
         return uint256(keccak256(seed));
+    }
+
+    function randomAddress(bytes memory seed) internal pure returns(address)
+    {
+        return address(uint160(uint256(keccak256(seed))));
     }
 }
