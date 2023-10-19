@@ -5,8 +5,8 @@ pragma solidity 0.8.18;
 
 import "forge-std/Test.sol";
 import "openzeppelin/token/ERC721/IERC721.sol";
-import "../src/TGA/TBARegistry.sol";
-import "../src/TGA/TokenGatedAccount.sol";
+import "TokenGatedAccount/TBARegistry.sol";
+import "TokenGatedAccount/TokenGatedAccount.sol";
 
 contract TestUtils {
     TBARegistry tbaRegistry;

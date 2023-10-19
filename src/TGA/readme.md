@@ -1,1 +1,0 @@
-These contracts are taken from [EIP 6551](https://eips.ethereum.org/EIPS/eip-6551).
