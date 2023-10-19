@@ -7,7 +7,7 @@ import "openzeppelin/token/ERC721/extensions/ERC721Enumerable.sol";
 import "openzeppelin/access/Ownable.sol";
 import "openzeppelin/utils/math/SafeMath.sol";
 
-pragma solidity ^0.8.13;
+pragma solidity 0.8.18;
 
 /**
  * @title Miladys contract

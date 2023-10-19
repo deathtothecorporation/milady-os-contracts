@@ -1,6 +1,6 @@
 /* solhint-disable private-vars-leading-underscore */
 
-pragma solidity ^0.8.13;
+pragma solidity 0.8.18;
 
 import "openzeppelin/token/ERC1155/ERC1155.sol";
 import "openzeppelin/access/Ownable.sol";
@@ -87,6 +87,8 @@ contract LiquidAccessories is ERC1155, Ownable {
     function _mintAccessoryAndDisburseRevenue(uint _accessoryId, uint _amount, address _recipient)
         internal
     {
+        require(_amount > 0, "amount cannot be 0");
+
         uint mintCost = getMintCostForNewAccessories(_accessoryId, _amount);
         _mintAccessory(_accessoryId, _amount, _recipient);
 
@@ -138,7 +140,9 @@ contract LiquidAccessories is ERC1155, Ownable {
     function _burnAccessory(uint _accessoryId, uint _amount, address payable _fundsRecipient)
         internal
     {
+        require(_amount > 0, "amount cannot be 0");
         require(balanceOf(msg.sender, _accessoryId) >= _amount, "Incorrect accessory balance");
+
         bondingCurves[_accessoryId].accessorySupply -= _amount;
         _burn(msg.sender, _accessoryId, _amount);
     }

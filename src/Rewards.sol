@@ -1,6 +1,6 @@
 /* solhint-disable private-vars-leading-underscore */
 
-pragma solidity ^0.8.13;
+pragma solidity 0.8.18;
 
 import "openzeppelin/token/ERC721/IERC721.sol";
 import "TokenGatedAccount/TBARegistry.sol";
@@ -16,13 +16,13 @@ contract Rewards {
 
     mapping (uint => RewardInfoForAccessory) public rewardInfoForAccessory;
     struct RewardInfoForAccessory {
-        uint totalRewardsAccrued;
+        uint rewardsPerWearerAccrued;
         uint totalWearers;
         mapping (uint => MiladyRewardInfo) miladyRewardInfo;
     }
     struct MiladyRewardInfo {
         bool isRegistered;
-        uint amountClaimedBeforeDivision;
+        uint amountClaimed;
     }
 
     event RewardsAccrued(uint indexed _accessoryId, uint _amount);
@@ -34,7 +34,7 @@ contract Rewards {
         require(msg.value > 0, "No ether included");
         require(rewardInfoForAccessory[_accessoryId].totalWearers > 0, "No eligible recipients");
 
-        rewardInfoForAccessory[_accessoryId].totalRewardsAccrued += msg.value;
+        rewardInfoForAccessory[_accessoryId].rewardsPerWearerAccrued += msg.value / rewardInfoForAccessory[_accessoryId].totalWearers;
 
         emit RewardsAccrued(_accessoryId, msg.value);
     }
@@ -52,7 +52,7 @@ contract Rewards {
 
         // when a new Milady is registered, we pretend they've been here the whole time and have already claimed all they could
         // this essentially starts out this Milady with 0 claimable rewards, which will go up as revenue increases
-        miladyRewardInfo.amountClaimedBeforeDivision = rewardInfoForAccessory[_accessoryId].totalRewardsAccrued;
+        miladyRewardInfo.amountClaimed = rewardInfoForAccessory[_accessoryId].rewardsPerWearerAccrued;
         rewardInfoForAccessory[_accessoryId].totalWearers ++;
 
         miladyRewardInfo.isRegistered = true;
@@ -98,7 +98,7 @@ contract Rewards {
 
         uint amountToSend = getAmountClaimableForMiladyAndAccessory(_miladyId, _accessoryId);
 
-        rewardInfo.miladyRewardInfo[_miladyId].amountClaimedBeforeDivision = rewardInfo.totalRewardsAccrued;
+        rewardInfo.miladyRewardInfo[_miladyId].amountClaimed = rewardInfo.rewardsPerWearerAccrued;
 
         _recipient.transfer(amountToSend);
 
@@ -116,9 +116,7 @@ contract Rewards {
         
         RewardInfoForAccessory storage rewardInfo = rewardInfoForAccessory[_accessoryId];
         
-        uint rewardOwedBeforeDivision = rewardInfo.totalRewardsAccrued - rewardInfo.miladyRewardInfo[_miladyId].amountClaimedBeforeDivision;
-
-        amountClaimable = rewardOwedBeforeDivision / rewardInfo.totalWearers;
+        amountClaimable = rewardInfo.rewardsPerWearerAccrued - rewardInfo.miladyRewardInfo[_miladyId].amountClaimed;
     }
 
     function getAmountClaimableForMiladyAndAccessories(uint _miladyId, uint[] memory _accessoryIds)
