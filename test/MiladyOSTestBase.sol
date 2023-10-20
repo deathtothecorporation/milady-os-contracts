@@ -147,6 +147,11 @@ contract MiladyOSTestBase is Test {
         avatarContract.updateEquipSlotsByAccessoryIds(_miladyId, accessoryIds);
     }
 
+    function random(uint seed) internal pure returns(uint)
+    {
+        return uint256(keccak256(abi.encodePacked(seed)));
+    }
+
     function random(bytes memory seed) internal pure returns(uint)
     {
         return uint256(keccak256(seed));
