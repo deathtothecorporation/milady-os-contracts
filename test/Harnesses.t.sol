@@ -119,6 +119,18 @@ contract LiquidAccessoriesHarness is LiquidAccessories {
     {
         _burnAccessory(_accessoryId, _amount);
     }
+
+    function beforeTokenTransfer(
+            address _operator, 
+            address _from, 
+            address _to, 
+            uint256[] memory _ids, 
+            uint256[] memory _amounts, 
+            bytes memory _data)
+        public    
+    {
+        _beforeTokenTransfer(_operator, _from, _to, _ids, _amounts, _data);
+    }
 }
 
 contract HarnessDeployer {

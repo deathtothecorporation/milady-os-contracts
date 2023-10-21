@@ -294,4 +294,43 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
         vm.expectRevert("Incorrect accessory balance");
         liquidAccessoriesContract.burnAccessory(_accessoryId, _amount + 1);
     }
+
+    function test_LA_BTT_2
+        // ()
+        (uint _miladyId, uint _accessoryTypes, uint _seed, uint _amount) 
+        public 
+    {
+        // Conditions: 
+        // 1. The calling contract is the avatarContract
+
+        vm.assume(_miladyId < NUM_MILADYS_MINTED);
+        vm.assume(_amount > 0);
+        vm.assume(_amount < 10);
+        vm.assume(_accessoryTypes > 0);
+        vm.assume(_accessoryTypes < 10);
+        vm.assume(_seed < 2**255);
+
+        uint[] memory ids = new uint[](_accessoryTypes);
+        uint[] memory amounts = new uint[](_accessoryTypes);
+
+        for(uint i = 0; i < _accessoryTypes; i++)
+        {
+            ids[i] = random(_seed + i);
+            amounts[i] = _amount;
+            for(uint j = 0; j < _amount; j++)
+            {
+                createAndBuyAccessory(_miladyId, ids[i], 0.001 ether);
+            }
+        }
+
+        address from = avatarContract.getAvatarTBA(_miladyId);
+        vm.prank(address(avatarContract));
+        liquidAccessoriesContract.beforeTokenTransfer(address(0), from, address(1), ids, amounts, "");
+
+        for(uint i = 0; i < _accessoryTypes; i++)
+        {
+            (uint128 accessoryType,) = avatarContract.accessoryIdToTypeAndVariantIds(ids[i]);
+            require(avatarContract.equipSlots(_miladyId, accessoryType) == 0, "Accessory not unequiped");
+        }
+    }
 }
