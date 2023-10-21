@@ -99,9 +99,9 @@ contract LiquidAccessoriesHarness is LiquidAccessories {
         return revenueRecipient;
     }
 
-    function getBurnRewardForReturnedAccessories(uint _accessoryId, uint _amount, uint _currentSupplyOfAccessory, uint _curveParameter)
+    function getBurnRewardForReturnedAccessories(uint _amount, uint _currentSupplyOfAccessory, uint _curveParameter)
         external
-        view
+        pure
         returns (uint)
     {
         require(_curveParameter != 0, "No bonding curve");

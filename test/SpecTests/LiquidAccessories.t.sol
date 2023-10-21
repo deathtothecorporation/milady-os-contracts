@@ -145,7 +145,6 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
         uint mintCost = liquidAccessoriesContract.getMintCostForNewAccessories(_accessoryId, _amount);
         (uint currentAccessorySupply, uint curveParameter) = liquidAccessoriesContract.bondingCurves(_accessoryId);
         uint burnReward = liquidAccessoriesContract.getBurnRewardForReturnedAccessories(
-            _accessoryId, 
             _amount, 
             currentAccessorySupply + _amount, 
             curveParameter);
@@ -204,7 +203,6 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
         uint mintCost = liquidAccessoriesContract.getMintCostForNewAccessories(_accessoryId, _amount);
         (uint currentAccessorySupply, uint curveParameter) = liquidAccessoriesContract.bondingCurves(_accessoryId);
         uint burnReward = liquidAccessoriesContract.getBurnRewardForReturnedAccessories(
-            _accessoryId, 
             _amount, 
             currentAccessorySupply + _amount, 
             curveParameter);
@@ -230,5 +228,49 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
         require(revenueRecipientBalanceAfter == revenueRecipientBalanceBefore + (rewards/2), "Incorrect rewards amount");
         require(rewardsContractBalanceAfter == rewardsContractBalanceBefore + (rewards - rewards/2), "Incorrect rewards amount");
 
+    }
+
+    function test_LA_BAS_2 
+        // () public
+        (uint _accessoryId, uint _amount, address _recipient) public
+    {
+        // Conditions:
+        // 1. there are some legitimate reward recipients
+        // 2. the requested _minRewardOut > actual rewards paid
+
+       // (uint _accessoryId, uint _amount, address _recipient) = (random(1234), 1, address(0x1234));
+
+        vm.assume(_accessoryId != 0);
+        vm.assume(_amount > 0);
+        vm.assume(_amount < 10);
+        vm.assume(_recipient != address(0));
+
+        createBuyAndEquipAccessory(0, _accessoryId, 0.001 ether);
+        for (uint i = 1; i < NUM_MILADYS_MINTED; i++)
+        {
+            buyAccessoryAndEquip(i, _accessoryId);
+        }
+
+        uint mintCost = liquidAccessoriesContract.getMintCostForNewAccessories(_accessoryId, _amount);
+        (uint currentAccessorySupply, uint curveParameter) = liquidAccessoriesContract.bondingCurves(_accessoryId);
+        uint burnReward = liquidAccessoriesContract.getBurnRewardForReturnedAccessories(
+            _amount, 
+            currentAccessorySupply + _amount, 
+            curveParameter);
+
+        vm.deal(address(this), 10**21);
+        liquidAccessoriesContract.mintAccessoryAndDisburseRevenue{ value : mintCost }(
+            _accessoryId,
+            _amount,
+            _recipient);
+
+        uint[] memory accessoryIds = new uint[](1);
+        accessoryIds[0] = _accessoryId;
+        uint[] memory amounts = new uint[](1);
+        amounts[0] = _amount;
+
+        vm.prank(_recipient);
+        vm.expectRevert("Specified reward not met");
+        liquidAccessoriesContract.burnAccessories(accessoryIds, amounts, burnReward + 1, payable(address(0x1234)));
     }
 }
