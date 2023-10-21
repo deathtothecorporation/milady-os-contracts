@@ -16,7 +16,7 @@ contract MiladyOSTestBase is Test {
     TokenGatedAccount tbaAccountImpl;
     Miladys miladysContract;
     MiladyAvatarHarness avatarContract;
-    LiquidAccessories liquidAccessoriesContract;
+    LiquidAccessoriesHarness liquidAccessoriesContract;
     SoulboundAccessoriesHarness soulboundAccessoriesContract;
     RewardsHarness rewardsContract;
     TestUtils testUtils;
@@ -145,6 +145,16 @@ contract MiladyOSTestBase is Test {
         accessoryIds[0] = _accessoryId;
         vm.prank(avatarContract.ownerOf(_miladyId));
         avatarContract.updateEquipSlotsByAccessoryIds(_miladyId, accessoryIds);
+    }
+
+    function clamp(uint x, uint min, uint max) internal pure returns(uint) {
+        if (x < min) {
+            return min;
+        } else if (x > max) {
+            return max;
+        } else {
+            return x;
+        }
     }
 
     function random(uint seed) internal pure returns(uint)
