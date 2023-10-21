@@ -193,7 +193,7 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
         createBuyAndEquipAccessory(0, _accessoryId, 0.001 ether);
         for (uint i = 1; i < NUM_MILADYS_MINTED; i++)
         {
-            buyAccessoryAndEquip(i, _accessoryId);
+            buyAndEquipAccessory(i, _accessoryId);
         }
 
         (uint accessorySupplyBefore,) = liquidAccessoriesContract.bondingCurves(_accessoryId);
@@ -227,7 +227,6 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
 
         require(revenueRecipientBalanceAfter == revenueRecipientBalanceBefore + (rewards/2), "Incorrect rewards amount");
         require(rewardsContractBalanceAfter == rewardsContractBalanceBefore + (rewards - rewards/2), "Incorrect rewards amount");
-
     }
 
     function test_LA_BAS_2 
@@ -248,7 +247,7 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
         createBuyAndEquipAccessory(0, _accessoryId, 0.001 ether);
         for (uint i = 1; i < NUM_MILADYS_MINTED; i++)
         {
-            buyAccessoryAndEquip(i, _accessoryId);
+            buyAndEquipAccessory(i, _accessoryId);
         }
 
         uint mintCost = liquidAccessoriesContract.getMintCostForNewAccessories(_accessoryId, _amount);
@@ -272,5 +271,27 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
         vm.prank(_recipient);
         vm.expectRevert("Specified reward not met");
         liquidAccessoriesContract.burnAccessories(accessoryIds, amounts, burnReward + 1, payable(address(0x1234)));
+    }
+
+    function test_LA_BA_1
+        // () 
+        (uint _miladyId, uint _accessoryId, uint _amount) 
+        public
+    {
+        // Conditions : 
+        // 1. the caller holds fewer of the accessoryId than they are trying to burn
+
+        vm.assume(_miladyId < NUM_MILADYS_MINTED);
+        vm.assume(_accessoryId != 0);
+        vm.assume(_amount > 0);
+        vm.assume(_amount < 10);
+
+        for (uint i=0; i < _amount - 1; i++) {
+            createAndBuyAccessory(_miladyId, _accessoryId, 0.001 ether);
+        }
+
+        vm.prank(address(miladysContract.ownerOf(_miladyId)));
+        vm.expectRevert("Incorrect accessory balance");
+        liquidAccessoriesContract.burnAccessory(_accessoryId, _amount + 1);
     }
 }

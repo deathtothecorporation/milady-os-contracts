@@ -113,6 +113,12 @@ contract LiquidAccessoriesHarness is LiquidAccessories {
         }
         return totalReward;
     }
+
+    function burnAccessory(uint _accessoryId, uint _amount)
+        external
+    {
+        _burnAccessory(_accessoryId, _amount);
+    }
 }
 
 contract HarnessDeployer {
