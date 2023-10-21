@@ -170,6 +170,7 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
         require(revenueRecipientBalanceAfter == revenueRecipientBalanceBefore + rewards, "Incorrect rewards amount");
     }
 
+    // TODO : @Schalk, this is slow at high fuzz rates!
     function test_LA_MADR_4
         // () public { 
         (uint _accessoryId, uint _amount, address _recipient) public {
