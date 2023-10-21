@@ -147,6 +147,16 @@ contract MiladyOSTestBase is Test {
         avatarContract.updateEquipSlotsByAccessoryIds(_miladyId, accessoryIds);
     }
 
+    function buyAccessoryAndEquip(uint _miladyId, uint _accessoryId)
+        internal
+    {
+        buyAccessory(_miladyId, _accessoryId);
+        uint[] memory accessoryIds = new uint[](1);
+        accessoryIds[0] = _accessoryId;
+        vm.prank(avatarContract.ownerOf(_miladyId));
+        avatarContract.updateEquipSlotsByAccessoryIds(_miladyId, accessoryIds);
+    }
+
     function clamp(uint x, uint min, uint max) internal pure returns(uint) {
         if (x < min) {
             return min;

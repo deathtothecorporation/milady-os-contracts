@@ -169,4 +169,65 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
 
         require(revenueRecipientBalanceAfter == revenueRecipientBalanceBefore + rewards, "Incorrect rewards amount");
     }
+
+    function test_LA_MADR_4
+        // () public { 
+        (uint _accessoryId, uint _amount, address _recipient) public {
+        // Conditions:
+        // 1. the _amount being minted is > 0
+        // 2. there are SOME eligible eligible reward recipeints
+        // 3. there is a bonding curve parameter set for the accessory
+
+        // (uint _accessoryId, 
+        // uint _amount, 
+        // address _recipient) =
+        //     (0, 
+        //     2, 
+        //     0x0000000000000000000000000000000000000001);
+
+        vm.assume(_amount > 0);
+        vm.assume(_amount < 10);
+        vm.assume(_recipient != address(0));
+        vm.assume(_accessoryId != 0);
+
+        createBuyAndEquipAccessory(0, _accessoryId, 0.001 ether);
+        for (uint i = 1; i < NUM_MILADYS_MINTED; i++)
+        {
+            buyAccessoryAndEquip(i, _accessoryId);
+        }
+
+        (uint accessorySupplyBefore,) = liquidAccessoriesContract.bondingCurves(_accessoryId);
+        uint revenueRecipientBalanceBefore = address(liquidAccessoriesContract._revenueRecipient()).balance;
+        uint rewardsContractBalanceBefore = address(rewardsContract).balance;
+
+        uint mintCost = liquidAccessoriesContract.getMintCostForNewAccessories(_accessoryId, _amount);
+        (uint currentAccessorySupply, uint curveParameter) = liquidAccessoriesContract.bondingCurves(_accessoryId);
+        uint burnReward = liquidAccessoriesContract.getBurnRewardForReturnedAccessories(
+            _accessoryId, 
+            _amount, 
+            currentAccessorySupply + _amount, 
+            curveParameter);
+
+        uint rewards = mintCost - burnReward;
+
+        vm.deal(address(this), 10**21);
+        liquidAccessoriesContract.mintAccessoryAndDisburseRevenue{ value : mintCost }(
+            _accessoryId,
+            _amount,
+            _recipient);
+        
+        uint revenueRecipientBalanceAfter = address(liquidAccessoriesContract._revenueRecipient()).balance;
+        uint rewardsContractBalanceAfter = address(rewardsContract).balance;
+
+        console.log("revenueRecipientBalanceBefore: %d", revenueRecipientBalanceBefore);
+        console.log("rewards: %d", rewards);
+        console.log("mintCost: %d", mintCost);
+        console.log("burnReward: %d", burnReward);
+        console.log("revenueRecipientBalanceAfter: %d", revenueRecipientBalanceAfter);
+        console.log("calculated balance: %d", revenueRecipientBalanceBefore + rewards);
+
+        require(revenueRecipientBalanceAfter == revenueRecipientBalanceBefore + (rewards/2), "Incorrect rewards amount");
+        require(rewardsContractBalanceAfter == rewardsContractBalanceBefore + (rewards - rewards/2), "Incorrect rewards amount");
+
+    }
 }
