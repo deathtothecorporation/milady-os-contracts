@@ -69,10 +69,74 @@ contract RewardsHarness is Rewards {
     }
 }
 
+contract LiquidAccessoriesHarness is LiquidAccessories {
+    constructor(
+            TBARegistry _tbaRegistry, 
+            Rewards _rewardsContract, 
+            address payable _revenueRecipient, 
+            string memory uri_)
+        LiquidAccessories(
+            _tbaRegistry, 
+            _rewardsContract, 
+            _revenueRecipient, 
+            uri_) {}
+
+    function mintAccessoryAndDisburseRevenue(
+            uint _accessoryId, 
+            uint _amount, 
+            address _recipient)
+        external
+        payable
+    {
+        _mintAccessoryAndDisburseRevenue(_accessoryId, _amount, _recipient);
+    }
+
+    function _revenueRecipient()
+        external
+        view
+        returns (address payable)
+    {
+        return revenueRecipient;
+    }
+
+    function getBurnRewardForReturnedAccessories(uint _amount, uint _currentSupplyOfAccessory, uint _curveParameter)
+        external
+        pure
+        returns (uint)
+    {
+        require(_curveParameter != 0, "No bonding curve");
+        require(_amount <= _currentSupplyOfAccessory, "Insufficient accessory supply");
+
+        uint totalReward;
+        for (uint i=0; i<_amount; i++) {
+            totalReward += getBurnRewardForItemNumber((_currentSupplyOfAccessory - 1) - i, _curveParameter);
+        }
+        return totalReward;
+    }
+
+    function burnAccessory(uint _accessoryId, uint _amount)
+        external
+    {
+        _burnAccessory(_accessoryId, _amount);
+    }
+
+    function beforeTokenTransfer(
+            address _operator, 
+            address _from, 
+            address _to, 
+            uint256[] memory _ids, 
+            uint256[] memory _amounts, 
+            bytes memory _data)
+        public    
+    {
+        _beforeTokenTransfer(_operator, _from, _to, _ids, _amounts, _data);
+    }
+}
+
 contract HarnessDeployer {
     MiladyAvatarHarness public avatarContract;
     RewardsHarness public rewardsContract;
-    LiquidAccessories public liquidAccessoriesContract;
+    LiquidAccessoriesHarness public liquidAccessoriesContract;
     SoulboundAccessoriesHarness public soulboundAccessoriesContract;  // Changed the contract type here
 
     event Deployed(
@@ -102,7 +166,7 @@ contract HarnessDeployer {
 
         rewardsContract = new RewardsHarness(address(avatarContract), miladysContract);
 
-        liquidAccessoriesContract = new LiquidAccessories(
+        liquidAccessoriesContract = new LiquidAccessoriesHarness(
             tbaRegistry,
             rewardsContract,
             revenueRecipient,

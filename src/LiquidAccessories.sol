@@ -5,7 +5,7 @@ pragma solidity 0.8.18;
 import "openzeppelin/token/ERC1155/ERC1155.sol";
 import "openzeppelin/access/Ownable.sol";
 import "openzeppelin/security/ReentrancyGuard.sol";
-import "./TGA/TBARegistry.sol";
+import "TokenGatedAccount/TBARegistry.sol";
 import "./MiladyAvatar.sol";
 import "./Rewards.sol";
 
@@ -145,7 +145,7 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
         uint totalBurnReward;
         for (uint i=0; i<_accessoryIds.length; i++) {
             totalBurnReward += getBurnRewardForReturnedAccessories(_accessoryIds[i], _amounts[i]);
-            _burnAccessory(_accessoryIds[i], _amounts[i], _fundsRecipient);
+            _burnAccessory(_accessoryIds[i], _amounts[i]);
         }
 
         require(totalBurnReward >= _minRewardOut, "Specified reward not met");
@@ -153,10 +153,9 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
         require(success, "Transfer failed");
     }
 
-    function _burnAccessory(uint _accessoryId, uint _amount, address payable _fundsRecipient)
+    function _burnAccessory(uint _accessoryId, uint _amount)
         internal
     {
-        require(_amount > 0, "amount cannot be 0");
         require(balanceOf(msg.sender, _accessoryId) >= _amount, "Incorrect accessory balance");
 
         bondingCurves[_accessoryId].accessorySupply -= _amount;
