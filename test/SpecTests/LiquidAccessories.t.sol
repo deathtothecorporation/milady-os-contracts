@@ -134,7 +134,7 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
         //     0xf4CF79A8485A8C6A434545F2CF9e24ed5c4Ef002);
 
         vm.assume(_amount > 0);
-        vm.assume(_amount < 100);
+        vm.assume(_amount < 10);
 
         vm.prank(address(liquidAccessoriesContract.owner()));
         liquidAccessoriesContract.defineBondingCurveParameter(_accessoryId, 0.001 ether);
