@@ -58,6 +58,13 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
         bondingCurves[_accessoryId].curveParameter = _parameter;
     }
 
+    function changeRevenueRecipient(address payable _revenueRecipient)
+        external
+        onlyOwner()
+    {
+        revenueRecipient = _revenueRecipient;
+    }
+
     function mintAccessories(
             uint[] calldata _accessoryIds, 
             uint[] calldata _amounts, 
