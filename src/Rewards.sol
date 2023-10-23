@@ -7,8 +7,8 @@ import "openzeppelin/security/ReentrancyGuard.sol";
 import "TokenGatedAccount/TBARegistry.sol";
 
 contract Rewards is ReentrancyGuard {
-    IERC721 public miladysContract;
-    address public avatarContractAddress;
+    IERC721 public immutable miladysContract;
+    address public immutable avatarContractAddress;
 
     constructor(address _avatarContractAddress, IERC721 _miladysContract) 
         ReentrancyGuard()
@@ -17,10 +17,12 @@ contract Rewards is ReentrancyGuard {
         miladysContract = _miladysContract;
     }
 
+    // indexed by accessoryId
     mapping (uint => RewardInfoForAccessory) public rewardInfoForAccessory;
     struct RewardInfoForAccessory {
         uint rewardsPerWearerAccrued;
         uint totalWearers;
+        // indexed by miladyId
         mapping (uint => MiladyRewardInfo) miladyRewardInfo;
     }
     struct MiladyRewardInfo {
@@ -89,8 +91,10 @@ contract Rewards is ReentrancyGuard {
     {
         require(msg.sender == miladysContract.ownerOf(_miladyId), "Not Milady owner");
 
-        for (uint i=0; i<_accessoriesToClaimFor.length; i++) {
+        for (uint i=0; i<_accessoriesToClaimFor.length;) {
             _claimRewardsForMiladyForAccessory(_miladyId, _accessoriesToClaimFor[i], _recipient);
+
+            unchecked { i++; }
         }
     }
 
@@ -132,8 +136,10 @@ contract Rewards is ReentrancyGuard {
         view
         returns (uint amountClaimable)
     {
-        for (uint i=0; i<_accessoryIds.length; i++) {
+        for (uint i=0; i<_accessoryIds.length;) {
             amountClaimable += getAmountClaimableForMiladyAndAccessory(_miladyId, _accessoryIds[i]);
+
+            unchecked { i++; }
         }
     }
 }

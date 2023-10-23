@@ -10,13 +10,13 @@ import "./MiladyAvatar.sol";
 import "./Rewards.sol";
 
 contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
-    TBARegistry public tbaRegistry;
+    TBARegistry public immutable tbaRegistry;
     MiladyAvatar public avatarContract;
 
-    Rewards rewardsContract;
+    Rewards immutable rewardsContract;
     address payable revenueRecipient;
 
-    address initialDeployer; 
+    address immutable initialDeployer; 
 
     constructor(
             TBARegistry _tbaRegistry, 
@@ -42,6 +42,7 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
         avatarContract = _avatarContract;
     }
     
+    // indexed by accessoryId
     mapping(uint => BondingCurveInfo) public bondingCurves;
     struct BondingCurveInfo {
         uint accessorySupply;
@@ -79,13 +80,15 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
         require(_accessoryIds.length == _amounts.length, "Array lengths differ");
         
         uint totalMintCost;
-        for (uint i=0; i<_accessoryIds.length; i++) {
+        for (uint i=0; i<_accessoryIds.length;) {
             totalMintCost += getMintCostForNewAccessories(_accessoryIds[i], _amounts[i]);
+            unchecked { i++; }
         }
         require(msg.value >= totalMintCost, "Insufficient Ether included");
 
-        for (uint i=0; i<_accessoryIds.length; i++) {
+        for (uint i=0; i<_accessoryIds.length;) {
             _mintAccessoryAndDisburseRevenue(_accessoryIds[i], _amounts[i], _recipient);
+            unchecked { i++; }
         }
 
         if (msg.value > totalMintCost) {
@@ -143,9 +146,11 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
         require(_accessoryIds.length == _amounts.length, "Array lengths differ");
 
         uint totalBurnReward;
-        for (uint i=0; i<_accessoryIds.length; i++) {
+        for (uint i=0; i<_accessoryIds.length;) {
             totalBurnReward += getBurnRewardForReturnedAccessories(_accessoryIds[i], _amounts[i]);
             _burnAccessory(_accessoryIds[i], _amounts[i]);
+
+            unchecked { i++; }
         }
 
         require(totalBurnReward >= _minRewardOut, "Specified reward not met");
@@ -172,8 +177,10 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
         require(curveParameter != 0, "Item has no bonding curve");
 
         uint totalCost;
-        for (uint i=0; i<_amount; i++) {
+        for (uint i=0; i<_amount;) {
             totalCost += getMintCostForItemNumber(currentSupplyOfAccessory + i, curveParameter);
+
+            unchecked { i++; }
         }
         return totalCost;
     }
@@ -189,8 +196,10 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
         require(_amount <= currentSupplyOfAccessory, "Insufficient accessory supply");
 
         uint totalReward;
-        for (uint i=0; i<_amount; i++) {
+        for (uint i=0; i<_amount;) {
             totalReward += getBurnRewardForItemNumber((currentSupplyOfAccessory - 1) - i, curveParameter);
+            
+            unchecked { i++; }
         }
         return totalReward;
     }
@@ -230,7 +239,7 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
         
         // tbaTokenContract == 0x0 if not a TBA
         if (tbaTokenContract == address(avatarContract)) {
-            for (uint i=0; i<_ids.length; i++) {
+            for (uint i=0; i<_ids.length;) {
                 
                 // next 3 lines for clarity. possible todo: remove for gas savings
                 uint accessoryId = _ids[i];
@@ -242,6 +251,8 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
                     //unequip if it's equipped
                     avatarContract.preTransferUnequipById(miladyId, accessoryId);
                 }
+
+                unchecked { i++; }
             }
         }
     }
