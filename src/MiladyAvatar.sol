@@ -10,18 +10,18 @@ import "./LiquidAccessories.sol";
 import "./SoulboundAccessories.sol";
 
 contract MiladyAvatar is IERC721 {
-    IERC721 public miladysContract;
+    IERC721 public immutable miladysContract;
     LiquidAccessories public liquidAccessoriesContract;
     SoulboundAccessories public soulboundAccessoriesContract;
     Rewards public rewardsContract;
     
     // state needed for TBA address calculation
-    TBARegistry public tbaRegistry;
-    IERC6551Account public tbaAccountImpl;
+    TBARegistry public immutable tbaRegistry;
+    IERC6551Account public immutable tbaAccountImpl;
 
     string public baseURI;
 
-    address initiaDeployer;
+    address immutable initialDeployer;
 
     constructor(
             IERC721 _miladysContract,
@@ -29,7 +29,7 @@ contract MiladyAvatar is IERC721 {
             TokenGatedAccount _tbaAccountImpl,
             string memory _baseURI
     ) {
-        initiaDeployer = msg.sender;
+        initialDeployer = msg.sender;
         miladysContract = _miladysContract;
         tbaRegistry = _tbaRegistry;
         tbaAccountImpl = _tbaAccountImpl;
@@ -42,7 +42,7 @@ contract MiladyAvatar is IERC721 {
             Rewards _rewardsContract)
         external
     {
-        require(msg.sender == initiaDeployer, "Caller not initial deployer");
+        require(msg.sender == initialDeployer, "Caller not initial deployer");
         require(address(liquidAccessoriesContract) == address(0), "Contracts already set");
         
         liquidAccessoriesContract = _liquidAccessoriesContract;
@@ -50,7 +50,7 @@ contract MiladyAvatar is IERC721 {
         rewardsContract = _rewardsContract;
     }
 
-    // each avatar has equip slots for each accessory type
+    // indexed by miladyId -> accessoryType
     mapping (uint => mapping (uint128 => uint)) public equipSlots;
     
     // main entry point for a user to change their Avatar's appearance / equip status
@@ -60,10 +60,12 @@ contract MiladyAvatar is IERC721 {
     {
         require(msg.sender == ownerOf(_miladyId), "Not Milady TBA");
 
-        for (uint i=0; i<_accessoryIds.length; i++) {
+        for (uint i=0; i<_accessoryIds.length;) {
             (uint128 accType, uint128 accVariant) = accessoryIdToTypeAndVariantIds(_accessoryIds[i]);
 
             _updateEquipSlotByTypeAndVariant(_miladyId, accType, accVariant);
+
+            unchecked { i++; }
         }
     }
 
@@ -90,7 +92,7 @@ contract MiladyAvatar is IERC721 {
         require(totalAccessoryBalanceOfAvatar(_miladyId, _accessoryId) > 0, "Not accessory owner");
 
         (uint128 accType, uint accVariant) = accessoryIdToTypeAndVariantIds(_accessoryId);
-        assert(accVariant != 0); // take out for gas savings?
+        require(accVariant != 0);
 
         _unequipAccessoryByTypeIfEquipped(_miladyId, accType);
 
@@ -124,8 +126,10 @@ contract MiladyAvatar is IERC721 {
     {
         require(msg.sender == address(soulboundAccessoriesContract), "Not soulboundAccessories");
 
-        for (uint i=0; i<_accessoryIds.length; i++) {
+        for (uint i=0; i<_accessoryIds.length;) {
             _equipAccessoryIfOwned(_miladyId, _accessoryIds[i]);
+
+            unchecked { i++; }
         }
     }
 
@@ -136,8 +140,10 @@ contract MiladyAvatar is IERC721 {
     {
         require(msg.sender == address(soulboundAccessoriesContract), "Not soulboundAccessories");
 
-        for (uint i=0; i<_accessoryIds.length; i++) {
+        for (uint i=0; i<_accessoryIds.length;) {
             _equipAccessoryIfOwned(_miladyId, _accessoryIds[i]);
+
+            unchecked { i++; }
         }
     }
 
@@ -277,9 +283,11 @@ contract MiladyAvatar is IERC721 {
         returns (uint[] memory accIds)
     {
         accIds = new uint[](accInfos.length);
-        for (uint i=0; i<accInfos.length; i++)
+        for (uint i=0; i<accInfos.length;)
         {
             accIds[i] = plaintextAccessoryInfoToAccessoryId(accInfos[i]);
+
+            unchecked { i++; }
         }
     }
 
