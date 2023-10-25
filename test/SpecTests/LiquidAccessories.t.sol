@@ -324,7 +324,7 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
             }
         }
 
-        address from = avatarContract.getAvatarTGA(_miladyId);
+        address from = avatarContract.getAvatarTBA(_miladyId);
         vm.prank(address(avatarContract));
         liquidAccessoriesContract.beforeTokenTransfer(address(0), from, address(1), ids, amounts, "");
 
