@@ -193,4 +193,9 @@ contract MiladyOSTestBase is Test {
     {
         return address(uint160(uint256(keccak256(seed))));
     }
+
+    function randomAddress(uint seed) internal pure returns(address)
+    {
+        return randomAddress(abi.encodePacked(seed));
+    }
 }
