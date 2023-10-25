@@ -297,7 +297,9 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
 
     function test_LA_BTT_2
         // ()
-        (uint _miladyId, uint _accessoryTypes, uint _seed, uint _amount) 
+            (uint _miladyId, 
+            uint _accessoryTypes, 
+            uint _amount) 
         public 
     {
         // Conditions: 
@@ -308,14 +310,13 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
         vm.assume(_amount < 10);
         vm.assume(_accessoryTypes > 0);
         vm.assume(_accessoryTypes < 10);
-        vm.assume(_seed < 2**255);
 
         uint[] memory ids = new uint[](_accessoryTypes);
         uint[] memory amounts = new uint[](_accessoryTypes);
 
         for(uint i = 0; i < _accessoryTypes; i++)
         {
-            ids[i] = random(_seed + i);
+            ids[i] = random(_miladyId * _amount * _accessoryTypes + i);
             amounts[i] = _amount;
             for(uint j = 0; j < _amount; j++)
             {

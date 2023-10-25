@@ -71,7 +71,7 @@ contract CurveTests is MiladyOSTestBase
     function getMintCostForItemNumber(uint _itemNumber, uint _curveParameter)
         public
         pure
-        returns (uint _mintCost, uint _disbursementVW, uint _disbursementMilady)
+        returns (uint _mintCost)
     {
         uint percDisbursementVW = 100;      //  10%
         uint percDisbursementMilady = 100;  //  10%
@@ -82,13 +82,14 @@ contract CurveTests is MiladyOSTestBase
             + percDisbursementCurve;        // 120%
 
         uint burnReward = getBurnRewardForItemNumber(_itemNumber, _curveParameter);
-        uint _mintCost = burnReward * percTotal / percDisbursementCurve;
+        _mintCost = burnReward * percTotal / percDisbursementCurve;
     }
 
-    function test_Check_LiquidAccessories_vs_MintCalculations(
+    function test_MintCalculations(
             uint _curveParameter,
             uint _existingItems,
-            uint _newItems)
+            uint _newItems,
+            uint _seed)
         public
     {
         // create an _existingItems number of items
@@ -97,7 +98,50 @@ contract CurveTests is MiladyOSTestBase
 
         vm.assume(_curveParameter > 0);
         vm.assume(_curveParameter < 10**18);
+        vm.assume(_existingItems < 10);
+        vm.assume(_newItems > 0);
+        vm.assume(_newItems < 100);
 
+        // init existing items
+        uint accessoryId = random(_seed);
+        createAccessory(accessoryId, _curveParameter);
+        for (uint i=0; i<_existingItems; i++) {
+            buyAccessory(0, accessoryId);
+        }
 
+        // calculate the cost of minting _newItems
+        uint calculatedMintCost = getMintCostForNewAccessories(_existingItems, _newItems, _curveParameter);
+        uint actualMintCost = liquidAccessoriesContract.getMintCostForNewAccessories(accessoryId, _newItems);
+        require(calculatedMintCost == actualMintCost, "Mint cost mismatch");
+    }
+
+    function test_BurnCalculations(
+            uint _curveParameter,
+            uint _existingItems,
+            uint _returnedItems,
+            uint _seed)
+        public
+    {
+        // create an _existingItems number of items
+        // burn _returnedItems number of items
+        // check that the reward for burning _returnedItems is the same as the reward for burning _existingItems - _returnedItems
+
+        vm.assume(_curveParameter > 0);
+        vm.assume(_curveParameter < 10**18);
+        vm.assume(_existingItems < 10);
+        vm.assume(_returnedItems > 0);
+        vm.assume(_returnedItems < 100);
+
+        // init existing items
+        uint accessoryId = random(_seed);
+        createAccessory(accessoryId, _curveParameter);
+        for (uint i=0; i<_existingItems; i++) {
+            buyAccessory(0, accessoryId);
+        }
+
+        // calculate the reward for burning _returnedItems
+        uint calculatedBurnReward = getBurnRewardForReturnedAccessories(_existingItems, _returnedItems, _curveParameter);
+        uint actualBurnReward = liquidAccessoriesContract.getBurnRewardForReturnedAccessories(accessoryId, _returnedItems);
+        require(calculatedBurnReward == actualBurnReward, "Burn reward mismatch");
     }
 }

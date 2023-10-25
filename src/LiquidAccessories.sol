@@ -108,7 +108,7 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
         _mintAccessory(_accessoryId, _amount, _recipient);
 
         uint burnReward = getBurnRewardForReturnedAccessories(_accessoryId, _amount);
-        uint feeRevenue = mintCost - burnReward;
+        uint freeRevenue = mintCost - burnReward;
 
         // If no one is currently equipping the accessory, the rewards contract will revert.
         // We test for this and just send everything to revenueRecipient if that's the case.
@@ -118,12 +118,12 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
             require(success, "Transfer failed");
         }
         else {
-            uint halfFeeRevenue = feeRevenue / 2;
+            uint halfFreeRevenue = freeRevenue / 2;
 
-            rewardsContract.addRewardsForAccessory{value:halfFeeRevenue}(_accessoryId);
+            rewardsContract.addRewardsForAccessory{value:halfFreeRevenue}(_accessoryId);
 
             // using `totalRevenue-halfFreeRevenue` instead of simply `halfFreeRevenue` to handle rounding errors from div by 2
-            (bool success,) = revenueRecipient.call{ value : feeRevenue - halfFeeRevenue }("");
+            (bool success,) = revenueRecipient.call{ value : freeRevenue - halfFreeRevenue }("");
             require(success, "Transfer failed");
         }
     }
@@ -170,30 +170,38 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
     function getMintCostForNewAccessories(uint _accessoryId, uint _amount)
         public
         view
-        returns (uint _totalCost)
+        returns (uint)
     {
         uint currentSupplyOfAccessory = bondingCurves[_accessoryId].accessorySupply;
         uint curveParameter = bondingCurves[_accessoryId].curveParameter;
         require(curveParameter != 0, "Item has no bonding curve");
 
-        for (uint i=0; i<_amount; i++) {
-            _totalCost += getMintCostForItemNumber(currentSupplyOfAccessory + i, curveParameter);
+        uint totalCost;
+        for (uint i=0; i<_amount;) {
+            totalCost += getMintCostForItemNumber(currentSupplyOfAccessory + i, curveParameter);
+
+            unchecked { i++; }
         }
+        return totalCost;
     }
 
     function getBurnRewardForReturnedAccessories(uint _accessoryId, uint _amount)
         public
         view
-        returns (uint _totalReward)
+        returns (uint)
     {
         uint curveParameter = bondingCurves[_accessoryId].curveParameter;
         require(curveParameter != 0, "No bonding curve");
         uint currentSupplyOfAccessory = bondingCurves[_accessoryId].accessorySupply;
         require(_amount <= currentSupplyOfAccessory, "Insufficient accessory supply");
 
-        for (uint i=0; i<_amount; i++) {
-            _totalReward += getBurnRewardForItemNumber((currentSupplyOfAccessory - 1) - i, curveParameter);
+        uint totalReward;
+        for (uint i=0; i<_amount;) {
+            totalReward += getBurnRewardForItemNumber((currentSupplyOfAccessory - 1) - i, curveParameter);
+            
+            unchecked { i++; }
         }
+        return totalReward;
     }
 
     function getMintCostForItemNumber(uint _itemNumber, uint _curveParameter)
