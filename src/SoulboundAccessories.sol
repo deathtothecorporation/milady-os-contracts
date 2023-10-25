@@ -12,9 +12,9 @@ import "./MiladyAvatar.sol";
 contract SoulboundAccessories is ERC1155, Ownable {
     MiladyAvatar public avatarContract;
 
-    // state needed for TBA address calculation
-    IERC6551Registry public tbaRegistry;
-    IERC6551Account public tbaAccountImpl;
+    // state needed for TGA address calculation
+    IERC6551Registry public tgaRegistry;
+    IERC6551Account public tgaAccountImpl;
 
     address public miladyAuthority;
 
@@ -23,8 +23,8 @@ contract SoulboundAccessories is ERC1155, Ownable {
     address deployer;
 
     constructor(
-        IERC6551Registry _tbaRegistry,
-        IERC6551Account _tbaAccountImpl,
+        IERC6551Registry _tgaRegistry,
+        IERC6551Account _tgaAccountImpl,
         address _miladyAuthority,
         string memory uri_
     )
@@ -32,8 +32,8 @@ contract SoulboundAccessories is ERC1155, Ownable {
     {
         deployer = msg.sender;
 
-        tbaRegistry = _tbaRegistry;
-        tbaAccountImpl = _tbaAccountImpl;
+        tgaRegistry = _tgaRegistry;
+        tgaAccountImpl = _tgaAccountImpl;
 
         miladyAuthority = _miladyAuthority;
     }
@@ -68,8 +68,8 @@ contract SoulboundAccessories is ERC1155, Ownable {
         require(!avatarActivated[_miladyId], "Avatar already activated");
         avatarActivated[_miladyId] = true;
 
-        address avatarTbaAddress = tbaRegistry.account(
-            address(tbaAccountImpl),
+        address avatarTbaAddress = tgaRegistry.account(
+            address(tgaAccountImpl),
             block.chainid,
             address(avatarContract),
             _miladyId,
@@ -97,8 +97,8 @@ contract SoulboundAccessories is ERC1155, Ownable {
         require(avatarActivated[_miladyId], "Avatar not activated");
         avatarActivated[_miladyId] = false;
 
-        address avatarTbaAddress = tbaRegistry.account(
-            address(tbaAccountImpl),
+        address avatarTbaAddress = tgaRegistry.account(
+            address(tgaAccountImpl),
             block.chainid,
             address(avatarContract),
             _miladyId,

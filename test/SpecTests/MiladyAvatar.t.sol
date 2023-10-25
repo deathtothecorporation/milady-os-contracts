@@ -46,7 +46,7 @@ contract MiladyAvatarTests is MiladyOSTestBase {
             {value : 1 ether}
             (liquidAccessoryIds, 
             mintAmounts, 
-            avatarContract.getAvatarTBA(_miladyId), 
+            avatarContract.getAvatarTGA(_miladyId), 
             overpayRecipient);
         vm.prank(avatarContract.ownerOf(_miladyId));
         avatarContract.updateEquipSlotsByAccessoryIds(_miladyId, liquidAccessoryIds);
@@ -107,7 +107,7 @@ contract MiladyAvatarTests is MiladyOSTestBase {
             {value : 1 ether}
             (liquidAccessoryIds, 
             mintAmounts, 
-            avatarContract.getAvatarTBA(_miladyId), 
+            avatarContract.getAvatarTGA(_miladyId), 
             overpayRecipient);
         vm.prank(avatarContract.ownerOf(_miladyId));
         avatarContract.updateEquipSlotsByAccessoryIds(_miladyId, liquidAccessoryIds);

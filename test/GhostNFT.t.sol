@@ -8,7 +8,7 @@ import "forge-std/console.sol";
 import "./MiladyOSTestBase.sol";
 import "./Miladys.sol";
 import "../src/MiladyAvatar.sol";
-import "TokenGatedAccount/TBARegistry.sol";
+import "TokenGatedAccount/TGARegistry.sol";
 
 contract GhostNFT is MiladyOSTestBase {
 
@@ -30,10 +30,10 @@ contract GhostNFT is MiladyOSTestBase {
     }
 
     function test_balanceOfRandomAcccountIs0(address randomAccount) public {
-        // make sure this random address is not 0x0 or a TBA
+        // make sure this random address is not 0x0 or a TGA
         vm.assume(randomAccount != address(uint160(0)));
-        (address tbaTokenContractAddr, ) = testUtils.tgaReverseLookup(randomAccount);
-        vm.assume(tbaTokenContractAddr == address(0x0));
+        (address tgaTokenContractAddr, ) = testUtils.tgaReverseLookup(randomAccount);
+        vm.assume(tgaTokenContractAddr == address(0x0));
 
         require(avatarContract.balanceOf(randomAccount) == 0);
     }

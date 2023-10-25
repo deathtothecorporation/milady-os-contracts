@@ -3,7 +3,7 @@
 pragma solidity 0.8.18;
 
 import "openzeppelin/token/ERC721/IERC721.sol";
-import "TokenGatedAccount/TBARegistry.sol";
+import "TokenGatedAccount/TGARegistry.sol";
 import "TokenGatedAccount/TokenGatedAccount.sol";
 import "./MiladyAvatar.sol";
 import "./LiquidAccessories.sol";
@@ -24,8 +24,8 @@ contract Deployer {
     );
 
     constructor(
-        TBARegistry tbaRegistry,
-        TokenGatedAccount tbaAccountImpl,
+        TGARegistry tgaRegistry,
+        TokenGatedAccount tgaAccountImpl,
         IERC721 miladysContract,
         address miladyAuthorityAddress,
         address liquidAccessoriesOwner,
@@ -38,23 +38,23 @@ contract Deployer {
     {
         avatarContract = new MiladyAvatar(
             miladysContract,
-            tbaRegistry,
-            tbaAccountImpl,
+            tgaRegistry,
+            tgaAccountImpl,
             avatarBaseURI
         );
 
         rewardsContract = new Rewards(address(avatarContract), miladysContract);
 
         liquidAccessoriesContract = new LiquidAccessories(
-            tbaRegistry,
+            tgaRegistry,
             rewardsContract,
             revenueRecipient,
             liquidAccessoriesURI
         );
 
         soulboundAccessoriesContract = new SoulboundAccessories(
-            tbaRegistry,
-            tbaAccountImpl,
+            tgaRegistry,
+            tgaAccountImpl,
             miladyAuthorityAddress,
             soulboundAccessoriesURI
         );
