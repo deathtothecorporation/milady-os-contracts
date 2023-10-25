@@ -12,14 +12,9 @@ import "./Harnesses.t.sol";
 
 
 contract MiladyOSTestBase is Test {
-<<<<<<< HEAD
-    HarnessDeployer harnessDeployerContract;
-    TBARegistry tbaRegistry;
-    TokenGatedAccount tbaAccountImpl;
-=======
+    HarnessDeployer harnessDeployer;
     TGARegistry tgaRegistry;
     TokenGatedAccount tgaAccountImpl;
->>>>>>> master
     Miladys miladysContract;
     MiladyAvatarHarness avatarContract;
     LiquidAccessoriesHarness liquidAccessoriesContract;
@@ -79,15 +74,9 @@ contract MiladyOSTestBase is Test {
             stealMilady(i, address(this));
         }
         
-<<<<<<< HEAD
-        harnessDeployerContract = new HarnessDeployer(
-            tbaRegistry,
-            tbaAccountImpl,
-=======
-        HarnessDeployer d = new HarnessDeployer(
+        HarnessDeployer harnessDeployer = new HarnessDeployer(
             tgaRegistry,
             tgaAccountImpl,
->>>>>>> master
             miladysContract,
             miladyAuthorityAddress,
             PROJECT_REVENUE_RECIPIENT,
@@ -96,10 +85,10 @@ contract MiladyOSTestBase is Test {
             ""
         );
 
-        avatarContract = harnessDeployerContract.avatarContract();
-        liquidAccessoriesContract = harnessDeployerContract.liquidAccessoriesContract();
-        soulboundAccessoriesContract = harnessDeployerContract.soulboundAccessoriesContract();
-        rewardsContract = harnessDeployerContract.rewardsContract();
+        avatarContract = harnessDeployer.avatarContract();
+        liquidAccessoriesContract = harnessDeployer.liquidAccessoriesContract();
+        soulboundAccessoriesContract = harnessDeployer.soulboundAccessoriesContract();
+        rewardsContract = harnessDeployer.rewardsContract();
 
         for (uint i=0; i<numMiladysToMint; i++) {
             tgaRegistry.createAccount(
