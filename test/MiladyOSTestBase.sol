@@ -16,9 +16,9 @@ contract MiladyOSTestBase is Test {
     TokenGatedAccount tgaAccountImpl;
     Miladys miladysContract;
     MiladyAvatarHarness avatarContract;
-    LiquidAccessories liquidAccessoriesContract;
+    LiquidAccessoriesHarness liquidAccessoriesContract;
     SoulboundAccessoriesHarness soulboundAccessoriesContract;
-    Rewards rewardsContract;
+    RewardsHarness rewardsContract;
     TestUtils testUtils;
     
     function setUp() public {
@@ -110,7 +110,15 @@ contract MiladyOSTestBase is Test {
         }
     }
 
-
+    function createAccessory(uint _accessoryId, uint _bondingCurveParameter)
+        internal
+    {
+        (uint bondingCurveParameter,) = liquidAccessoriesContract.bondingCurves(_accessoryId);
+        if (bondingCurveParameter == 0) {
+            vm.prank(liquidAccessoriesContract.owner());
+            liquidAccessoriesContract.defineBondingCurveParameter(_accessoryId, _bondingCurveParameter);
+        }
+    }
 
     function buyAccessory(uint _miladyId, uint _accessoryId) 
         internal 
@@ -130,16 +138,58 @@ contract MiladyOSTestBase is Test {
             overpayRecipient);
     }
 
+    function equipAccessory(uint _miladyId, uint _accessoryId)
+        internal
+    {
+        uint[] memory accessoryIds = new uint[](1);
+        accessoryIds[0] = _accessoryId;
+        vm.prank(avatarContract.ownerOf(_miladyId));
+        avatarContract.updateEquipSlotsByAccessoryIds(_miladyId, accessoryIds);
+    }
+
     function createAndBuyAccessory(uint _miladyId, uint _accessoryId, uint _bondingCurveParameter)
         internal
     {
-        vm.prank(liquidAccessoriesContract.owner());
-        liquidAccessoriesContract.defineBondingCurveParameter(_accessoryId, _bondingCurveParameter);
+        createAccessory(_accessoryId, _bondingCurveParameter);
         buyAccessory(_miladyId, _accessoryId);
+    }
+
+    function createBuyAndEquipAccessory(uint _miladyId, uint _accessoryId, uint _bondingCurveParameter)
+        internal
+    {
+        createAndBuyAccessory(_miladyId, _accessoryId, _bondingCurveParameter);
+        equipAccessory(_miladyId, _accessoryId);
+    }
+
+    function buyAndEquipAccessory(uint _miladyId, uint _accessoryId)
+        internal
+    {
+        buyAccessory(_miladyId, _accessoryId);
+        equipAccessory(_miladyId, _accessoryId);
+    }
+
+    function clamp(uint x, uint min, uint max) internal pure returns(uint) {
+        if (x < min) {
+            return min;
+        } else if (x > max) {
+            return max;
+        } else {
+            return x;
+        }
+    }
+
+    function random(uint seed) internal pure returns(uint)
+    {
+        return uint256(keccak256(abi.encodePacked(seed)));
     }
 
     function random(bytes memory seed) internal pure returns(uint)
     {
         return uint256(keccak256(seed));
+    }
+
+    function randomAddress(bytes memory seed) internal pure returns(address)
+    {
+        return address(uint160(uint256(keccak256(seed))));
     }
 }

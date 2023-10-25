@@ -4,20 +4,25 @@ pragma solidity 0.8.18;
 
 import "openzeppelin/token/ERC721/IERC721.sol";
 import "TokenGatedAccount/TGARegistry.sol";
+import "openzeppelin/security/ReentrancyGuard.sol";
 
-contract Rewards {
-    IERC721 public miladysContract;
-    address public avatarContractAddress;
+contract Rewards is ReentrancyGuard {
+    IERC721 public immutable miladysContract;
+    address public immutable avatarContractAddress;
 
-    constructor(address _avatarContractAddress, IERC721 _miladysContract) {
+    constructor(address _avatarContractAddress, IERC721 _miladysContract) 
+        ReentrancyGuard()
+    {
         avatarContractAddress = _avatarContractAddress;
         miladysContract = _miladysContract;
     }
 
+    // indexed by accessoryId
     mapping (uint => RewardInfoForAccessory) public rewardInfoForAccessory;
     struct RewardInfoForAccessory {
         uint rewardsPerWearerAccrued;
         uint totalWearers;
+        // indexed by miladyId
         mapping (uint => MiladyRewardInfo) miladyRewardInfo;
     }
     struct MiladyRewardInfo {
@@ -64,6 +69,7 @@ contract Rewards {
 
     function deregisterMiladyForRewardsForAccessoryAndClaim(uint _miladyId, uint _accessoryId, address payable _recipient)
         external
+        nonReentrant
     {
         require(msg.sender == avatarContractAddress, "Not avatarContractAddress");
 
@@ -81,11 +87,14 @@ contract Rewards {
 
     function claimRewardsForMilady(uint _miladyId, uint[] calldata _accessoriesToClaimFor, address payable _recipient)
         external
+        nonReentrant
     {
         require(msg.sender == miladysContract.ownerOf(_miladyId), "Not Milady owner");
 
-        for (uint i=0; i<_accessoriesToClaimFor.length; i++) {
+        for (uint i=0; i<_accessoriesToClaimFor.length;) {
             _claimRewardsForMiladyForAccessory(_miladyId, _accessoriesToClaimFor[i], _recipient);
+
+            unchecked { i++; }
         }
     }
 
@@ -93,6 +102,8 @@ contract Rewards {
 
     function _claimRewardsForMiladyForAccessory(uint _miladyId, uint _accessoryId, address payable _recipient)
         internal
+        // all calls to this must be nonreentrant
+        // did not make this nonreentrant to prevent gas churn
     {
         RewardInfoForAccessory storage rewardInfo = rewardInfoForAccessory[_accessoryId];
 
@@ -100,7 +111,8 @@ contract Rewards {
 
         rewardInfo.miladyRewardInfo[_miladyId].amountClaimed = rewardInfo.rewardsPerWearerAccrued;
 
-        _recipient.transfer(amountToSend);
+        (bool success,) = _recipient.call{ value: amountToSend }("");
+        require(success, "Transfer failed");
 
         emit RewardsClaimed(_miladyId, _accessoryId, _recipient);
     }
@@ -124,8 +136,10 @@ contract Rewards {
         view
         returns (uint amountClaimable)
     {
-        for (uint i=0; i<_accessoryIds.length; i++) {
+        for (uint i=0; i<_accessoryIds.length;) {
             amountClaimable += getAmountClaimableForMiladyAndAccessory(_miladyId, _accessoryIds[i]);
+
+            unchecked { i++; }
         }
     }
 }

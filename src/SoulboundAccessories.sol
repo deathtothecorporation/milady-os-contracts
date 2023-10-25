@@ -13,14 +13,15 @@ contract SoulboundAccessories is ERC1155, Ownable {
     MiladyAvatar public avatarContract;
 
     // state needed for TGA address calculation
-    IERC6551Registry public tgaRegistry;
-    IERC6551Account public tgaAccountImpl;
+    IERC6551Registry public immutable tgaRegistry;
+    IERC6551Account public immutable tgaAccountImpl;
 
     address public miladyAuthority;
 
+    // indexed by miladyId
     mapping(uint => bool) public avatarActivated;
 
-    address deployer;
+    address immutable initialDeployer;
 
     constructor(
         IERC6551Registry _tgaRegistry,
@@ -30,7 +31,7 @@ contract SoulboundAccessories is ERC1155, Ownable {
     )
         ERC1155(uri_)
     {
-        deployer = msg.sender;
+        initialDeployer = msg.sender;
 
         tgaRegistry = _tgaRegistry;
         tgaAccountImpl = _tgaAccountImpl;
@@ -41,7 +42,7 @@ contract SoulboundAccessories is ERC1155, Ownable {
     function setAvatarContract(MiladyAvatar _avatarContract)
         external
     {
-        require(msg.sender == deployer, "Not initial deployer");
+        require(msg.sender == initialDeployer, "Not initial deployer");
         require(address(avatarContract) == address(0), "Avatar already set");
 
         avatarContract = _avatarContract;
@@ -77,8 +78,10 @@ contract SoulboundAccessories is ERC1155, Ownable {
         );
 
         uint[] memory listOf1s = new uint[](_accessories.length);
-        for (uint i=0; i<listOf1s.length; i++) {
+        for (uint i=0; i<listOf1s.length;) {
             listOf1s[i] = 1;
+
+            unchecked { i++; }
         }
 
         _mintBatch(avatarTbaAddress, _accessories, listOf1s, "");
@@ -106,8 +109,10 @@ contract SoulboundAccessories is ERC1155, Ownable {
         );
 
         uint[] memory listOf1s = new uint[](_accessories.length);
-        for (uint i=0; i<listOf1s.length; i++) {
+        for (uint i=0; i<listOf1s.length;) {
             listOf1s[i] = 1;
+
+            unchecked { i++; }
         }
 
         _burnBatch(avatarTbaAddress, _accessories, listOf1s);

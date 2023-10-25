@@ -4,18 +4,19 @@ pragma solidity 0.8.18;
 
 import "openzeppelin/token/ERC1155/ERC1155.sol";
 import "openzeppelin/access/Ownable.sol";
+import "openzeppelin/security/ReentrancyGuard.sol";
 import "TokenGatedAccount/TGARegistry.sol";
 import "./MiladyAvatar.sol";
 import "./Rewards.sol";
 
-contract LiquidAccessories is ERC1155, Ownable {
+contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
     TGARegistry public tgaRegistry;
     MiladyAvatar public avatarContract;
 
-    Rewards rewardsContract;
+    Rewards immutable rewardsContract;
     address payable revenueRecipient;
 
-    address initialDeployer; 
+    address immutable initialDeployer; 
 
     constructor(
             TGARegistry _tgaRegistry, 
@@ -23,6 +24,7 @@ contract LiquidAccessories is ERC1155, Ownable {
             address payable _revenueRecipient, 
             string memory uri_)
         ERC1155(uri_)
+        ReentrancyGuard()
     {
         initialDeployer = msg.sender;
 
@@ -40,6 +42,7 @@ contract LiquidAccessories is ERC1155, Ownable {
         avatarContract = _avatarContract;
     }
     
+    // indexed by accessoryId
     mapping(uint => BondingCurveInfo) public bondingCurves;
     struct BondingCurveInfo {
         uint accessorySupply;
@@ -56,6 +59,13 @@ contract LiquidAccessories is ERC1155, Ownable {
         bondingCurves[_accessoryId].curveParameter = _parameter;
     }
 
+    function changeRevenueRecipient(address payable _revenueRecipient)
+        external
+        onlyOwner()
+    {
+        revenueRecipient = _revenueRecipient;
+    }
+
     function mintAccessories(
             uint[] calldata _accessoryIds, 
             uint[] calldata _amounts, 
@@ -63,29 +73,34 @@ contract LiquidAccessories is ERC1155, Ownable {
             address payable _overpayReturnAddress)
         external
         payable
+        nonReentrant
     {
         // note that msg.value functions as an implicit "minimumIn" (analagous to burnAccessories's "minRewardOut"),
         // implicitly protecting this purchase from sandwich attacks
         require(_accessoryIds.length == _amounts.length, "Array lengths differ");
         
         uint totalMintCost;
-        for (uint i=0; i<_accessoryIds.length; i++) {
+        for (uint i=0; i<_accessoryIds.length;) {
             totalMintCost += getMintCostForNewAccessories(_accessoryIds[i], _amounts[i]);
+            unchecked { i++; }
         }
         require(msg.value >= totalMintCost, "Insufficient Ether included");
 
-        for (uint i=0; i<_accessoryIds.length; i++) {
+        for (uint i=0; i<_accessoryIds.length;) {
             _mintAccessoryAndDisburseRevenue(_accessoryIds[i], _amounts[i], _recipient);
+            unchecked { i++; }
         }
 
         if (msg.value > totalMintCost) {
             // return extra in case of overpayment
-            _overpayReturnAddress.transfer(msg.value - totalMintCost);
+            (bool success,) = _overpayReturnAddress.call{ value: msg.value - totalMintCost }("");
+            require(success, "Transfer failed");
         }
     }
 
     function _mintAccessoryAndDisburseRevenue(uint _accessoryId, uint _amount, address _recipient)
         internal
+        // only called from mintAccessories, therefore non-reentrant
     {
         require(_amount > 0, "amount cannot be 0");
 
@@ -99,7 +114,8 @@ contract LiquidAccessories is ERC1155, Ownable {
         // We test for this and just send everything to revenueRecipient if that's the case.
         (, uint numEligibleRewardRecipients) = rewardsContract.rewardInfoForAccessory(_accessoryId);
         if (numEligibleRewardRecipients == 0) {
-            revenueRecipient.transfer(freeRevenue);
+            (bool success, ) = revenueRecipient.call{ value: freeRevenue }("");
+            require(success, "Transfer failed");
         }
         else {
             uint halfFreeRevenue = freeRevenue / 2;
@@ -107,7 +123,8 @@ contract LiquidAccessories is ERC1155, Ownable {
             rewardsContract.addRewardsForAccessory{value:halfFreeRevenue}(_accessoryId);
 
             // using `totalRevenue-halfFreeRevenue` instead of simply `halfFreeRevenue` to handle rounding errors from div by 2
-            revenueRecipient.transfer(freeRevenue - halfFreeRevenue);
+            (bool success,) = revenueRecipient.call{ value : freeRevenue - halfFreeRevenue }("");
+            require(success, "Transfer failed");
         }
     }
 
@@ -124,23 +141,26 @@ contract LiquidAccessories is ERC1155, Ownable {
             uint _minRewardOut, 
             address payable _fundsRecipient)
         external
+        nonReentrant
     {
         require(_accessoryIds.length == _amounts.length, "Array lengths differ");
 
         uint totalBurnReward;
-        for (uint i=0; i<_accessoryIds.length; i++) {
+        for (uint i=0; i<_accessoryIds.length;) {
             totalBurnReward += getBurnRewardForReturnedAccessories(_accessoryIds[i], _amounts[i]);
-            _burnAccessory(_accessoryIds[i], _amounts[i], _fundsRecipient);
+            _burnAccessory(_accessoryIds[i], _amounts[i]);
+
+            unchecked { i++; }
         }
 
         require(totalBurnReward >= _minRewardOut, "Specified reward not met");
-        _fundsRecipient.transfer(totalBurnReward);
+        (bool success,) = _fundsRecipient.call{ value : totalBurnReward }("");
+        require(success, "Transfer failed");
     }
 
-    function _burnAccessory(uint _accessoryId, uint _amount, address payable _fundsRecipient)
+    function _burnAccessory(uint _accessoryId, uint _amount)
         internal
     {
-        require(_amount > 0, "amount cannot be 0");
         require(balanceOf(msg.sender, _accessoryId) >= _amount, "Incorrect accessory balance");
 
         bondingCurves[_accessoryId].accessorySupply -= _amount;
@@ -157,8 +177,10 @@ contract LiquidAccessories is ERC1155, Ownable {
         require(curveParameter != 0, "Item has no bonding curve");
 
         uint totalCost;
-        for (uint i=0; i<_amount; i++) {
+        for (uint i=0; i<_amount;) {
             totalCost += getMintCostForItemNumber(currentSupplyOfAccessory + i, curveParameter);
+
+            unchecked { i++; }
         }
         return totalCost;
     }
@@ -174,8 +196,10 @@ contract LiquidAccessories is ERC1155, Ownable {
         require(_amount <= currentSupplyOfAccessory, "Insufficient accessory supply");
 
         uint totalReward;
-        for (uint i=0; i<_amount; i++) {
+        for (uint i=0; i<_amount;) {
             totalReward += getBurnRewardForItemNumber((currentSupplyOfAccessory - 1) - i, curveParameter);
+            
+            unchecked { i++; }
         }
         return totalReward;
     }
@@ -215,7 +239,7 @@ contract LiquidAccessories is ERC1155, Ownable {
         
         // tgaTokenContract == 0x0 if not a TGA
         if (tgaTokenContract == address(avatarContract)) {
-            for (uint i=0; i<_ids.length; i++) {
+            for (uint i=0; i<_ids.length;) {
                 
                 // next 3 lines for clarity. possible todo: remove for gas savings
                 uint accessoryId = _ids[i];
@@ -227,6 +251,8 @@ contract LiquidAccessories is ERC1155, Ownable {
                     //unequip if it's equipped
                     avatarContract.preTransferUnequipById(miladyId, accessoryId);
                 }
+
+                unchecked { i++; }
             }
         }
     }
