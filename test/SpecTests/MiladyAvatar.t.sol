@@ -38,7 +38,7 @@ contract MiladyAvatarTests is MiladyOSTestBase {
         vm.stopPrank();
         
         // milady should already be stolen at this point
-        TokenGatedAccount tba = testUtils.getTGA(avatarContract, _miladyId);
+        TokenGatedAccount tga = testUtils.getTGA(avatarContract, _miladyId);
         
         vm.deal(address(this), 1e18 * 1000); // send 1000 eth to this contract
         address payable overpayRecipient = payable(address(0xb055e5b055e5b055e5));
@@ -46,7 +46,7 @@ contract MiladyAvatarTests is MiladyOSTestBase {
             {value : 1 ether}
             (liquidAccessoryIds, 
             mintAmounts, 
-            avatarContract.getAvatarTBA(_miladyId), 
+            avatarContract.getAvatarTGA(_miladyId), 
             overpayRecipient);
         vm.prank(avatarContract.ownerOf(_miladyId));
         avatarContract.updateEquipSlotsByAccessoryIds(_miladyId, liquidAccessoryIds);
@@ -54,7 +54,7 @@ contract MiladyAvatarTests is MiladyOSTestBase {
         // mint a set of soulbound accessories for the milady but...
         // change one to another type to be equiped
         soulboundAccessoriesContract.mintBatch(
-            address(tba),
+            address(tga),
             soulboundAccessoryIds,
             mintAmounts,
             "");
@@ -99,7 +99,7 @@ contract MiladyAvatarTests is MiladyOSTestBase {
         vm.stopPrank();
         
         // milady should already be stolen at this point
-        TokenGatedAccount tba = testUtils.getTGA(avatarContract, _miladyId);
+        TokenGatedAccount tga = testUtils.getTGA(avatarContract, _miladyId);
         
         vm.deal(address(this), 1e18 * 1000); // send 1000 eth to this contract
         address payable overpayRecipient = payable(address(0xb055e5b055e5b055e5));
@@ -107,14 +107,14 @@ contract MiladyAvatarTests is MiladyOSTestBase {
             {value : 1 ether}
             (liquidAccessoryIds, 
             mintAmounts, 
-            avatarContract.getAvatarTBA(_miladyId), 
+            avatarContract.getAvatarTGA(_miladyId), 
             overpayRecipient);
         vm.prank(avatarContract.ownerOf(_miladyId));
         avatarContract.updateEquipSlotsByAccessoryIds(_miladyId, liquidAccessoryIds);
 
 
         soulboundAccessoriesContract.mintBatch(
-            address(tba),
+            address(tga),
             soulboundAccessoryIds,
             mintAmounts,
             "");

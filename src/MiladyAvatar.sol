@@ -4,7 +4,7 @@ pragma solidity 0.8.18;
 
 import "openzeppelin/token/ERC721/IERC721.sol";
 import "TokenGatedAccount/TokenGatedAccount.sol";
-import "TokenGatedAccount/TBARegistry.sol";
+import "TokenGatedAccount/TGARegistry.sol";
 import "./Rewards.sol";
 import "./LiquidAccessories.sol";
 import "./SoulboundAccessories.sol";
@@ -15,9 +15,9 @@ contract MiladyAvatar is IERC721 {
     SoulboundAccessories public soulboundAccessoriesContract;
     Rewards public rewardsContract;
     
-    // state needed for TBA address calculation
-    TBARegistry public immutable tbaRegistry;
-    IERC6551Account public immutable tbaAccountImpl;
+    // state needed for TGA address calculation
+    TGARegistry public immutable tgaRegistry;
+    IERC6551Account public immutable tgaAccountImpl;
 
     string public baseURI;
 
@@ -25,14 +25,14 @@ contract MiladyAvatar is IERC721 {
 
     constructor(
             IERC721 _miladysContract,
-            TBARegistry _tbaRegistry,
-            TokenGatedAccount _tbaAccountImpl,
+            TGARegistry _tgaRegistry,
+            TokenGatedAccount _tgaAccountImpl,
             string memory _baseURI
     ) {
         initialDeployer = msg.sender;
         miladysContract = _miladysContract;
-        tbaRegistry = _tbaRegistry;
-        tbaAccountImpl = _tbaAccountImpl;
+        tgaRegistry = _tgaRegistry;
+        tgaAccountImpl = _tgaAccountImpl;
         baseURI = _baseURI;
     }
 
@@ -58,7 +58,7 @@ contract MiladyAvatar is IERC721 {
     function updateEquipSlotsByAccessoryIds(uint _miladyId, uint[] memory _accessoryIds)
         public
     {
-        require(msg.sender == ownerOf(_miladyId), "Not Milady TBA");
+        require(msg.sender == ownerOf(_miladyId), "Not Milady TGA");
 
         for (uint i=0; i<_accessoryIds.length;) {
             (uint128 accType, uint128 accVariant) = accessoryIdToTypeAndVariantIds(_accessoryIds[i]);
@@ -111,7 +111,7 @@ contract MiladyAvatar is IERC721 {
     {
         // if "something" is equiped in this slot
         if (equipSlots[_miladyId][_accType] != 0) { 
-            rewardsContract.deregisterMiladyForRewardsForAccessoryAndClaim(_miladyId, equipSlots[_miladyId][_accType], getPayableAvatarTBA(_miladyId));
+            rewardsContract.deregisterMiladyForRewardsForAccessoryAndClaim(_miladyId, equipSlots[_miladyId][_accType], getPayableAvatarTGA(_miladyId));
 
             emit AccessoryUnequipped(_miladyId, equipSlots[_miladyId][_accType]);
 
@@ -166,25 +166,25 @@ contract MiladyAvatar is IERC721 {
         returns(uint)
     {
         return
-            liquidAccessoriesContract.balanceOf(getAvatarTBA(miladyId), accessoryId)
-          + soulboundAccessoriesContract.balanceOf(getAvatarTBA(miladyId), accessoryId);
+            liquidAccessoriesContract.balanceOf(getAvatarTGA(miladyId), accessoryId)
+          + soulboundAccessoriesContract.balanceOf(getAvatarTGA(miladyId), accessoryId);
     }
 
     // get the TokenGatedAccount for a particular Milady Avatar.
-    function getAvatarTBA(uint _miladyId)
+    function getAvatarTGA(uint _miladyId)
         public
         view
         returns (address)
     {
-        return tbaRegistry.account(address(tbaAccountImpl), block.chainid, address(this), _miladyId, 0);
+        return tgaRegistry.account(address(tgaAccountImpl), block.chainid, address(this), _miladyId, 0);
     }
 
-    function getPayableAvatarTBA(uint _miladyId)
+    function getPayableAvatarTGA(uint _miladyId)
         public
         view
         returns (address payable)
     {
-        return payable(getAvatarTBA(_miladyId));
+        return payable(getAvatarTGA(_miladyId));
     }
 
     function name() external pure returns (string memory) {
@@ -211,8 +211,8 @@ contract MiladyAvatar is IERC721 {
         returns 
         (uint256 balance) 
     {
-        (address tbaContractAddress,) = tbaRegistry.registeredAccounts(_who);
-        if (tbaContractAddress == address(miladysContract)) {
+        (address tgaContractAddress,) = tgaRegistry.registeredAccounts(_who);
+        if (tgaContractAddress == address(miladysContract)) {
             return 1;
         }
         else return 0;
@@ -225,7 +225,7 @@ contract MiladyAvatar is IERC721 {
     {
         require(_tokenId <= 9999, "Invalid Milady/Avatar id");
 
-        return tbaRegistry.account(address(tbaAccountImpl), block.chainid, address(miladysContract), _tokenId, 0);
+        return tgaRegistry.account(address(tgaAccountImpl), block.chainid, address(miladysContract), _tokenId, 0);
     }
 
     function safeTransferFrom(address, address, uint256, bytes calldata) external {

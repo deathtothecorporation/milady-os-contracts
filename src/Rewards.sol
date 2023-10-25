@@ -3,8 +3,8 @@
 pragma solidity 0.8.18;
 
 import "openzeppelin/token/ERC721/IERC721.sol";
+import "TokenGatedAccount/TGARegistry.sol";
 import "openzeppelin/security/ReentrancyGuard.sol";
-import "TokenGatedAccount/TBARegistry.sol";
 
 contract Rewards is ReentrancyGuard {
     IERC721 public immutable miladysContract;

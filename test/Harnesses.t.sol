@@ -9,14 +9,14 @@ import "./TestConstants.sol";
 contract SoulboundAccessoriesHarness is SoulboundAccessories
 {
     constructor(
-        IERC6551Registry _tbaRegistry,
-        IERC6551Account _tbaAccountImpl,
+        IERC6551Registry _tgaRegistry,
+        IERC6551Account _tgaAccountImpl,
         address _miladyAuthority,
         string memory uri_
     )
         SoulboundAccessories( 
-        _tbaRegistry,
-         _tbaAccountImpl,
+        _tgaRegistry,
+         _tgaAccountImpl,
          _miladyAuthority,
         uri_) {}
 
@@ -34,13 +34,13 @@ contract SoulboundAccessoriesHarness is SoulboundAccessories
 contract MiladyAvatarHarness is MiladyAvatar {
     constructor(
             IERC721 _miladysContract,
-            TBARegistry _tbaRegistry,
-            TokenGatedAccount _tbaAccountImpl,
+            TGARegistry _tgaRegistry,
+            TokenGatedAccount _tgaAccountImpl,
             string memory _baseURI
     ) MiladyAvatar(
         _miladysContract,
-        _tbaRegistry,
-        _tbaAccountImpl,
+        _tgaRegistry,
+        _tgaAccountImpl,
         _baseURI) {}
 
     function updateEquipSlotByTypeAndVariant(uint _miladyId, uint128 _accType, uint128 _accVariantOrNull) public {
@@ -71,12 +71,12 @@ contract RewardsHarness is Rewards {
 
 contract LiquidAccessoriesHarness is LiquidAccessories {
     constructor(
-            TBARegistry _tbaRegistry, 
+            TGARegistry _tgaRegistry, 
             Rewards _rewardsContract, 
             address payable _revenueRecipient, 
             string memory uri_)
         LiquidAccessories(
-            _tbaRegistry, 
+            _tgaRegistry, 
             _rewardsContract, 
             _revenueRecipient, 
             uri_) {}
@@ -147,8 +147,8 @@ contract HarnessDeployer {
     );
 
     constructor(
-        TBARegistry tbaRegistry,
-        TokenGatedAccount tbaAccountImpl,
+        TGARegistry tgaRegistry,
+        TokenGatedAccount tgaAccountImpl,
         IERC721 miladysContract,
         address miladyAuthorityAddress,
         address payable revenueRecipient,
@@ -159,23 +159,23 @@ contract HarnessDeployer {
     {
         avatarContract = new MiladyAvatarHarness(
             miladysContract,
-            tbaRegistry,
-            tbaAccountImpl,
+            tgaRegistry,
+            tgaAccountImpl,
             avatarBaseURI
         );
 
         rewardsContract = new RewardsHarness(address(avatarContract), miladysContract);
 
         liquidAccessoriesContract = new LiquidAccessoriesHarness(
-            tbaRegistry,
+            tgaRegistry,
             rewardsContract,
             revenueRecipient,
             liquidAccessoriesURI
         );
 
         soulboundAccessoriesContract = new SoulboundAccessoriesHarness(  // Changed the contract type here
-            tbaRegistry,
-            tbaAccountImpl,
+            tgaRegistry,
+            tgaAccountImpl,
             miladyAuthorityAddress,
             soulboundAccessoriesHarnessURI  // Changed the parameter name here
         );

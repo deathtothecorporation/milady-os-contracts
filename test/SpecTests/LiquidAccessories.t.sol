@@ -17,7 +17,7 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
 
         vm.prank(address(0x1234));
         LiquidAccessories liquidAccessoriesContract = new LiquidAccessories(
-            tbaRegistry,
+            tgaRegistry,
             rewardsContract,
             PROJECT_REVENUE_RECIPIENT,
             "https://n.a/"
@@ -323,7 +323,7 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
             }
         }
 
-        address from = avatarContract.getAvatarTBA(_miladyId);
+        address from = avatarContract.getAvatarTGA(_miladyId);
         vm.prank(address(avatarContract));
         liquidAccessoriesContract.beforeTokenTransfer(address(0), from, address(1), ids, amounts, "");
 

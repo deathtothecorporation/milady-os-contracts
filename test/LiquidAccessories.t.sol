@@ -181,7 +181,7 @@ contract LiquidAccessoriesTests is MiladyOSTestBase {
         // we can also verify the rewards were distributed upon the auto-unequip
         // The mint during equip should have had a freeRevenue of (0.0072 - 0.006) = 0.0012.
         // Half of this (0.0006) should have been sent to the rewards contract, then distributed to the Milady
-        // Thus the avatar's TBA should have a balance of 0.0006 ETH
+        // Thus the avatar's TGA should have a balance of 0.0006 ETH
         require(payable(address(avatar0TGA)).balance == 0.0006 ether);
 
         // test solvency by burning the two accessories we minted

@@ -12,9 +12,14 @@ import "./Harnesses.t.sol";
 
 
 contract MiladyOSTestBase is Test {
+<<<<<<< HEAD
     HarnessDeployer harnessDeployerContract;
     TBARegistry tbaRegistry;
     TokenGatedAccount tbaAccountImpl;
+=======
+    TGARegistry tgaRegistry;
+    TokenGatedAccount tgaAccountImpl;
+>>>>>>> master
     Miladys miladysContract;
     MiladyAvatarHarness avatarContract;
     LiquidAccessoriesHarness liquidAccessoriesContract;
@@ -61,9 +66,9 @@ contract MiladyOSTestBase is Test {
         public
     {
         vm.deal(address(this), 1e18 * 1000); // send 1000 eth to this contract
-        tbaRegistry = new TBARegistry();
-        tbaAccountImpl = new TokenGatedAccount();
-        testUtils = new TestUtils(tbaRegistry, tbaAccountImpl);
+        tgaRegistry = new TGARegistry();
+        tgaAccountImpl = new TokenGatedAccount();
+        testUtils = new TestUtils(tgaRegistry, tgaAccountImpl);
 
         miladysContract = Miladys(0x5Af0D9827E0c53E4799BB226655A1de152A425a5);
         vm.prank(miladysContract.owner());
@@ -74,9 +79,15 @@ contract MiladyOSTestBase is Test {
             stealMilady(i, address(this));
         }
         
+<<<<<<< HEAD
         harnessDeployerContract = new HarnessDeployer(
             tbaRegistry,
             tbaAccountImpl,
+=======
+        HarnessDeployer d = new HarnessDeployer(
+            tgaRegistry,
+            tgaAccountImpl,
+>>>>>>> master
             miladysContract,
             miladyAuthorityAddress,
             PROJECT_REVENUE_RECIPIENT,
@@ -91,8 +102,8 @@ contract MiladyOSTestBase is Test {
         rewardsContract = harnessDeployerContract.rewardsContract();
 
         for (uint i=0; i<numMiladysToMint; i++) {
-            tbaRegistry.createAccount(
-                address(tbaAccountImpl),
+            tgaRegistry.createAccount(
+                address(tgaAccountImpl),
                 1, 
                 address(miladysContract),
                 i,
@@ -100,8 +111,8 @@ contract MiladyOSTestBase is Test {
                 ""
             );
 
-            tbaRegistry.createAccount(
-                address(tbaAccountImpl),
+            tgaRegistry.createAccount(
+                address(tgaAccountImpl),
                 1, 
                 address(avatarContract),
                 i,
@@ -135,7 +146,7 @@ contract MiladyOSTestBase is Test {
             {value : 1 ether}
             (liquidAccessoryIds, 
             mintAmounts, 
-            avatarContract.getAvatarTBA(_miladyId), 
+            avatarContract.getAvatarTGA(_miladyId), 
             overpayRecipient);
     }
 

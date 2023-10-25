@@ -5,12 +5,12 @@ pragma solidity 0.8.18;
 import "openzeppelin/token/ERC1155/ERC1155.sol";
 import "openzeppelin/access/Ownable.sol";
 import "openzeppelin/security/ReentrancyGuard.sol";
-import "TokenGatedAccount/TBARegistry.sol";
+import "TokenGatedAccount/TGARegistry.sol";
 import "./MiladyAvatar.sol";
 import "./Rewards.sol";
 
 contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
-    TBARegistry public immutable tbaRegistry;
+    TGARegistry public tgaRegistry;
     MiladyAvatar public avatarContract;
 
     Rewards immutable rewardsContract;
@@ -19,7 +19,7 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
     address immutable initialDeployer; 
 
     constructor(
-            TBARegistry _tbaRegistry, 
+            TGARegistry _tgaRegistry, 
             Rewards _rewardsContract, 
             address payable _revenueRecipient, 
             string memory uri_)
@@ -28,7 +28,7 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
     {
         initialDeployer = msg.sender;
 
-        tbaRegistry = _tbaRegistry;
+        tgaRegistry = _tgaRegistry;
         rewardsContract = _rewardsContract;
         revenueRecipient = _revenueRecipient;
     }
@@ -234,17 +234,17 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
         internal
         override
     {
-        // check if we're sending from a miladyAvatar TBA
-        (address tbaTokenContract, uint tbaTokenId) = tbaRegistry.registeredAccounts(_from);
+        // check if we're sending from a miladyAvatar TGA
+        (address tgaTokenContract, uint tgaTokenId) = tgaRegistry.registeredAccounts(_from);
         
-        // tbaTokenContract == 0x0 if not a TBA
-        if (tbaTokenContract == address(avatarContract)) {
+        // tgaTokenContract == 0x0 if not a TGA
+        if (tgaTokenContract == address(avatarContract)) {
             for (uint i=0; i<_ids.length;) {
                 
                 // next 3 lines for clarity. possible todo: remove for gas savings
                 uint accessoryId = _ids[i];
                 uint requestedAmountToTransfer = _amounts[i];
-                uint miladyId = tbaTokenId;
+                uint miladyId = tgaTokenId;
 
                 // check if this transfer would result in a 0 balance of that accessory
                 if (requestedAmountToTransfer == avatarContract.totalAccessoryBalanceOfAvatar(miladyId, accessoryId)) {
