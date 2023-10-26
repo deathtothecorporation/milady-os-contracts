@@ -50,7 +50,8 @@ contract MiladyAvatar is IERC721 {
      * @dev This function is callable only once and only by the initial deployer.
      * @param _liquidAccessoriesContract The LiquidAccessories contract address.
      * @param _soulboundAccessoriesContract The SoulboundAccessories contract address.
-     */ @param _rewardsContract The Rewards contract address.
+     * @param _rewardsContract The Rewards contract address.
+     */
     function setOtherContracts(
             LiquidAccessories _liquidAccessoriesContract, 
             SoulboundAccessories _soulboundAccessoriesContract, 
