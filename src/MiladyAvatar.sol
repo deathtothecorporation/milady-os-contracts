@@ -25,11 +25,13 @@ contract MiladyAvatar is IERC721 {
 
     address immutable initialDeployer;
 
-    /// @dev Sets initial state for the contract.
-    /// @param _miladysContract Address of the Milady's ERC721 contract.
-    /// @param _tgaRegistry Address of the TokenGatedAccount registry contract.
-    /// @param _tgaAccountImpl Address of the TokenGatedAccount implementation contract.
-    /// @param _baseURI The base URI for the ERC721 token metadata.
+    /** 
+     * @dev Sets initial state for the contract.
+     * @param _miladysContract Address of the Milady's ERC721 contract.
+     * @param _tgaRegistry Address of the TokenGatedAccount registry contract.
+     * @param _tgaAccountImpl Address of the TokenGatedAccount implementation contract.
+     * @param _baseURI The base URI for the ERC721 token metadata.
+     */
     constructor(
             IERC721 _miladysContract,
             TGARegistry _tgaRegistry,
@@ -43,11 +45,12 @@ contract MiladyAvatar is IERC721 {
         baseURI = _baseURI;
     }
 
-    /// @notice Sets other required contracts for the MiladyAvatar to function properly.
-    /// @dev This function is callable only once and only by the initial deployer.
-    /// @param _liquidAccessoriesContract The LiquidAccessories contract address.
-    /// @param _soulboundAccessoriesContract The SoulboundAccessories contract address.
-    /// @param _rewardsContract The Rewards contract address.
+    /** 
+     * @notice Sets other required contracts for the MiladyAvatar to function properly.
+     * @dev This function is callable only once and only by the initial deployer.
+     * @param _liquidAccessoriesContract The LiquidAccessories contract address.
+     * @param _soulboundAccessoriesContract The SoulboundAccessories contract address.
+     */ @param _rewardsContract The Rewards contract address.
     function setOtherContracts(
             LiquidAccessories _liquidAccessoriesContract, 
             SoulboundAccessories _soulboundAccessoriesContract, 
@@ -66,10 +69,12 @@ contract MiladyAvatar is IERC721 {
     mapping (uint => mapping (uint128 => uint)) public equipSlots;
     
 
-    /// @notice Updates the equipped accessories for a Milady Avatar.
-    /// @dev A variant ID of 0 is interpreted as an unequip action.
-    /// @param _miladyId The ID of the Milady Avatar.
-    /// @param _accessoryIds Array of accessory IDs to equip or unequip.
+    /** 
+     * @notice Updates the equipped accessories for a Milady Avatar.
+     * @dev A variant ID of 0 is interpreted as an unequip action.
+     * @param _miladyId The ID of the Milady Avatar.
+     * @param _accessoryIds Array of accessory IDs to equip or unequip.
+     */
     // main entry point for a user to change their Avatar's appearance / equip status
     // if an accessoryId's unpacked accVariant == 0, we interpret this as an unequip action
     function updateEquipSlotsByAccessoryIds(uint _miladyId, uint[] memory _accessoryIds)
@@ -136,10 +141,12 @@ contract MiladyAvatar is IERC721 {
         }
     }
 
-    /// @notice This function lets soulbound accessories automatically equip themselves upon minting.
-    /// @dev Function is intended to be called from the `SoulboundAccessories` contract.
-    /// @param _miladyId The ID of the Milady Avatar.
-    /// @param _accessoryIds Array of accessory IDs to equip.
+    /** 
+     * @notice This function lets soulbound accessories automatically equip themselves upon minting.
+     * @dev Function is intended to be called from the `SoulboundAccessories` contract.
+     * @param _miladyId The ID of the Milady Avatar.
+     * @param _accessoryIds Array of accessory IDs to equip.
+     */
     // allows soulbound accessories to "auto equip" themselves upon mint
     // see `SoulboundAccessories.mintAndEquipSoulboundAccessories`
     function equipSoulboundAccessories(uint _miladyId, uint[] calldata _accessoryIds)
@@ -154,10 +161,12 @@ contract MiladyAvatar is IERC721 {
         }
     }
 
-    /// @notice This function lets soulbound accessories unequip themselves upon unmint.
-    /// @dev Function is intended to be called from the `SoulboundAccessories` contract.
-    /// @param _miladyId The ID of the Milady Avatar.
-    /// @param _accessoryIds Array of accessory IDs to unequip.
+    /** 
+     * @notice This function lets soulbound accessories unequip themselves upon unmint.
+     * @dev Function is intended to be called from the `SoulboundAccessories` contract.
+     * @param _miladyId The ID of the Milady Avatar.
+     * @param _accessoryIds Array of accessory IDs to unequip.
+     */
     // allows soulbound accessories to unequip the item upon unmint
     // see `SoulboundAccessories.unmintAndUnequipSoulboundAccessories`
     function unequipSoulboundAccessories(uint _miladyId, uint[] calldata _accessoryIds)
@@ -172,10 +181,12 @@ contract MiladyAvatar is IERC721 {
         }
     }
 
-    /// @notice This function lets liquid accessories automatically unequip themselves before transferring.
-    /// @dev Intended to be called from the `LiquidAccessories` contract's `_beforeTokenTransfer` function.
-    /// @param _miladyId The ID of the Milady Avatar.
-    /// @param _accessoryId The accessory ID to unequip.
+    /** 
+     * @notice This function lets liquid accessories automatically unequip themselves before transferring.
+     * @dev Intended to be called from the `LiquidAccessories` contract's `_beforeTokenTransfer` function.
+     * @param _miladyId The ID of the Milady Avatar.
+     * @param _accessoryId The accessory ID to unequip.
+     */
     // allows liquid accessoires to "auto unequip" themselves upon transfer away
     // see `LiquidAccessories._beforeTokenTransfer`
     function preTransferUnequipById(uint _miladyId, uint _accessoryId)
@@ -290,9 +301,11 @@ contract MiladyAvatar is IERC721 {
         revert("Cannot transfer soulbound tokens");
     }
 
-    /// @notice Checks if the contract supports a given interface.
-    /// @param interfaceId The interface ID to check.
-    /// @return True if the interface is supported, false otherwise.
+    /** 
+     * @notice Checks if the contract supports a given interface.
+     * @param interfaceId The interface ID to check.
+     * @return True if the interface is supported, false otherwise.
+     */
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return interfaceId == type(IERC721).interfaceId;
     }
@@ -305,11 +318,13 @@ contract MiladyAvatar is IERC721 {
     // an ID's upper 128 bits are the truncated hash of the category text;
     // the lower 128 bits are the truncated hash of the variant test
 
-    /// @notice Calculates a unique identifier for accessories using their type and variant.
-    /// @dev This identifier is based on the truncated hashes of the accessory's type and variant.
-    /// @param accTypeString Text representation of the accessory type.
-    /// @param accVariantString Text representation of the accessory variant.
-    /// @return accessoryId The unique identifier for the accessory.
+    /** 
+     * @notice Calculates a unique identifier for accessories using their type and variant.
+     * @dev This identifier is based on the truncated hashes of the accessory's type and variant.
+     * @param accTypeString Text representation of the accessory type.
+     * @param accVariantString Text representation of the accessory variant.
+     * @return accessoryId The unique identifier for the accessory.
+     */
     struct PlaintextAccessoryInfo {
         string accType;
         string accVariant;
