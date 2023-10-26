@@ -141,7 +141,8 @@ contract MiladyAvatar is IERC721 {
         require(msg.sender == address(soulboundAccessoriesContract), "Not soulboundAccessories");
 
         for (uint i=0; i<_accessoryIds.length;) {
-            _equipAccessoryIfOwned(_miladyId, _accessoryIds[i]);
+            (uint128 accType,) = accessoryIdToTypeAndVariantIds(_accessoryIds[i]);
+            _unequipAccessoryByTypeIfEquipped(_miladyId, accType);
 
             unchecked { i++; }
         }
