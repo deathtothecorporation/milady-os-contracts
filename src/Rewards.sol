@@ -35,6 +35,7 @@ contract Rewards is ReentrancyGuard {
     function addRewardsForAccessory(uint _accessoryId)
         payable
         external
+        nonReentrant
     {
         require(msg.value > 0, "No ether included");
         require(rewardInfoForAccessory[_accessoryId].totalWearers > 0, "No eligible recipients");
