@@ -6,10 +6,20 @@ import "openzeppelin/token/ERC721/IERC721.sol";
 import "openzeppelin/security/ReentrancyGuard.sol";
 import "TokenGatedAccount/TBARegistry.sol";
 
+/**
+ * @title Rewards contract for distributing rewards based on accessory holdings.
+ * @notice This contract handles registration, accrual, and claiming of rewards for Milady Avatars based on the accessories they are wearing.
+ * @author Logan Brutsche
+ */
 contract Rewards is ReentrancyGuard {
     IERC721 public immutable miladysContract;
     address public immutable avatarContractAddress;
 
+    /**
+     * @notice Creates a new instance of the Rewards contract.
+     * @param _avatarContractAddress The address of the Avatar contract.
+     * @param _miladysContract The IERC721 contract of the Miladys.
+     */
     constructor(address _avatarContractAddress, IERC721 _miladysContract) 
         ReentrancyGuard()
     {
@@ -25,13 +35,23 @@ contract Rewards is ReentrancyGuard {
         // indexed by miladyId
         mapping (uint => MiladyRewardInfo) miladyRewardInfo;
     }
+
     struct MiladyRewardInfo {
         bool isRegistered;
         uint amountClaimed;
     }
 
+    /**
+     * @notice Emitted when rewards are accrued for an accessory.
+     * @param _accessoryId The ID of the accessory that accrued rewards.
+     * @param _amount The amount of rewards accrued.
+     */
     event RewardsAccrued(uint indexed _accessoryId, uint _amount);
 
+    /**
+     * @notice Allows adding rewards for an accessory.
+     * @param _accessoryId The ID of the accessory.
+     */
     function addRewardsForAccessory(uint _accessoryId)
         payable
         external
@@ -45,8 +65,18 @@ contract Rewards is ReentrancyGuard {
         emit RewardsAccrued(_accessoryId, msg.value);
     }
 
+    /**
+     * @notice Emitted when a Milady is registered for rewards for an accessory.
+     * @param _miladyId The ID of the Milady being registered.
+     * @param _accessoryId The ID of the accessory the Milady is being registered for.
+     */
     event MiladyRegisteredForRewards(uint indexed _miladyId, uint indexed _accessoryId);
 
+    /**
+     * @notice Registers a Milady for rewards for a particular accessory.
+     * @param _miladyId The ID of the Milady.
+     * @param _accessoryId The ID of the accessory.
+     */
     function registerMiladyForRewardsForAccessory(uint _miladyId, uint _accessoryId)
         external
     {
@@ -66,8 +96,19 @@ contract Rewards is ReentrancyGuard {
         emit MiladyRegisteredForRewards(_miladyId, _accessoryId);
     }
 
+    /**
+     * @notice Emitted when a Milady is deregistered for rewards for an accessory.
+     * @param _miladyId The ID of the Milady being deregistered.
+     * @param _accessoryId The ID of the accessory the Milady is being deregistered for.
+     */
     event MiladyDeregisteredForRewards(uint indexed _miladyId, uint indexed _accessoryId);
 
+    /**
+     * @notice Deregisters a Milady for rewards for a particular accessory and claims any accrued rewards.
+     * @param _miladyId The ID of the Milady.
+     * @param _accessoryId The ID of the accessory.
+     * @param _recipient The address to receive the claimed rewards.
+     */
     function deregisterMiladyForRewardsForAccessoryAndClaim(uint _miladyId, uint _accessoryId, address payable _recipient)
         external
         nonReentrant
@@ -86,6 +127,12 @@ contract Rewards is ReentrancyGuard {
         emit MiladyDeregisteredForRewards(_miladyId, _accessoryId);
     }
 
+    /**
+     * @notice Allows a Milady owner to claim rewards for multiple accessories.
+     * @param _miladyId The ID of the Milady.
+     * @param _accessoriesToClaimFor The IDs of the accessories to claim rewards for.
+     * @param _recipient The address to receive the claimed rewards.
+     */
     function claimRewardsForMilady(uint _miladyId, uint[] calldata _accessoriesToClaimFor, address payable _recipient)
         external
         nonReentrant
@@ -99,8 +146,20 @@ contract Rewards is ReentrancyGuard {
         }
     }
 
+    /**
+     * @notice Emitted when rewards are claimed for a Milady for an accessory.
+     * @param _miladyId The Milady claiming rewards.
+     * @param _accessoryId The accessory the Milady is claiming rewards for.
+     * @param _recipient The address that received the claimed rewards.
+     */
     event RewardsClaimed(uint indexed _miladyId, uint indexed _accessoryId, address indexed _recipient);
 
+    /**
+     * @notice Internal function to claim rewards for a Milady for a particular accessory.
+     * @param _miladyId The ID of the Milady.
+     * @param _accessoryId The ID of the accessory.
+     * @param _recipient The address to receive the claimed rewards.
+     */
     function _claimRewardsForMiladyForAccessory(uint _miladyId, uint _accessoryId, address payable _recipient)
         internal
         // all calls to this must be nonreentrant
@@ -118,6 +177,12 @@ contract Rewards is ReentrancyGuard {
         emit RewardsClaimed(_miladyId, _accessoryId, _recipient);
     }
 
+    /**
+     * @notice Computes the amount of rewards claimable for a Milady for a particular accessory.
+     * @param _miladyId The ID of the Milady.
+     * @param _accessoryId The ID of the accessory.
+     * @return amountClaimable The amount of rewards claimable.
+     */
     function getAmountClaimableForMiladyAndAccessory(uint _miladyId, uint _accessoryId)
         public
         view
@@ -132,6 +197,12 @@ contract Rewards is ReentrancyGuard {
         amountClaimable = rewardInfo.rewardsPerWearerAccrued - rewardInfo.miladyRewardInfo[_miladyId].amountClaimed;
     }
 
+    /**
+     * @notice Computes the total amount of rewards claimable for a Milady for a list of accessories.
+     * @param _miladyId The ID of the Milady.
+     * @param _accessoryIds The IDs of the accessories.
+     * @return amountClaimable The total amount of rewards claimable.
+     */
     function getAmountClaimableForMiladyAndAccessories(uint _miladyId, uint[] memory _accessoryIds)
         public
         view
