@@ -24,7 +24,6 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
             address payable _revenueRecipient, 
             string memory uri_)
         ERC1155(uri_)
-        ReentrancyGuard()
     {
         initialDeployer = msg.sender;
 
