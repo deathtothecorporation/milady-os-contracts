@@ -9,6 +9,12 @@ import "TokenGatedAccount/TokenGatedAccount.sol";
 import "openzeppelin/access/Ownable.sol";
 import "./MiladyAvatar.sol";
 
+/**
+ * @title SoulboundAccessories Contract
+ * @notice This contract handles the minting, equipping, and management of soulbound accessories for Milady Avatars.
+ * @dev Inherits from ERC1155 and Ownable. Includes logic to mint and equip accessories, as well as administration functions.
+ * @author Logan Brutsche
+ */
 contract SoulboundAccessories is ERC1155, Ownable {
     MiladyAvatar public avatarContract;
 
@@ -23,6 +29,13 @@ contract SoulboundAccessories is ERC1155, Ownable {
 
     address immutable initialDeployer;
 
+    /**
+     * @notice Creates a new instance of the SoulboundAccessories contract.
+     * @param _tbaRegistry The TokenGatedAccount registry contract.
+     * @param _tbaAccountImpl The TokenGatedAccount implementation contract.
+     * @param _miladyAuthority The authority address for Milady.
+     * @param uri_ The base URI for the contract.
+     */
     constructor(
         IERC6551Registry _tbaRegistry,
         IERC6551Account _tbaAccountImpl,
@@ -39,6 +52,10 @@ contract SoulboundAccessories is ERC1155, Ownable {
         miladyAuthority = _miladyAuthority;
     }
 
+    /**
+     * @notice Sets the Avatar contract.
+     * @param _avatarContract The MiladyAvatar contract.
+     */
     function setAvatarContract(MiladyAvatar _avatarContract)
         external
     {
@@ -48,6 +65,10 @@ contract SoulboundAccessories is ERC1155, Ownable {
         avatarContract = _avatarContract;
     }
 
+    /**
+     * @notice Changes the authority address for Milady.
+     * @param _newMiladyAuthority The new authority address.
+     */
     function changeMiladyAuthority(address _newMiladyAuthority)
         external
         onlyOwner()
@@ -55,9 +76,20 @@ contract SoulboundAccessories is ERC1155, Ownable {
         miladyAuthority = _newMiladyAuthority;
     }
 
+    /**
+     * @dev Emitted when soulbound accessories are minted.
+     * @param miladyId The ID of the Milady.
+     * @param accessories The IDs of the accessories.
+     */
     event SoulboundAccessoriesMinted(uint indexed miladyId, uint[] indexed accessories);
 
-    // we assume here that miladyAuthority will never specify an accessory whose decoded accVariant == 0
+    /**
+     * @notice Mints and equips soulbound accessories to a Milady Avatar.
+     * @dev This function is only callable by the miladyAuthority.
+     * We assume here that miladyAuthority will never specify an accessory whose decoded accVariant == 0
+     * @param _miladyId The ID of the Milady Avatar.
+     * @param _accessories The IDs of the accessories to mint and equip.
+     */
     function mintAndEquipSoulboundAccessories(uint _miladyId, uint[] calldata _accessories)
         external
     {
@@ -91,8 +123,13 @@ contract SoulboundAccessories is ERC1155, Ownable {
         emit SoulboundAccessoriesMinted(_miladyId, _accessories);
     }
 
-    // This function is included as a last-resort option to leverage, in case the miladyAuthority key has been compromised.
-    // It allows the owner to reverse any damage done by the key, by unminting and unequipping any erroneous soulboundAccessories.
+    /**
+     * @notice Unmints and unequips soulbound accessories from a Milady Avatar.
+     * This function is included as a last-resort option to leverage, in case the miladyAuthority key has been compromised.
+     * It allows the owner to reverse any damage done by the key, by unminting and unequipping any erroneous soulboundAccessories.
+     * @param _miladyId The ID of the Milady Avatar.
+     * @param _accessories The IDs of the accessories to unmint and unequip.
+     */
     function unmintAndUnequipSoulboundAccessories(uint _miladyId, uint[] calldata _accessories)
         external
         onlyOwner()
@@ -120,7 +157,10 @@ contract SoulboundAccessories is ERC1155, Ownable {
         avatarContract.unequipSoulboundAccessories(_miladyId, _accessories);
     }
 
-    // disable all token transfers, making these soulbound.
+    /**
+     * @notice Overrides the default function to disable all token transfers, making these soulbound.
+     * @param _from The address transferring the tokens.
+     */
     function _beforeTokenTransfer(address, address _from, address, uint256[] memory, uint256[] memory, bytes memory)
         internal
         override
@@ -131,7 +171,9 @@ contract SoulboundAccessories is ERC1155, Ownable {
         revert("Cannot transfer soulbound tokens");
     }
 
-    // prevents spurious approvals
+    /**
+     * @notice Overrides the default function to prevent spurious approvals.
+     */
     function _setApprovalForAll(address, address, bool) 
         internal 
         override {
