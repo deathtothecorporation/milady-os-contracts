@@ -76,6 +76,7 @@ contract Rewards is ReentrancyGuard {
      * @notice Registers a Milady for rewards for a particular accessory.
      * @param _miladyId The ID of the Milady.
      * @param _accessoryId The ID of the accessory.
+     * @dev Only callable by the avatarContractAddress. See `MiladyAvatar._equipAccessoryIfOwned`
      */
     function registerMiladyForRewardsForAccessory(uint _miladyId, uint _accessoryId)
         external
@@ -108,6 +109,7 @@ contract Rewards is ReentrancyGuard {
      * @param _miladyId The ID of the Milady.
      * @param _accessoryId The ID of the accessory.
      * @param _recipient The address to receive the claimed rewards.
+     * @dev Only callable by the avatarContractAddress. See `MiladyAvatar._unequipAccessoryByTypeIfEquipped`
      */
     function deregisterMiladyForRewardsForAccessoryAndClaim(uint _miladyId, uint _accessoryId, address payable _recipient)
         external
