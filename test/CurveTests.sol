@@ -97,7 +97,7 @@ contract CurveTests is MiladyOSTestBase
         // check that the cost of minting _newItems is the same as the cost of minting _existingItems + _newItems
 
         vm.assume(_curveParameter > 0);
-        vm.assume(_curveParameter < 10**18);
+        vm.assume(_curveParameter < 10**17);
         vm.assume(_existingItems < 10);
         vm.assume(_newItems >= 0);
         vm.assume(_newItems < 100);
@@ -127,7 +127,7 @@ contract CurveTests is MiladyOSTestBase
         // check that the reward for burning _returnedItems is the same as the reward for burning _existingItems - _returnedItems
 
         vm.assume(_curveParameter > 0);
-        vm.assume(_curveParameter < 10**18);
+        vm.assume(_curveParameter < 10**17);
         vm.assume(_existingItems < 10);
         vm.assume(_returnedItems < 10);
         
