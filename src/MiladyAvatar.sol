@@ -201,7 +201,7 @@ contract MiladyAvatar is IERC721 {
         view 
         returns (string memory) 
     {
-        require(_tokenId <= 9998, "Invalid Milady/Avatar id");
+        require(_tokenId <= 9999, "Invalid Milady/Avatar id");
 
         return string(abi.encodePacked(baseURI, Strings.toString(_tokenId)));
     }
