@@ -12,6 +12,7 @@ import "./Harnesses.t.sol";
 
 
 contract MiladyOSTestBase is Test {
+    HarnessDeployer harnessDeployer;
     TBARegistry tbaRegistry;
     TokenGatedAccount tbaAccountImpl;
     Miladys miladysContract;
@@ -73,7 +74,7 @@ contract MiladyOSTestBase is Test {
             stealMilady(i, address(this));
         }
         
-        HarnessDeployer d = new HarnessDeployer(
+        HarnessDeployer harnessDeployer = new HarnessDeployer(
             tbaRegistry,
             tbaAccountImpl,
             miladysContract,
@@ -84,10 +85,10 @@ contract MiladyOSTestBase is Test {
             ""
         );
 
-        avatarContract = d.avatarContract();
-        liquidAccessoriesContract = d.liquidAccessoriesContract();
-        soulboundAccessoriesContract = d.soulboundAccessoriesContract();
-        rewardsContract = d.rewardsContract();
+        avatarContract = harnessDeployer.avatarContract();
+        liquidAccessoriesContract = harnessDeployer.liquidAccessoriesContract();
+        soulboundAccessoriesContract = harnessDeployer.soulboundAccessoriesContract();
+        rewardsContract = harnessDeployer.rewardsContract();
 
         for (uint i=0; i<numMiladysToMint; i++) {
             tbaRegistry.createAccount(
@@ -191,5 +192,10 @@ contract MiladyOSTestBase is Test {
     function randomAddress(bytes memory seed) internal pure returns(address)
     {
         return address(uint160(uint256(keccak256(seed))));
+    }
+
+    function randomAddress(uint seed) internal pure returns(address)
+    {
+        return randomAddress(abi.encodePacked(seed));
     }
 }

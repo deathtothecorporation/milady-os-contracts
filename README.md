@@ -2,11 +2,11 @@
 
 Milady OS (mOS) is to be an Urbit app where Milady holders can change the dress state of their Milady by equipping/unequipping different clothing items, and where doing so will affect the visual representation of the user's avatar as well as the kinds of communication channels available to them.
 
-This repo is focused only on the smart contracts underlying such a system, which supports the above equip/unequip functionality as well as financial incentives to have popular items equipped - funded from a 10% buy/sell spread across a bonding curve.
+This repo is focused only on the smart contracts underlying such a system, which supports the above equip/unequip functionality as well as financial incentives to have popular items equipped - funded from a 20% buy/sell spread across a bonding curve.
 
 ### Terms
 
-* **MiladyMaker** - The original NFT set of 9998 "Miladys" (or one item in the set, depending on context), of which this project is a derivative of. [Contract](https://etherscan.io/address/0x5af0d9827e0c53e4799bb226655a1de152a425a5).
+* **MiladyMaker** - The original NFT set of 10,000 "Miladys" (or one item in the set, depending on context), of which this project is a derivative of. [Contract](https://etherscan.io/address/0x5af0d9827e0c53e4799bb226655a1de152a425a5).
 * **Metadata** - the set of attributes defined as canonically "part of" the original MiladyMaker NFT. This maps to `Accessories`, defined below.
 * **Avatar** - A "reflective NFT" that is defined as soulbound to the MiladyMaker with the same ID, defined in more detail below.
 
