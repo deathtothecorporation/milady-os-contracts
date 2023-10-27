@@ -3,13 +3,15 @@
 pragma solidity 0.8.18;
 
 import "openzeppelin/token/ERC721/IERC721.sol";
+import "openzeppelin/security/ReentrancyGuard.sol";
 import "TokenGatedAccount/TokenGatedAccount.sol";
 import "TokenGatedAccount/TBARegistry.sol";
 import "./Rewards.sol";
 import "./LiquidAccessories.sol";
 import "./SoulboundAccessories.sol";
 
-contract MiladyAvatar is IERC721 {
+
+contract MiladyAvatar is IERC721, ReentrancyGuard {
     IERC721 public immutable miladysContract;
     LiquidAccessories public liquidAccessoriesContract;
     SoulboundAccessories public soulboundAccessoriesContract;
@@ -57,6 +59,7 @@ contract MiladyAvatar is IERC721 {
     // if an accessoryId's unpacked accVariant == 0, we interpret this as an unequip action
     function updateEquipSlotsByAccessoryIds(uint _miladyId, uint[] memory _accessoryIds)
         public
+        nonReentrant
     {
         require(msg.sender == ownerOf(_miladyId), "Not Milady TBA");
 
@@ -123,6 +126,7 @@ contract MiladyAvatar is IERC721 {
     // see `SoulboundAccessories.mintAndEquipSoulboundAccessories`
     function equipSoulboundAccessories(uint _miladyId, uint[] calldata _accessoryIds)
         external
+        nonReentrant
     {
         require(msg.sender == address(soulboundAccessoriesContract), "Not soulboundAccessories");
 
@@ -137,6 +141,7 @@ contract MiladyAvatar is IERC721 {
     // see `SoulboundAccessories.unmintAndUnequipSoulboundAccessories`
     function unequipSoulboundAccessories(uint _miladyId, uint[] calldata _accessoryIds)
         external
+        nonReentrant
     {
         require(msg.sender == address(soulboundAccessoriesContract), "Not soulboundAccessories");
 
@@ -152,6 +157,7 @@ contract MiladyAvatar is IERC721 {
     // see `LiquidAccessories._beforeTokenTransfer`
     function preTransferUnequipById(uint _miladyId, uint _accessoryId)
         external
+        nonReentrant
     {
         require(msg.sender == address(liquidAccessoriesContract), "Not liquidAccessoriesContract");
 
