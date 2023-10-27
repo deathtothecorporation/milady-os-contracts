@@ -152,7 +152,7 @@ contract CurveTests is MiladyOSTestBase
         returns (uint _equippedAccessoryId)
     {
         (uint128 _type,) = avatarContract.accessoryIdToTypeAndVariantIds(_accessoryId);
-        _equippedAccessoryId = avatarContract.equipSlots(0, _type);
+        _equippedAccessoryId = avatarContract.equipSlots(_miladyId, _type);
     }
 
     function logRewardConfiguration(uint _miladyId, uint _accessoryId)
