@@ -48,7 +48,7 @@ contract CurveTests is MiladyOSTestBase
             uint _amount, 
             uint _curveParameter)
         public
-        view
+        pure
         returns (uint _mintCost)
     {
         require(_curveParameter != 0, "Item has no bonding curve");
@@ -146,26 +146,60 @@ contract CurveTests is MiladyOSTestBase
         require(calculatedBurnReward == actualBurnReward, "Burn reward mismatch");
     }
 
-    function test_MintDisbursements
-            // (
-            // uint _curveParameter,
-            // uint _existingItems,
-            // uint _newItems,
-            // uint _seed)
-            ()
-        public
+    function getEquipStatus(uint _miladyId, uint _accessoryId) 
+        private
+        view
+        returns (uint _equippedAccessoryId)
     {
-        // vm.assume(_curveParameter > 0);
-        // vm.assume(_curveParameter < 10**18);
-        // vm.assume(_existingItems < 10);
-        // vm.assume(_newItems < 10);
-        // vm.assume(_newItems > 0);
+        (uint128 _type,) = avatarContract.accessoryIdToTypeAndVariantIds(_accessoryId);
+        _equippedAccessoryId = avatarContract.equipSlots(0, _type);
+    }
 
-        (
+    function logRewardConfiguration(uint _miladyId, uint _accessoryId)
+        private
+        view
+    {
+        (uint rewardsPerWearerAccrued, uint totalWearers) = rewardsContract.rewardInfoForAccessory(_accessoryId);
+        (bool isRegistered, uint amountCliamed) = rewardsContract.getMiladyRewardInfoForAccessory(_miladyId, _accessoryId);
+
+        console.log("rewards miladyId", _miladyId);
+        console.log("rewards accessoryId", _accessoryId);
+        console.log("rewardsPerWearerAccrued", rewardsPerWearerAccrued);
+        console.log("totalWearers", totalWearers);
+        console.log("isRegistered", isRegistered);
+        console.log("amountCliamed", amountCliamed);
+    }
+
+    function getFreeAmount(uint _existingItems, uint _newItems, uint _curveParameter) 
+        public
+        pure
+        returns (uint _freeAmount)
+    {
+        _freeAmount = 
+            getMintCostForNewAccessories(_existingItems, _newItems, _curveParameter) 
+            - getBurnRewardForReturnedAccessories(_existingItems, _newItems, _curveParameter);
+    }
+
+    function test_MintDisbursements
+            (
             uint _curveParameter,
             uint _existingItems,
             uint _newItems,
-            uint _seed) = (10**15, 5, 5, 1);
+            uint _seed)
+            // ()
+        public
+    {
+        vm.assume(_curveParameter > 0);
+        vm.assume(_curveParameter < 10**18);
+        vm.assume(_existingItems < 10);
+        vm.assume(_newItems < 10);
+        vm.assume(_newItems > 0);
+
+        // (
+        //     uint _curveParameter,
+        //     uint _existingItems,
+        //     uint _newItems,
+        //     uint _seed) = (1, 0, 1, 0);
         
         // init existing items
         uint accessoryId = random(_seed);
@@ -177,25 +211,35 @@ contract CurveTests is MiladyOSTestBase
         // calculate the reward for minting, as well as the disbursed amounts
         // compare them to the actual disbursements
         uint calculatedMintCost = getMintCostForNewAccessories(_existingItems, _newItems, _curveParameter);
-        uint bondAmount = (calculatedMintCost * 1000) / 1200;
+        uint freeAmount = 
+            calculatedMintCost - ((calculatedMintCost * 1000) / 1200);
 
-        uint calculatedDisbursementVW = bondAmount / 2;
-        uint calculatedDisbursementMilady = bondAmount - calculatedDisbursementVW;
-
+        uint calculatedRewards; 
+        uint calculatedDisbursementVW;
+        
+        if (_existingItems == 0) {
+            calculatedDisbursementVW = freeAmount;
+            calculatedRewards = 0;
+        } else {
+            calculatedRewards = freeAmount / 2;
+            calculatedDisbursementVW = freeAmount - calculatedRewards;
+        }
+        
         address payable overpayRecipient = payable(randomAddress(_seed));
         uint overpayRecipientBalanceBefore = overpayRecipient.balance;
         uint revenueRecipientBalanceBefore = PROJECT_REVENUE_RECIPIENT.balance;
-        uint equipedMiladyBalanceBefore = avatarContract.ownerOf(0).balance;
-        uint buyingMiladyBalanceBefore = avatarContract.ownerOf(1).balance;
+        uint rewardsBalanceBefore = address(rewardsContract).balance;
 
         uint[] memory accessoryIds = new uint[](1);
         accessoryIds[0] = accessoryId;
         uint[] memory amounts = new uint[](1);
         amounts[0] = _newItems;
 
-        address payerAddress = randomAddress(_seed + 1);
-        vm.deal(payerAddress, calculatedMintCost + 1);
-        vm.prank(payerAddress);
+        vm.deal(address(this), calculatedMintCost + 1);
+        vm.prank(address(this));
+        console.log("equipStatus", getEquipStatus(0, accessoryId));
+        logRewardConfiguration(0, accessoryId);
+        console.log("-------------------");
         liquidAccessoriesContract.mintAccessories
             { value : calculatedMintCost + 1 } 
             (accessoryIds, 
@@ -205,26 +249,23 @@ contract CurveTests is MiladyOSTestBase
 
         uint overpayRecipientBalanceAfter = overpayRecipient.balance;
         uint revenueRecipientBalanceAfter = PROJECT_REVENUE_RECIPIENT.balance;
-        uint equipedMiladyBalanceAfter = avatarContract.ownerOf(0).balance;
-        uint buyingMiladyBalanceAfter = avatarContract.ownerOf(1).balance;
+        uint rewardsBalanceAfter = address(rewardsContract).balance;
 
-        // console.log("calculatedMintCost", calculatedMintCost);
-        // console.log("bondAmount", bondAmount);
+        logRewardConfiguration(0, accessoryId);
+        console.log("-------------------");
+
+        console.log("calculatedMintCost", calculatedMintCost);
+        console.log("freeAmount", freeAmount);
         console.log("calculatedDisbursementVW", calculatedDisbursementVW);
-        // console.log("calculatedDisbursementMilady", calculatedDisbursementMilady);
-        console.log("overpayRecipientBalanceBefore", overpayRecipientBalanceBefore);
-        console.log("overpayRecipientBalanceAfter", overpayRecipientBalanceAfter);
         console.log("revenueRecipientBalanceBefore", revenueRecipientBalanceBefore);
         console.log("revenueRecipientBalanceAfter", revenueRecipientBalanceAfter);
-        console.log("equipedMiladyBalanceBefore", equipedMiladyBalanceBefore);
-        console.log("equipedMiladyBalanceAfter", equipedMiladyBalanceAfter);
-        console.log("buyingMiladyBalanceBefore", buyingMiladyBalanceBefore);
-        console.log("buyingMiladyBalanceAfter", buyingMiladyBalanceAfter);
-
+        console.log("rewardsBalanceBefore", rewardsBalanceBefore);
+        console.log("rewardsBalanceAfter", address(rewardsContract).balance);
+        console.log("overpayRecipientBalanceBefore", overpayRecipientBalanceBefore);
+        console.log("overpayRecipientBalanceAfter", overpayRecipientBalanceAfter);
 
         require(overpayRecipientBalanceAfter == overpayRecipientBalanceBefore + 1, "Overpay recipient balance mismatch");
         require(revenueRecipientBalanceAfter == revenueRecipientBalanceBefore + calculatedDisbursementVW, "Revenue recipient balance mismatch");
-        require(equipedMiladyBalanceAfter == equipedMiladyBalanceBefore + calculatedDisbursementMilady, "Equiped Milady balance mismatch");
-        require(buyingMiladyBalanceAfter == buyingMiladyBalanceBefore - calculatedMintCost, "Buying Milady balance mismatch");
+        require(rewardsBalanceAfter == rewardsBalanceBefore + calculatedRewards, "Rewards balance mismatch");
     }
 }
