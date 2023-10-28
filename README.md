@@ -2,7 +2,7 @@
 
 Milady OS (mOS) is to be an Urbit app where Milady holders can change the dress state of their Milady by equipping/unequipping different clothing items, and where doing so will affect the visual representation of the user's avatar as well as the kinds of communication channels available to them.
 
-This repo is focused only on the smart contracts underlying such a system, which supports the above equip/unequip functionality as well as financial incentives to have popular items equipped - funded from a 20% buy/sell spread across a bonding curve.
+This repo is focused only on the smart contracts underlying such a system, which supports the above equip/unequip functionality as well as financial incentives to have popular items equipped - funded from a 20% buy/sell spread across a bonding curve on minting new accessories.
 
 ### Terms
 
@@ -10,19 +10,30 @@ This repo is focused only on the smart contracts underlying such a system, which
 * **Metadata** - the set of attributes defined as canonically "part of" the original MiladyMaker NFT. This maps to `Accessories`, defined below.
 * **Avatar** - A "reflective NFT" that is defined as soulbound to the MiladyMaker with the same ID, defined in more detail below.
 
-# TBA Structure
+## Deployed contracts
 
-As described in more detail below, there are two levels of TBAs at work here:
+* [MiladyAvatar](https://etherscan.io/address/0x0Ef38aE5B7Ba0B8641cf34C2B9bAC3694B92EeFF)
+* [LiquidAccessories](https://etherscan.io/address/0x87B819cc72224ADf81dE07a7A87843B44132f56B)
+* [SoulboundAccessories](https://etherscan.io/address/0x223d1aec02B2DB27f8988807F5C56f2f421138A9)
+* [Rewards](https://etherscan.io/address/0x45b19598Ca27d60eeF2b93979dC4790E29115a7e)
 
-* Each MiladyMaker has a TBA which holds (by definition) its own Avatar.
-* Each Avatar has a TBA which holds some number of Accessories.
+See the [Audit report](./audit-report.pdf).
+
+Uses TokenGatedAccounts from [this repo](https://github.com/deathtothecorporation/TokenGatedAccount), a particular kind of TokenBoundAccount, and assumes users are being onboarded (for example, setting up TGAs) by [this repo](https://github.com/deathtothecorporation/shipping). 
+
+# TGA Structure
+
+As described in more detail below, there are two levels of TGAs at work here:
+
+* Each MiladyMaker has a TGA which holds (by definition) its own Avatar.
+* Each Avatar has a TGA which holds some number of Accessories.
 * Some number of these Accessories may be considered "equipped" by its owning Avatar.
 
 ## Avatars
 
-An `Avatar` (`MiladyAvatar.sol`), is an NFT set defined as soulbound to the TBAs of the MiladyMaker NFTs. This NFT can be thought of as a "reflective NFT", and is a way of creating new state that follows the original MiladyMaker NFT around.
+An `Avatar` (`MiladyAvatar.sol`), is an NFT set defined as soulbound to the TGAs of the MiladyMaker NFTs. This NFT can be thought of as a "reflective NFT", and is a way of creating new state that follows the original MiladyMaker NFT around.
 
-See the `ownerOf` and `balanceOf` functions to see how this works. The former is defined as always the TBA of the Milady with the same id; the latter is simply 1 if the address being queried is a Milady TBA, and 0 otherwise. All other NFT functionality reverts, resulting in its being soulbound to the Milady TBA.
+See the `ownerOf` and `balanceOf` functions to see how this works. The former is defined as always the TGA of the Milady with the same id; the latter is simply 1 if the address being queried is a Milady TGA, and 0 otherwise. All other NFT functionality reverts, resulting in its being soulbound to the Milady TGA.
 
 ## Accessories
 
@@ -38,15 +49,15 @@ Accessories are either soulbound or liquid (see below), but share this ID scheme
 
 `Avatar.sol` is also where the main equip/unequip functionality is defined.
 
-* For an accessory to be equippable, it must be currently held in the Avatar's TBA, and sending away all instances of a given accessory automatically unequips it during transfer (see `LiquidAccessories._beforeTokenTransfer`). Thus, an Avatar should never have an item equipped that it does not own.
+* For an accessory to be equippable, it must be currently held in the Avatar's TGA, and sending away all instances of a given accessory automatically unequips it during transfer (see `LiquidAccessories._beforeTokenTransfer`). Thus, an Avatar should never have an item equipped that it does not own.
 * For a given accessory type, only one accessory can be equipped at once; any existing equipped item will be unequipped if another one is equipped in its place. See the mapping `Avatar.equipSlots`.
 * Equipping/unequipping items registers/deregisters the Milady from participating in revenue sharing for when a `LiquidAccessory` is minted, as discussed below; this can be seen in `Rewards.registerMiladyForRewardsForAccessory` and `Rewards.deregisterMiladyForRewardsForAccessoryAndClaim`, which is only called during the Avatar's equip/unequip functions.
 
 ### Soulbound Accessories
 
-`Soulbound Accessories` (`SoulboundAccessories.sol`) represent the initial set of accessories that "came with" a given Milady - in other words, the accessories listed in that Milady's metadata and displayed as part of the canonical MiladyMaker image. These accessories cannot be sent away from the Avatar's TBA.
+`Soulbound Accessories` (`SoulboundAccessories.sol`) represent the initial set of accessories that "came with" a given Milady - in other words, the accessories listed in that Milady's metadata and displayed as part of the canonical MiladyMaker image. These accessories cannot be sent away from the Avatar's TGA.
 
-During or before onboarding of a particular MiladyMaker holder, a server holding a key authorized as `ROLE_MILADY_AUTHORITY` is expected to call `SoulboundAccessories.mintAndEquipSoulboundAccessories` with a set of `uint256` IDs. This uploads the "missing metadata" onto the EVM as a set of `uint256`s, encoded as described in `AccessoryUtils.sol` and described in the previous section. The result of this action is to mint a set of 1155s into the Avatar's TBA and equip them, so that after onboarding the user's Milady is dressed up as its canonical, original MiladyMaker visual appearance.
+During or before onboarding of a particular MiladyMaker holder, a server holding a key authorized as `ROLE_MILADY_AUTHORITY` is expected to call `SoulboundAccessories.mintAndEquipSoulboundAccessories` with a set of `uint256` IDs. This uploads the "missing metadata" onto the EVM as a set of `uint256`s, encoded as described in `AccessoryUtils.sol` and described in the previous section. The result of this action is to mint a set of 1155s into the Avatar's TGA and equip them, so that after onboarding the user's Milady is dressed up as its canonical, original MiladyMaker visual appearance.
 
 ### Liquid Accessories
 

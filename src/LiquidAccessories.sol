@@ -11,8 +11,12 @@ import "./Rewards.sol";
 
 /**
  * @title LiquidAccessories
- * @dev A contract for minting and burning accessories based on bonding curves.
- * Users can mint or burn accessories and the cost/reward is determined by the curve.
+ * @dev This contract manages the minting, burning, and pricing of accessories in the Milady OS ecosystem. 
+ * It uses a bonding curve to determine the price of minting new accessories and the reward for burning them.
+ * It interacts with the TBA Registry, Milady Avatar, and Rewards contracts to ensure proper handling and distribution of rewards.
+ * The contract also ensures that the equip status of an accessory is updated if it's sent away.
+ * 
+ * @author Logan Brutche
  */
 contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
     TGARegistry public tgaRegistry;
@@ -24,11 +28,11 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
     address immutable initialDeployer; 
 
     /**
-     * @dev Initializes the contract setting the TGARegistry, Rewards, revenueRecipient, and the URI.
-     * @param _tgaRegistry Address of the TGARegistry contract.
-     * @param _rewardsContract Address of the Rewards contract.
-     * @param _revenueRecipient Address where revenues are sent.
-     * @param uri_ URI to be passed to the ERC1155 contract.
+     * @dev Sets the initial state of the contract, including the TBA registry, Rewards contract, and revenue recipient.
+     * @param _tbaRegistry The address of the TBA registry contract.
+     * @param _rewardsContract The address of the Rewards contract.
+     * @param _revenueRecipient The address to receive revenue generated from minting accessories.
+     * @param uri_ The URI for the ERC1155 token.
      */
     constructor(
             TGARegistry _tgaRegistry, 
@@ -36,7 +40,6 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
             address payable _revenueRecipient, 
             string memory uri_)
         ERC1155(uri_)
-        ReentrancyGuard()
     {
         initialDeployer = msg.sender;
 
@@ -46,8 +49,8 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @dev Allows the initial deployer to set the MiladyAvatar contract.
-     * @param _avatarContract Address of the MiladyAvatar contract.
+     * @dev Sets the Avatar contract address. Can only be called once, by the initial deployer.
+     * @param _avatarContract The address of the Avatar contract.
      */
     function setAvatarContract(MiladyAvatar _avatarContract)
         external
@@ -66,9 +69,9 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @dev Defines the curve parameter for a given accessory.
+     * @dev Defines the parameter for the bonding curve of a given accessory.
      * @param _accessoryId The ID of the accessory.
-     * @param _parameter The curve parameter for the accessory.
+     * @param _parameter The parameter for the bonding curve.
      */
     function defineBondingCurveParameter(uint _accessoryId, uint _parameter)
         external
@@ -81,8 +84,8 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @dev Allows the owner to change the address where revenues are sent.
-     * @param _revenueRecipient New address for receiving revenues.
+     * @dev Changes the recipient of the revenue generated from minting accessories.
+     * @param _revenueRecipient The new address to receive revenue.
      */
     function changeRevenueRecipient(address payable _revenueRecipient)
         external
@@ -92,11 +95,11 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Mints the specified accessories and sends them to the recipient.
-     * @param _accessoryIds Array of accessory IDs to mint.
-     * @param _amounts Corresponding array of amounts for each accessory.
-     * @param _recipient The address that will receive the minted accessories.
-     * @param _overpayReturnAddress The address to return any excess ether to.
+     * @dev Mints new accessories and handles the distribution of revenue.
+     * @param _accessoryIds The IDs of the accessories to mint.
+     * @param _amounts The amounts of each accessory to mint.
+     * @param _recipient The address to receive the minted accessories.
+     * @param _overpayReturnAddress The address to return any overpayment.
      */
     function mintAccessories(
             uint[] calldata _accessoryIds, 
@@ -129,12 +132,12 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
             require(success, "Transfer failed");
         }
     }
-    
+
     /**
-     * @notice Mints a specific accessory and distributes the revenue accordingly.
-     * @param _accessoryId ID of the accessory to mint.
-     * @param _amount Amount of the accessory to mint.
-     * @param _recipient The address that will receive the minted accessories.
+     * @notice Internal function to mint a specified amount of an accessory and disburse the revenue.
+     * @param _accessoryId The ID of the accessory.
+     * @param _amount The amount of the accessory to mint.
+     * @param _recipient The address to receive the minted accessory.
      */
     function _mintAccessoryAndDisburseRevenue(uint _accessoryId, uint _amount, address _recipient)
         internal
@@ -167,10 +170,10 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Internal function to mint a specific accessory.
-     * @param _accessoryId ID of the accessory to mint.
-     * @param _amount Amount of the accessory to mint.
-     * @param _recipient The address that will receive the minted accessories.
+     * @notice Internal function to mint a specified amount of an accessory.
+     * @param _accessoryId The ID of the accessory.
+     * @param _amount The amount of the accessory to mint.
+     * @param _recipient The address to receive the minted accessory.
      */
     function _mintAccessory(uint _accessoryId, uint _amount, address _recipient)
         internal
@@ -178,13 +181,13 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
         bondingCurves[_accessoryId].accessorySupply += _amount;
         _mint(_recipient, _accessoryId, _amount, "");
     }
-    
+
     /**
-     * @notice Burns the specified accessories and sends the burn reward to the specified recipient.
-     * @param _accessoryIds Array of accessory IDs to burn.
-     * @param _amounts Corresponding array of amounts for each accessory.
-     * @param _minRewardOut Minimum expected burn reward; reverts if not met.
-     * @param _fundsRecipient Address that will receive the burn reward.
+     * @dev Burns accessories and sends the reward to the specified recipient.
+     * @param _accessoryIds The IDs of the accessories to burn.
+     * @param _amounts The amounts of each accessory to burn.
+     * @param _minRewardOut The minimum reward expected out of the burn.
+     * @param _fundsRecipient The address to receive the reward.
      */
     function burnAccessories(
             uint[] calldata _accessoryIds, 
@@ -210,9 +213,9 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Internal function to burn a specific accessory.
-     * @param _accessoryId ID of the accessory to burn.
-     * @param _amount Amount of the accessory to burn.
+     * @notice Internal function to burn a specified amount of an accessory.
+     * @param _accessoryId The ID of the accessory.
+     * @param _amount The amount of the accessory to burn.
      */
     function _burnAccessory(uint _accessoryId, uint _amount)
         internal
@@ -224,10 +227,10 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Calculate the ether cost to mint a specified amount of a given accessory.
-     * @param _accessoryId ID of the accessory.
-     * @param _amount Amount of the accessory to calculate for.
-     * @return totalCost The total cost in ether.
+     * @notice Calculates the cost to mint a specified amount of a particular accessory.
+     * @param _accessoryId The ID of the accessory.
+     * @param _amount The amount of the accessory to mint.
+     * @return The total cost to mint the specified amount of the accessory.
      */
     function getMintCostForNewAccessories(uint _accessoryId, uint _amount)
         public
@@ -248,10 +251,10 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Calculate the ether reward for burning a specified amount of a given accessory.
-     * @param _accessoryId ID of the accessory.
-     * @param _amount Amount of the accessory to calculate for.
-     * @return totalReward The total reward in ether.
+     * @notice Calculates the ether reward for burning a specified amount of a particular accessory.
+     * @param _accessoryId The ID of the accessory.
+     * @param _amount The amount of the accessory to burn.
+     * @return The total ether reward for burning the specified amount of the accessory.
      */
     function getBurnRewardForReturnedAccessories(uint _accessoryId, uint _amount)
         public
@@ -273,10 +276,10 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Calculates the ether cost to mint a single accessory given its number in the supply.
-     * @param _itemNumber The position of the accessory in the supply.
-     * @param _curveParameter Parameter of the bonding curve.
-     * @return The ether cost.
+     * @notice Calculates the cost to mint a particular item number of an accessory.
+     * @param _itemNumber The item number.
+     * @param _curveParameter The parameter of the bonding curve.
+     * @return The cost to mint the item number of the accessory.
      */
     function getMintCostForItemNumber(uint _itemNumber, uint _curveParameter)
         public
@@ -290,10 +293,10 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Calculates the ether reward for burning a single accessory given its number in the supply.
-     * @param _itemNumber The position of the accessory in the supply.
-     * @param _curveParameter Parameter of the bonding curve.
-     * @return The ether reward.
+     * @notice Calculates the ether reward for burning a particular item number of an accessory.
+     * @param _itemNumber The item number.
+     * @param _curveParameter The parameter of the bonding curve.
+     * @return The ether reward for burning the item number of the accessory.
      */
     function getBurnRewardForItemNumber(uint _itemNumber, uint _curveParameter)
         public
@@ -304,12 +307,11 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Updates the equip status before a token transfer.
-     * @param _from Sender address.
-     * @param _ids Array of token IDs being transferred.
-     * @param _amounts Corresponding array of amounts for each token ID.
+     * @notice Overrides the ERC1155 _beforeTokenTransfer hook to manage the equip status of accessories being transferred from a MiladyAvatar's TBA.
+     * @param _from The address sending the tokens.
+     * @param _ids Array of token IDs.
+     * @param _amounts Array of amounts of tokens.
      */
-    // We need to make sure the equip status is updated if we send away an accessory that is currently equipped.
     function _beforeTokenTransfer(
             address, 
             address _from, 

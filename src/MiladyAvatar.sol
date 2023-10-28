@@ -3,15 +3,20 @@
 pragma solidity 0.8.18;
 
 import "openzeppelin/token/ERC721/IERC721.sol";
+import "openzeppelin/security/ReentrancyGuard.sol";
 import "TokenGatedAccount/TokenGatedAccount.sol";
 import "TokenGatedAccount/TGARegistry.sol";
 import "./Rewards.sol";
 import "./LiquidAccessories.sol";
 import "./SoulboundAccessories.sol";
 
-/// @title MiladyAvatar Contract
-/// @notice A contract to manage Milady Avatars, including accessory equip/unequip actions.
-contract MiladyAvatar is IERC721 {
+/**
+ * @title MiladyAvatar
+ * @notice A contract to manage Avatars, their equipment and interactions with accessories in the Milady OS ecosystem.
+ * @dev Inherits from IERC721 and ReentrancyGuard. Interacts with LiquidAccessories, SoulboundAccessories, and Rewards contracts to facilitate accessory management and reward distribution.
+ * @author Logan Brutsche
+ */
+contract MiladyAvatar is IERC721, ReentrancyGuard {
     IERC721 public immutable miladysContract;
     LiquidAccessories public liquidAccessoriesContract;
     SoulboundAccessories public soulboundAccessoriesContract;
@@ -25,12 +30,12 @@ contract MiladyAvatar is IERC721 {
 
     address immutable initialDeployer;
 
-    /** 
-     * @dev Sets initial state for the contract.
-     * @param _miladysContract Address of the Milady's ERC721 contract.
-     * @param _tgaRegistry Address of the TokenGatedAccount registry contract.
-     * @param _tgaAccountImpl Address of the TokenGatedAccount implementation contract.
-     * @param _baseURI The base URI for the ERC721 token metadata.
+    /**
+     * @notice Initializes the contract with the specified Milady's contract, TBARegistry, TBA Account Implementation and base URI.
+     * @param _miladysContract The address of the Milady's contract.
+     * @param _tbaRegistry The address of the TBARegistry.
+     * @param _tbaAccountImpl The address of the TBA Account Implementation.
+     * @param _baseURI The base URI for the ERC721 token.
      */
     constructor(
             IERC721 _miladysContract,
@@ -45,12 +50,11 @@ contract MiladyAvatar is IERC721 {
         baseURI = _baseURI;
     }
 
-    /** 
-     * @notice Sets other required contracts for the MiladyAvatar to function properly.
-     * @dev This function is callable only once and only by the initial deployer.
-     * @param _liquidAccessoriesContract The LiquidAccessories contract address.
-     * @param _soulboundAccessoriesContract The SoulboundAccessories contract address.
-     * @param _rewardsContract The Rewards contract address.
+    /**
+     * @notice Sets the address of the LiquidAccessories, SoulboundAccessories, and Rewards contracts. Can only be called once and by the initial deployer.
+     * @param _liquidAccessoriesContract The address of the LiquidAccessories contract.
+     * @param _soulboundAccessoriesContract The address of the SoulboundAccessories contract.
+     * @param _rewardsContract The address of the Rewards contract.
      */
     function setOtherContracts(
             LiquidAccessories _liquidAccessoriesContract, 
@@ -69,17 +73,16 @@ contract MiladyAvatar is IERC721 {
     // indexed by miladyId -> accessoryType
     mapping (uint => mapping (uint128 => uint)) public equipSlots;
     
-
-    /** 
-     * @notice Updates the equipped accessories for a Milady Avatar.
-     * @dev A variant ID of 0 is interpreted as an unequip action.
+    /**
+     * @notice Allows a user to update their Avatar's equipment by providing accessory IDs. 
+     * This is the main entry point for a user to change their Avatar's appearance / equip status
+     * if an accessoryId's unpacked accVariant == 0, we interpret this as an unequip action.
      * @param _miladyId The ID of the Milady Avatar.
-     * @param _accessoryIds Array of accessory IDs to equip or unequip.
+     * @param _accessoryIds Array of accessory IDs to equip/unequip.
      */
-    // main entry point for a user to change their Avatar's appearance / equip status
-    // if an accessoryId's unpacked accVariant == 0, we interpret this as an unequip action
     function updateEquipSlotsByAccessoryIds(uint _miladyId, uint[] memory _accessoryIds)
         public
+        nonReentrant
     {
         require(msg.sender == ownerOf(_miladyId), "Not Milady TGA");
 
@@ -92,6 +95,12 @@ contract MiladyAvatar is IERC721 {
         }
     }
 
+    /**
+     * @notice Internal function to update an equip slot by accessory type and variant.
+     * @param _miladyId The ID of the Milady Avatar.
+     * @param _accType The type of the accessory.
+     * @param _accVariantOrNull The variant of the accessory or 0 for unequip action.
+     */
     function _updateEquipSlotByTypeAndVariant(uint _miladyId, uint128 _accType, uint128 _accVariantOrNull)
         internal
     {
@@ -104,11 +113,23 @@ contract MiladyAvatar is IERC721 {
         }
     }
 
+    /**
+     * @notice The event emitted when an accessory is equipped.
+     * @param _miladyId Milady that equiped the accessory
+     * @param _accessoryId  The ID of the accessory that was equiped
+     */
     event AccessoryEquipped(uint indexed _miladyId, uint indexed _accessoryId);
 
-    // core function for equip logic.
-    // unequips items if equip would overwrite for that accessory type
-    // assumes the accessory's accVariant != 0
+    
+    /**
+     * @notice Internal function to equip an accessory if owned by the Avatar.
+     * @dev The core function for equip logic.
+     * Unequips items if equip would overwrite for that accessory type 
+     * assumes the accessory's accVariant != 0
+     * @param _miladyId The ID of the Milady Avatar.
+     * @param _accessoryId The ID of the accessory to equip.
+     * @dev Assumes the accessory's accVariant != 0.
+     */
     function _equipAccessoryIfOwned(uint _miladyId, uint _accessoryId)
         internal
     {
@@ -126,9 +147,18 @@ contract MiladyAvatar is IERC721 {
         emit AccessoryEquipped(_miladyId, _accessoryId);
     }
 
+    /**
+     * @notice The event emitted when an accessory is unequipped.
+     * @param _miladyId Milady that equiped the accessory
+     * @param _accessoryId The ID of the accessory that was equiped
+     */
     event AccessoryUnequipped(uint indexed _miladyId, uint indexed _accessoryId);
 
-    // core function for unequip logic
+    /**
+     * @notice Internal function to unequip an accessory by type if it's equipped.
+     * @param _miladyId The ID of the Milady Avatar.
+     * @param _accType The type of the accessory to unequip.
+     */
     function _unequipAccessoryByTypeIfEquipped(uint _miladyId, uint128 _accType)
         internal
     {
@@ -142,16 +172,15 @@ contract MiladyAvatar is IERC721 {
         }
     }
 
-    /** 
-     * @notice This function lets soulbound accessories automatically equip themselves upon minting.
-     * @dev Function is intended to be called from the `SoulboundAccessories` contract.
+    /**
+     * @notice Allows soulbound accessories to "auto equip" themselves upon mint.
+     * @dev See `SoulboundAccessories.mintAndEquipSoulboundAccessories`
      * @param _miladyId The ID of the Milady Avatar.
      * @param _accessoryIds Array of accessory IDs to equip.
      */
-    // allows soulbound accessories to "auto equip" themselves upon mint
-    // see `SoulboundAccessories.mintAndEquipSoulboundAccessories`
     function equipSoulboundAccessories(uint _miladyId, uint[] calldata _accessoryIds)
         external
+        nonReentrant
     {
         require(msg.sender == address(soulboundAccessoriesContract), "Not soulboundAccessories");
 
@@ -162,36 +191,35 @@ contract MiladyAvatar is IERC721 {
         }
     }
 
-    /** 
-     * @notice This function lets soulbound accessories unequip themselves upon unmint.
-     * @dev Function is intended to be called from the `SoulboundAccessories` contract.
+    /**
+     * @notice Allows soulbound accessories to unequip themselves upon unmint.
+     * @dev See `SoulboundAccessories.unmintAndUnequipSoulboundAccessories`
      * @param _miladyId The ID of the Milady Avatar.
      * @param _accessoryIds Array of accessory IDs to unequip.
      */
-    // allows soulbound accessories to unequip the item upon unmint
-    // see `SoulboundAccessories.unmintAndUnequipSoulboundAccessories`
     function unequipSoulboundAccessories(uint _miladyId, uint[] calldata _accessoryIds)
         external
+        nonReentrant
     {
         require(msg.sender == address(soulboundAccessoriesContract), "Not soulboundAccessories");
 
         for (uint i=0; i<_accessoryIds.length;) {
-            _equipAccessoryIfOwned(_miladyId, _accessoryIds[i]);
+            (uint128 accType,) = accessoryIdToTypeAndVariantIds(_accessoryIds[i]);
+            _unequipAccessoryByTypeIfEquipped(_miladyId, accType);
 
             unchecked { i++; }
         }
     }
 
-    /** 
-     * @notice This function lets liquid accessories automatically unequip themselves before transferring.
-     * @dev Intended to be called from the `LiquidAccessories` contract's `_beforeTokenTransfer` function.
+    /**
+     * @notice Allows liquid accessories to "auto unequip" themselves upon transfer away.
+     * @dev See `LiquidAccessories._beforeTokenTransfer`
      * @param _miladyId The ID of the Milady Avatar.
-     * @param _accessoryId The accessory ID to unequip.
+     * @param _accessoryId The ID of the accessory to unequip.
      */
-    // allows liquid accessoires to "auto unequip" themselves upon transfer away
-    // see `LiquidAccessories._beforeTokenTransfer`
     function preTransferUnequipById(uint _miladyId, uint _accessoryId)
         external
+        nonReentrant
     {
         require(msg.sender == address(liquidAccessoriesContract), "Not liquidAccessoriesContract");
 
@@ -200,7 +228,12 @@ contract MiladyAvatar is IERC721 {
         _unequipAccessoryByTypeIfEquipped(_miladyId, accType);
     }
 
-
+    /**
+     * @notice Retrieves the total balance of a specific accessory owned by a particular Avatar.
+     * @param miladyId The ID of the Milady Avatar.
+     * @param accessoryId The ID of the accessory.
+     * @return The total balance of the specified accessory.
+     */
     function totalAccessoryBalanceOfAvatar(uint miladyId, uint accessoryId)
         public
         view
@@ -211,8 +244,12 @@ contract MiladyAvatar is IERC721 {
           + soulboundAccessoriesContract.balanceOf(getAvatarTGA(miladyId), accessoryId);
     }
 
-    // get the TokenGatedAccount for a particular Milady Avatar.
-    function getAvatarTGA(uint _miladyId)
+    /**
+     * @notice Retrieves the TokenGatedAccount for a particular Milady Avatar.
+     * @param _miladyId The ID of the Milady Avatar.
+     * @return The address of the TokenGatedAccount.
+     */
+    function getAvatarTBA(uint _miladyId)
         public
         view
         returns (address)
@@ -220,7 +257,12 @@ contract MiladyAvatar is IERC721 {
         return tgaRegistry.account(address(tgaAccountImpl), block.chainid, address(this), _miladyId, 0);
     }
 
-    function getPayableAvatarTGA(uint _miladyId)
+    /**
+     * @notice Retrieves the payable TokenGatedAccount for a particular Milady Avatar.
+     * @param _miladyId The ID of the Milady Avatar.
+     * @return The payable address of the TokenGatedAccount.
+     */
+    function getPayableAvatarTBA(uint _miladyId)
         public
         view
         returns (address payable)
@@ -228,6 +270,10 @@ contract MiladyAvatar is IERC721 {
         return payable(getAvatarTGA(_miladyId));
     }
 
+    /**
+     * @notice Retrieves the name of the contract.
+     * @return The name "Milady Avatar".
+     */
     function name() external pure returns (string memory) {
         return "Milady Avatar";
     }
@@ -236,16 +282,25 @@ contract MiladyAvatar is IERC721 {
         return "MILA";
     }
 
+    /**
+     * @notice Retrieves the symbol of the contract.
+     * @return The symbol "MILA".
+     */
     function tokenURI(uint256 _tokenId) 
         external 
         view 
         returns (string memory) 
     {
-        require(_tokenId <= 9998, "Invalid Milady/Avatar id");
+        require(_tokenId <= 9999, "Invalid Milady/Avatar id");
 
         return string(abi.encodePacked(baseURI, Strings.toString(_tokenId)));
     }
 
+    /**
+     * @notice Retrieves the balance of a particular address.
+     * @param _who The address to query.
+     * @return balance The balance of the address.
+     */
     function balanceOf(address _who) 
         external 
         view 
@@ -258,7 +313,12 @@ contract MiladyAvatar is IERC721 {
         }
         else return 0;
     }
-
+    
+    /**
+     * @notice Retrieves the owner of a particular token ID.
+     * @param _tokenId The ID of the token.
+     * @return owner The address of the owner.
+     */
     function ownerOf(uint256 _tokenId) 
         public 
         view 
@@ -269,42 +329,65 @@ contract MiladyAvatar is IERC721 {
         return tgaRegistry.account(address(tgaAccountImpl), block.chainid, address(miladysContract), _tokenId, 0);
     }
 
+    /**
+     * @notice Reverts with a message indicating that soulbound tokens cannot be transferred.
+     */
     function safeTransferFrom(address, address, uint256, bytes calldata) external {
         revertWithSoulboundMessage();
     }
     
+    /**
+     * @notice Reverts with a message indicating that soulbound tokens cannot be transferred.
+     */
     function safeTransferFrom(address, address, uint256) external {
         revertWithSoulboundMessage();
     }
 
+    /**
+     * @notice Reverts with a message indicating that soulbound tokens cannot be transferred.
+     */
     function transferFrom(address, address, uint256) external {
         revertWithSoulboundMessage();
     }
 
+    /**
+     * @notice Reverts with a message indicating that soulbound tokens cannot be transferred.
+     */
     function approve(address, uint256) external {
         revertWithSoulboundMessage();
     }
 
+    /**
+     * @notice Reverts with a message indicating that soulbound tokens cannot be transferred.
+     */
     function setApprovalForAll(address, bool) external {
         revertWithSoulboundMessage();
     }
 
+    /**
+     * @notice Reverts with a message indicating that soulbound tokens cannot be transferred.
+     */
     function getApproved(uint256) external view returns (address) {
         revertWithSoulboundMessage();
     }
 
+    /**
+     * @notice Always false.
+     */
     function isApprovedForAll(address, address) external view returns (bool) {
         return false;
     }
 
-    /// @dev This function is used internally to revert any calls attempting to transfer soulbound tokens.
+    /**
+     * @notice Internal function to revert any transaction with a message indicating the non-transferability of soulbound tokens.
+     */
     function revertWithSoulboundMessage() pure internal {
         revert("Cannot transfer soulbound tokens");
     }
 
-    /** 
-     * @notice Checks if the contract supports a given interface.
-     * @param interfaceId The interface ID to check.
+    /**
+     * @notice Checks if the contract supports a particular interface.
+     * @param interfaceId The ID of the interface.
      * @return True if the interface is supported, false otherwise.
      */
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
@@ -331,6 +414,12 @@ contract MiladyAvatar is IERC721 {
         string accVariant;
     }
 
+    
+    /**
+     * @notice Converts an array of PlaintextAccessoryInfo structs to an array of accessory IDs.
+     * @param accInfos An array of PlaintextAccessoryInfo structs.
+     * @return accIds An array of accessory IDs.
+     */
     function batchPlaintextAccessoryInfoToAccessoryIds(PlaintextAccessoryInfo[] memory accInfos)
         public
         pure
@@ -345,6 +434,14 @@ contract MiladyAvatar is IERC721 {
         }
     }
 
+    /**
+     * @notice Converts a PlaintextAccessoryInfo struct to an accessory ID.
+     * @dev The accType is derived from hashing the accessory type's plaintext description string.
+     * @dev The accVariant is derived from hashing the accessory variant's plaintext description string.
+     * @dev The accessory ID is derived from the accType and accVariant, both uint128, packed into a uint256.
+     * @param accInfo A PlaintextAccessoryInfo struct.
+     * @return accessoryId The accessory ID derived from the plaintext info.
+     */
     function plaintextAccessoryInfoToAccessoryId(PlaintextAccessoryInfo memory accInfo)
         public
         pure
@@ -355,6 +452,12 @@ contract MiladyAvatar is IERC721 {
         accessoryId = typeAndVariantIdsToAccessoryId(accType, accVariant);
     }
 
+    /**
+     * @notice Converts plain text accessory type and variant strings to an accessory ID.
+     * @param accTypeString A string representing the accessory type.
+     * @param accVariantString A string representing the accessory variant.
+     * @return accessoryId The accessory ID derived from the plaintext strings.
+     */
     function plaintextAccessoryTextToAccessoryId(string memory accTypeString, string memory accVariantString)
         public
         pure
@@ -363,6 +466,12 @@ contract MiladyAvatar is IERC721 {
         return plaintextAccessoryInfoToAccessoryId(PlaintextAccessoryInfo(accTypeString, accVariantString));
     }
 
+    /**
+     * @notice Decodes an accessory ID into its type and variant IDs.
+     * @param id The accessory ID.
+     * @return accType The accessory type ID.
+     * @return accVariant The accessory variant ID.
+     */
     function accessoryIdToTypeAndVariantIds(uint id)
         public
         pure
@@ -371,6 +480,12 @@ contract MiladyAvatar is IERC721 {
         return (uint128(id >> 128), uint128(id));
     }
 
+    /**
+     * @notice Encodes accessory type and variant IDs, both uint128, into a single accessory ID.
+     * @param accType The accessory type ID.
+     * @param accVariant The accessory variant ID.
+     * @return The accessory ID.
+     */
     function typeAndVariantIdsToAccessoryId(uint128 accType, uint128 accVariant)
         public
         pure

@@ -183,7 +183,10 @@ contract RewardsTests is MiladyOSTestBase {
         rewardsContract.claimRewardsForMilady(_miladyId, accessoryIds, _attacker);
     }
 
-    function test_R_CRFM_3(uint _miladyId, uint _numberOfAccessories, uint _seed, address payable _recipient) public {
+    function test_R_CRFM_3
+        (uint _miladyId, uint _numberOfAccessories, uint _seed, address payable _recipient) 
+        // ()
+    public {
         // conditions:
         // * msg.sender is the owner of the milady
         // * the milady is registered for rewards for some / or no accessories
@@ -194,15 +197,35 @@ contract RewardsTests is MiladyOSTestBase {
         //      * add rewards for the accessory
         // * claim rewards for the milady
 
+        // (uint _miladyId, uint256 _numberOfAccessories, uint _seed, address payable _recipient) =
+        //     (0,
+        //     0,
+        //     0,
+        //     payable(randomAddress(abi.encodePacked(uint(2)))));
+
         // arrange
         vm.assume(_miladyId <= NUM_MILADYS_MINTED);
         vm.assume(_numberOfAccessories <= 10);
-        uint[] memory accessoryIds = new uint[](_numberOfAccessories);
+        vm.assume(_numberOfAccessories > 0);
+        vm.assume(_seed < 2**255);
+        
+
+
+        console.log("miladyId: %d", _miladyId);
+        console.log("numberOfAccessories: %d", _numberOfAccessories + 1);
+        console.log("seed: %d", _seed);
+        console.log("recipient: %s", _recipient);
+
+        
+        uint256 arraySize = uint(_numberOfAccessories) + uint(1);
+        uint[] memory accessoryIds = new uint[](arraySize); // +1 to add one unregistered accessory
         for (uint i=0; i<_numberOfAccessories; i++) {
             accessoryIds[i] = random(abi.encodePacked(i, _seed));
             createBuyAndEquipAccessory(_miladyId, accessoryIds[i], 0.001 ether);
             rewardsContract.addRewardsForAccessory{value : 0.1 ether}(accessoryIds[i]);
         }
+
+        accessoryIds[_numberOfAccessories] = random(_seed + 3); // one accessory to claim for that we never actually have
 
         uint recipientBalanceBefore = _recipient.balance;
 
