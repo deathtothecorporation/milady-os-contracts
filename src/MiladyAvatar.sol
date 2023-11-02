@@ -31,10 +31,10 @@ contract MiladyAvatar is IERC721, ReentrancyGuard {
     address immutable initialDeployer;
 
     /**
-     * @notice Initializes the contract with the specified Milady's contract, TBARegistry, TBA Account Implementation and base URI.
+     * @notice Initializes the contract with the specified Milady's contract, TGARegistry, TGA Account Implementation and base URI.
      * @param _miladysContract The address of the Milady's contract.
-     * @param _tbaRegistry The address of the TBARegistry.
-     * @param _tbaAccountImpl The address of the TBA Account Implementation.
+     * @param _tgaRegistry The address of the TGARegistry.
+     * @param _tgaAccountImpl The address of the TGA Account Implementation.
      * @param _baseURI The base URI for the ERC721 token.
      */
     constructor(
@@ -249,7 +249,7 @@ contract MiladyAvatar is IERC721, ReentrancyGuard {
      * @param _miladyId The ID of the Milady Avatar.
      * @return The address of the TokenGatedAccount.
      */
-    function getAvatarTBA(uint _miladyId)
+    function getAvatarTGA(uint _miladyId)
         public
         view
         returns (address)
@@ -262,7 +262,7 @@ contract MiladyAvatar is IERC721, ReentrancyGuard {
      * @param _miladyId The ID of the Milady Avatar.
      * @return The payable address of the TokenGatedAccount.
      */
-    function getPayableAvatarTBA(uint _miladyId)
+    function getPayableAvatarTGA(uint _miladyId)
         public
         view
         returns (address payable)

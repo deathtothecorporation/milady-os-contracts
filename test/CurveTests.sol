@@ -8,7 +8,7 @@ import "forge-std/console.sol";
 import "./MiladyOSTestBase.sol";
 import "./Miladys.sol";
 import "../src/MiladyAvatar.sol";
-import "TokenGatedAccount/TBARegistry.sol";
+import "TokenGatedAccount/TGARegistry.sol";
 
 contract CurveTests is MiladyOSTestBase 
 {

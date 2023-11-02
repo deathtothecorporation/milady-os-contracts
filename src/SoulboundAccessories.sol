@@ -31,8 +31,8 @@ contract SoulboundAccessories is ERC1155, Ownable {
 
     /**
      * @notice Creates a new instance of the SoulboundAccessories contract.
-     * @param _tbaRegistry The TokenGatedAccount registry contract.
-     * @param _tbaAccountImpl The TokenGatedAccount implementation contract.
+     * @param _tgaRegistry The TokenGatedAccount registry contract.
+     * @param _tgaAccountImpl The TokenGatedAccount implementation contract.
      * @param _miladyAuthority The miladyAuthority address, intended to be held by the miladyAuthority server.
      * @param uri_ The base URI for the contract.
      */

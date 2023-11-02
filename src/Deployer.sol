@@ -39,8 +39,8 @@ contract Deployer {
 
     /**
      * @notice Constructs the Deployer contract and deploys the other contracts, establishing the necessary relationships between them.
-     * @param tbaRegistry The address of the TBARegistry contract.
-     * @param tbaAccountImpl The address of the TokenGatedAccount implementation contract.
+     * @param tgaRegistry The address of the TGARegistry contract.
+     * @param tgaAccountImpl The address of the TokenGatedAccount implementation contract.
      * @param miladysContract The address of the Miladys contract.
      * @param miladyAuthorityAddress The address of the Milady Authority.
      * @param liquidAccessoriesOwner The address to be set as the owner of the LiquidAccessories contract.

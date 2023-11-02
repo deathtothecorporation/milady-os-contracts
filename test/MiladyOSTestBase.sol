@@ -13,8 +13,8 @@ import "./Harnesses.t.sol";
 
 contract MiladyOSTestBase is Test {
     HarnessDeployer harnessDeployer;
-    TBARegistry tbaRegistry;
-    TokenGatedAccount tbaAccountImpl;
+    TGARegistry tgaRegistry;
+    TokenGatedAccount tgaAccountImpl;
     Miladys miladysContract;
     MiladyAvatarHarness avatarContract;
     LiquidAccessoriesHarness liquidAccessoriesContract;
@@ -75,8 +75,8 @@ contract MiladyOSTestBase is Test {
         }
         
         HarnessDeployer harnessDeployer = new HarnessDeployer(
-            tbaRegistry,
-            tbaAccountImpl,
+            tgaRegistry,
+            tgaAccountImpl,
             miladysContract,
             miladyAuthorityAddress,
             PROJECT_REVENUE_RECIPIENT,

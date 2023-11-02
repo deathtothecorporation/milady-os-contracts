@@ -13,7 +13,7 @@ import "./Rewards.sol";
  * @title LiquidAccessories
  * @dev This contract manages the minting, burning, and pricing of accessories in the Milady OS ecosystem. 
  * It uses a bonding curve to determine the price of minting new accessories and the reward for burning them.
- * It interacts with the TBA Registry, Milady Avatar, and Rewards contracts to ensure proper handling and distribution of rewards.
+ * It interacts with the TGA Registry, Milady Avatar, and Rewards contracts to ensure proper handling and distribution of rewards.
  * The contract also ensures that the equip status of an accessory is updated if it's sent away.
  * 
  * @author Logan Brutche
@@ -28,8 +28,8 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
     address immutable initialDeployer; 
 
     /**
-     * @dev Sets the initial state of the contract, including the TBA registry, Rewards contract, and revenue recipient.
-     * @param _tbaRegistry The address of the TBA registry contract.
+     * @dev Sets the initial state of the contract, including the TGA registry, Rewards contract, and revenue recipient.
+     * @param _tgaRegistry The address of the TGA registry contract.
      * @param _rewardsContract The address of the Rewards contract.
      * @param _revenueRecipient The address to receive revenue generated from minting accessories.
      * @param uri_ The URI for the ERC1155 token.
@@ -307,7 +307,7 @@ contract LiquidAccessories is ERC1155, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Overrides the ERC1155 _beforeTokenTransfer hook to manage the equip status of accessories being transferred from a MiladyAvatar's TBA.
+     * @notice Overrides the ERC1155 _beforeTokenTransfer hook to manage the equip status of accessories being transferred from a MiladyAvatar's TGA.
      * @param _from The address sending the tokens.
      * @param _ids Array of token IDs.
      * @param _amounts Array of amounts of tokens.
