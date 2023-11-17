@@ -319,7 +319,7 @@ contract MiladyAvatar is IERC721, ReentrancyGuard {
      * @param _tokenId The ID of the token.
      * @return owner The address of the owner.
      */
-    function ownerOf(uint256 _tokenId) 
+    function ownerOf(uint256 _tokenId)
         public 
         view 
         returns (address owner) 
