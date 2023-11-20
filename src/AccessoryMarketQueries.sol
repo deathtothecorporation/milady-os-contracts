@@ -71,4 +71,18 @@ contract AccessoryMarketQueries is Ownable {
 
         return (activatedAccessories, mintPrices, burnPrices);
     }
+
+    function getActivatedAccessoryBalances(address who)
+        external
+        view
+        returns (uint256[] memory, uint256[] memory)
+    {
+        uint256[] memory balances = new uint256[](activatedAccessories.length);
+
+        for (uint256 i = 0; i < activatedAccessories.length; i++) {
+            balances[i] = liquidAccessoriesContract.balanceOf(who, activatedAccessories[i]);
+        }
+
+        return (activatedAccessories, balances);
+    }
 }
